@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>反诈教育中心</title>
+  <!-- 引入Google字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- 引入Font Awesome图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- 引入AOS动画库 -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3a6ea5;
+      --primary-dark: #2a5a8c;
+      --primary-light: #4c84c4;
+      --secondary-color: #4CAF50;
+      --secondary-dark: #388E3C;
+      --accent-color: #FF5722;
+      --text-color: #333333;
+      --text-light: #666666;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans SC', '微软雅黑', Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* 头部样式 */
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      padding: 3rem 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgzMCkiPjxyZWN0IHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHg9IjAiIHk9IjAiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+      opacity: 0.6;
+    }
+
+    header h1 {
+      position: relative;
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    header p {
+      position: relative;
+      font-size: 1.2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      opacity: 0.9;
+    }
+
+    /* 导航栏样式 */
+    .tab-container {
+      background-color: var(--card-bg);
+      padding: 1.2rem 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    .tab-btn-container {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      background-color: transparent;
+      color: var(--text-color);
+      border: 2px solid transparent;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn i {
+      font-size: 1.1rem;
+    }
+
+    .tab-btn:hover {
+      background-color: rgba(58, 110, 165, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 12px rgba(58, 110, 165, 0.25);
+    }
+
+    /* 内容区域样式 */
+    section {
+      max-width: 1300px;
+      margin: 3rem auto;
+      padding: 2.5rem;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
+    }
+
+    section:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-bottom: 2.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+      font-size: 2rem;
+      font-weight: 700;
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 80px;
+      height: 2px;
+      background-color: var(--primary-color);
+    }
+
+    h3 {
+      color: var(--primary-dark);
+      margin: 2rem 0 1.2rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 i {
+      color: var(--accent-color);
+    }
+
+    .section-content {
+      display: grid;
+      gap: 3rem;
+    }
+
+    /* 卡片样式 */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      padding: 2rem;
+      transition: var(--transition);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* iframe容器样式 */
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      height: 800px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin: 1.5rem 0;
+      transition: var(--transition);
+    }
+
+    .iframe-container:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* 知识图谱容器样式 */
+    .knowledge-container {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin: 1.5rem 0;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .knowledge-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .knowledge-loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    .knowledge-content {
+      width: 100%;
+      height: 100%;
+    }
+
+    .knowledge-content iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* 加载动画 */
+    @keyframes loading {
+      0% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.5;
+      }
+    }
+
+    .knowledge-loading {
+      animation: loading 1.5s infinite;
+    }
+
+    /* 视频列表样式 */
+    .video-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .video-item {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .video-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-thumbnail {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      background-color: #eee;
+      overflow: hidden;
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .video-item:hover .video-thumbnail img {
+      transform: scale(1.05);
+    }
+
+    .video-play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-color);
+      font-size: 1.5rem;
+      opacity: 0.9;
+      transition: var(--transition);
+    }
+
+    .video-item:hover .video-play-icon {
+      background-color: var(--accent-color);
+      color: white;
+      opacity: 1;
+    }
+
+    .video-info {
+      padding: 1.2rem;
+    }
+
+    .video-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+      line-height: 1.4;
+    }
+
+    .video-source {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    /* 返回按钮样式 */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    .back-button button {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-button button:hover {
+      background-color: var(--secondary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .back-button button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+    }
+
+    .back-button button i {
+      font-size: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .back-button button:hover i {
+      transform: translateX(-3px);
+    }
+
+    /* 页脚样式 */
+    footer {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      text-align: center;
+      padding: 2.5rem 0;
+      margin-top: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgzMCkiPjxyZWN0IHdpZHRoPSIyIiBoZWlnaHQ9IjIiIHg9IjAiIHk9IjAiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+      opacity: 0.6;
+    }
+
+    .footer-content {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .footer-logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .footer-social a {
+      color: white;
+      background-color: rgba(255, 255, 255, 0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .footer-social a:hover {
+      background-color: white;
+      color: var(--primary-color);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      position: relative;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 992px) {
+      .container {
+        padding: 0 1.5rem;
+      }
+
+      header {
+        padding: 2.5rem 0;
+      }
+
+      header h1 {
+        font-size: 2.2rem;
+      }
+
+      section {
+        padding: 2rem;
+        margin: 2rem auto;
+      }
+
+      .video-list {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.8rem;
+      }
+
+      header p {
+        font-size: 1rem;
+      }
+
+      section {
+        padding: 1.5rem;
+        margin: 1.5rem auto;
+      }
+
+      h2 {
+        font-size: 1.6rem;
+      }
+
+      h3 {
+        font-size: 1.3rem;
+      }
+
+      .iframe-container {
+        height: 600px;
+      }
+
+      .knowledge-container {
+        height: 500px;
+      }
+
+      .video-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .tab-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .iframe-container {
+        height: 450px;
+      }
+
+      .knowledge-container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1>虚假新闻辨别教育中心</h1>
+      <p>提高媒体素养，培养批判性思维，共建清朗网络空间</p>
+    </div>
+  </header>
+
+  <div class="back-button">
+    <button onclick="history.back()">
+      <i class="fas fa-arrow-left"></i> 返回
+    </button>
+  </div>
+
+  <div class="tab-container">
+    <div class="container">
+      <div class="tab-btn-container">
+        <button class="tab-btn active" onclick="showSection('section1')">
+          <i class="fas fa-hands-helping"></i> 交互学习区
+        </button>
+        <button class="tab-btn" onclick="showSection('section2')">
+          <i class="fas fa-book-reader"></i> 教育资源区
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <section id="section1" data-aos="fade-up">
+      <h2>交互学习区</h2>
+      <div class="section-content">
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <h3><i class="fas fa-microscope"></i> 谣言解剖沙盘</h3>
+          <p>通过互动方式学习如何识别和分析虚假新闻，提高媒体素养和批判性思维能力。</p>
+          <div class="iframe-container">
+            <iframe src="/sandbox" frameborder="0" scrolling="yes" allowfullscreen></iframe>
+          </div>
+        </div>
+
+        <div class="card" data-aos="fade-up" data-aos-delay="200">
+          <h3><i class="fas fa-tasks"></i> 媒体素养测试题库</h3>
+          <p>测试您识别虚假新闻的能力，通过实际案例提高辨别能力。</p>
+          <div class="iframe-container">
+            <iframe src="/question" frameborder="0" scrolling="yes" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section2" style="display: none;" data-aos="fade-up">
+      <h2>教育资源区</h2>
+      <div class="section-content">
+        <div class="card" data-aos="fade-up" data-aos-delay="100">
+          <h3><i class="fas fa-project-diagram"></i> 虚假新闻知识图谱</h3>
+          <p>这里展示虚假新闻的知识图谱，可以详细了解各类虚假新闻知识的关联。通过可视化方式呈现虚假新闻的传播路径、特征和影响。</p>
+          <div id="knowledge-graph" class="knowledge-container">
+            <div class="knowledge-loading">
+              <i class="fas fa-spinner fa-spin"></i> 加载中...
+            </div>
+            <div class="knowledge-content">
+              <iframe src="/new_data" frameborder="0" scrolling="yes" allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-aos="fade-up" data-aos-delay="200">
+          <h3><i class="fas fa-film"></i> 虚假新闻谣言视频专区</h3>
+          <p>精选优质视频资源，帮助您深入了解虚假新闻的危害和识别方法。</p>
+
+          <ul class="video-list">
+            <li class="video-item">
+              <a href="https://www.bilibili.com/video/BV1GC4y1a7zy/?vd_source=dfd52ff3d658asdb16cb08ecd595d0849"
+                target="_blank" rel="noopener noreferrer">
+                <div class="video-thumbnail">
+                  <img src="https://via.placeholder.com/300x180?text=纪录片封面" alt="纪录片封面">
+                  <div class="video-play-icon">
+                    <i class="fas fa-play"></i>
+                  </div>
+                </div>
+                <div class="video-info">
+                  <h4 class="video-title">纪录片：真相之后：虚假新闻与信息的代价</h4>
+                  <div class="video-source">
+                    <i class="fab fa-bilibili"></i> Bilibili
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <li class="video-item">
+              <a href="https://www.bilibili.com/bangumi/play/ep814750?bsource=bing_ogv" target="_blank">
+                <div class="video-thumbnail">
+                  <img src="https://via.placeholder.com/300x180?text=电视剧封面" alt="电视剧封面">
+                  <div class="video-play-icon">
+                    <i class="fas fa-play"></i>
+                  </div>
+                </div>
+                <div class="video-info">
+                  <h4 class="video-title">电视剧：新闻编辑室 第三季</h4>
+                  <div class="video-source">
+                    <i class="fab fa-bilibili"></i> Bilibili
+                  </div>
+                </div>
+              </a>
+            </li>
+
+            <li class="video-item">
+              <a href="https://www.bilibili.com/video/BV1bv411a76J/?vd_source=dfd42ff3d6584db16cb08ecd595d0849"
+                target="_blank">
+                <div class="video-thumbnail">
+                  <img src="https://via.placeholder.com/300x180?text=教学视频封面" alt="教学视频封面">
+                  <div class="video-play-icon">
+                    <i class="fas fa-play"></i>
+                  </div>
+                </div>
+                <div class="video-info">
+                  <h4 class="video-title">如何识别假新闻？</h4>
+                  <div class="video-source">
+                    <i class="fab fa-bilibili"></i> Bilibili
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">虚假新闻辨别教育中心</div>
+      <div class="footer-links">
+        <a href="#">关于我们</a>
+        <a href="#">联系方式</a>
+        <a href="#">使用指南</a>
+        <a href="#">隐私政策</a>
+      </div>
+      <div class="footer-social">
+        <a href="#"><i class="fab fa-weixin"></i></a>
+        <a href="#"><i class="fab fa-weibo"></i></a>
+        <a href="#"><i class="fab fa-qq"></i></a>
+        <a href="#"><i class="fab fa-bilibili"></i></a>
+      </div>
+      <div class="copyright">© 2025 虚假新闻辨别教育中心 版权所有</div>
+    </div>
+  </footer>
+
+  <!-- 引入AOS动画库 -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    // 初始化AOS动画
+    document.addEventListener('DOMContentLoaded', function () {
+      AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+      });
+    });
+
+    function showSection(sectionId) {
+      // 隐藏所有section
+      document.querySelectorAll('section').forEach(section => {
+        section.style.display = 'none';
+      });
+
+      // 显示指定的section
+      const section = document.getElementById(sectionId);
+      section.style.display = 'block';
+
+      // 更新按钮样式
+      document.querySelectorAll('.tab-btn').forEach(button => {
+        button.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 重新初始化AOS动画
+      setTimeout(function () {
+        AOS.refresh();
+      }, 100);
+    }
+
+    // 初始化时显示第一个section
+    window.onload = function () {
+      showSection('section1');
+    };
+  </script>
+</body>
+
+</html>

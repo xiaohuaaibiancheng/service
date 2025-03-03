@@ -1,0 +1,502 @@
+[
+  {
+    "id": 1,
+    "content": "某社交媒体上流传着一则信息，称某明星即将退役，来源是一个不知名的账号。这则信息可能是谣言。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 2,
+    "content": "某政府网站发布了关于新政策的通知，这则信息应该是真实的。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 3,
+    "content": "一条信息声称某知名电商平台即将推出双十一前最大的促销活动，来源是该平台的官方公告。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 4,
+    "content": "某新闻媒体报道称某地发生了重大交通事故，伤亡情况严重，但未提到具体来源和证据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 5,
+    "content": "某论坛用户发帖称某品牌的食品存在质量问题，并附带了一些不明真假的图片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 6,
+    "content": "某学术机构发布了一份关于新冠病毒变异的研究报告，内容经过同行评审。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 7,
+    "content": "某名人在个人社交媒体上发表声明，否认了离婚的传闻。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 8,
+    "content": "某企业发布了年度财报，显示公司盈利情况良好，数据来源于官方网站。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 9,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明生物，附带了一些模糊的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 10,
+    "content": "某知名媒体报道称某国发生了政变，引发广泛关注。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 11,
+    "content": "某用户转发了一条信息，称某药品可以治愈某种疾病，并附带了一些未经证实的数据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 12,
+    "content": "某公司发布了一则招聘信息，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 13,
+    "content": "某自媒体文章声称某地区即将发生自然灾害，并呼吁大家注意安全。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 14,
+    "content": "某知名人物在深夜发布了一条信息，称即将退休，引发了广泛猜测。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 15,
+    "content": "某政府部门在官网发布了新的环保政策，详细说明了执行时间和具体措施。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 16,
+    "content": "某社交媒体用户匿名声称某品牌手机存在质量问题，但未提供具体证据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 17,
+    "content": "某知名医院发布了一则关于新型疗法的公告，附带了临床试验数据。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 18,
+    "content": "某论坛用户发帖称某地即将发生地震，引发了广泛关注，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 19,
+    "content": "某航空公司在官网上发布了航班延误的通知，并提供了补偿方案。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 20,
+    "content": "某名人通过个人助理发布声明，否认了传闻中的绯闻。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 21,
+    "content": "某不知名网站声称某国发现了外星人，附带了一些模糊的照片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 22,
+    "content": "某科技公司发布了新产品的预热信息，明确标注了发布会时间和地点。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 23,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 24,
+    "content": "某知名媒体报道称某国领导人即将访问我国，并提到了行程安排。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 25,
+    "content": "某药店员工在朋友圈声称某种药品可以治愈某种疾病，并附带了一些未经验证的案例。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 26,
+    "content": "某大学在官网上发布了招生简章，详细说明了录取条件和流程。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 27,
+    "content": "某自媒体博主声称某地区即将发生经济危机，并呼吁大家储备物资。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 28,
+    "content": "某知名企业家在公开演讲中宣布了公司的新战略规划，并提到了具体目标。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 29,
+    "content": "某社交媒体用户转发了一条信息，称某地发生了严重暴力事件，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 30,
+    "content": "某政府部门发布了一则关于疫苗接种的通知，明确说明了接种时间和对象。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 31,
+    "content": "某政府部门发布了一则关于新能源补贴的通知，详细说明了政策执行时间和对象。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 32,
+    "content": "某社交媒体用户匿名声称某城市即将发生洪水，未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 33,
+    "content": "某知名教育机构发布了一则关于新学期招生的公告，附带了详细的报名流程。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 34,
+    "content": "某论坛用户发帖称某品牌的家电存在安全隐患，但未提供具体证据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 35,
+    "content": "某航空公司在官网上发布了航班延误的通知，并提供了补偿方案。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 36,
+    "content": "某名人通过个人社交媒体账号发布了一张度假照片，引发了粉丝的关注。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 37,
+    "content": "某不知名网站声称某国发现了外星人，附带了一些模糊的照片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 38,
+    "content": "某科技公司发布了新产品的预热信息，明确标注了发布会时间和地点。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 39,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 40,
+    "content": "某知名媒体报道称某国领导人即将访问我国，并提到了行程安排。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 41,
+    "content": "某药店员工在朋友圈声称某种药品可以治愈某种疾病，并附带了一些未经验证的案例。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 42,
+    "content": "某大学在官网上发布了招生简章，详细说明了录取条件和流程。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 43,
+    "content": "某自媒体博主声称某地区即将发生经济危机，并呼吁大家储备物资。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 44,
+    "content": "某知名企业家在公开演讲中宣布了公司的新战略规划，并提到了具体目标。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 45,
+    "content": "某社交媒体用户转发了一条信息，称某地发生了严重暴力事件，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 46,
+    "content": "某政府部门发布了一则关于疫苗接种的通知，明确说明了接种时间和对象。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 47,
+    "content": "某普通用户在社交媒体上发帖称某明星即将结婚，附带了一些不明真假的照片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 48,
+    "content": "某知名媒体报道称某地发生了重大火灾，伤亡情况严重，并附带了现场视频。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 49,
+    "content": "某论坛用户发帖称某品牌的食品存在质量问题，并附带了一些不明真假的图片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 50,
+    "content": "某公司发布了一则招聘信息，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 51,
+    "content": "某社交媒体用户匿名声称某城市即将发生地震，未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 52,
+    "content": "某知名医院发布了一则关于新型疗法的公告，附带了临床试验数据。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 53,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明生物，附带了一些模糊的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 54,
+    "content": "某政府网站发布了关于新政策的通知，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 55,
+    "content": "某新闻媒体报道称某地发生了重大交通事故，伤亡情况严重，但未提到具体来源和证据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 56,
+    "content": "某知名电商平台发布了一则促销活动的公告，明确标注了活动时间和规则。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 57,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 58,
+    "content": "某知名媒体报道称某国发生了政变，引发了广泛关注。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 59,
+    "content": "某自媒体博主声称某地区即将发生自然灾害，并呼吁大家注意安全。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 60,
+    "content": "某学术机构发布了一份关于气候变化的研究报告，内容经过同行评审。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 61,
+    "content": "某普通用户在社交媒体上发帖称某明星即将退役，来源是一个不知名的账号。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 62,
+    "content": "某政府部门发布了一则关于环保政策的通知，详细说明了执行时间和具体措施。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 63,
+    "content": "某论坛用户发帖称某品牌的手机存在质量问题，附带了一些不明真假的图片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 64,
+    "content": "某知名企业家在公开演讲中宣布了公司的新战略规划，并提到了具体目标。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 65,
+    "content": "某社交媒体用户匿名声称某城市即将发生洪水，未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 66,
+    "content": "某知名医院发布了一则关于新型疗法的公告，附带了临床试验数据。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 67,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 68,
+    "content": "某政府网站发布了关于新政策的通知，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 69,
+    "content": "某社交媒体用户转发了一条信息，称某地发生了严重暴力事件，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 70,
+    "content": "某知名媒体报道称某国领导人即将访问我国，并提到了行程安排。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 71,
+    "content": "某药店员工在朋友圈声称某种药品可以治愈某种疾病，并附带了一些未经验证的案例。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 72,
+    "content": "某大学在官网上发布了招生简章，详细说明了录取条件和流程。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 73,
+    "content": "某自媒体博主声称某地区即将发生经济危机，并呼吁大家储备物资。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 74,
+    "content": "某知名企业家在公开演讲中宣布了公司的新战略规划，并提到了具体目标。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 75,
+    "content": "某社交媒体用户转发了一条信息，称某地发生了严重暴力事件，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 76,
+    "content": "某政府部门发布了一则关于疫苗接种的通知，明确说明了接种时间和对象。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 77,
+    "content": "某普通用户在社交媒体上发帖称某明星即将结婚，附带了一些不明真假的照片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 78,
+    "content": "某知名媒体报道称某地发生了重大火灾，伤亡情况严重，并附带了现场视频。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 79,
+    "content": "某论坛用户发帖称某品牌的食品存在质量问题，并附带了一些不明真假的图片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 80,
+    "content": "某公司发布了一则招聘信息，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 81,
+    "content": "某社交媒体用户匿名声称某城市即将发生地震，未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 82,
+    "content": "某知名医院发布了一则关于新型疗法的公告，附带了临床试验数据。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 83,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明生物，附带了一些模糊的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 84,
+    "content": "某政府网站发布了关于新政策的通知，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 85,
+    "content": "某新闻媒体报道称某地发生了重大交通事故，伤亡情况严重，但未提到具体来源和证据。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 86,
+    "content": "某知名电商平台发布了一则促销活动的公告，明确标注了活动时间和规则。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 87,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 88,
+    "content": "某知名媒体报道称某国发生了政变，引发了广泛关注。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 89,
+    "content": "某自媒体博主声称某地区即将发生自然灾害，并呼吁大家注意安全。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 90,
+    "content": "某学术机构发布了一份关于气候变化的研究报告，内容经过同行评审。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 91,
+    "content": "某普通用户在社交媒体上发帖称某明星即将退役，来源是一个不知名的账号。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 92,
+    "content": "某政府部门发布了一则关于环保政策的通知，详细说明了执行时间和具体措施。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 93,
+    "content": "某论坛用户发帖称某品牌的手机存在质量问题，附带了一些不明真假的图片。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 94,
+    "content": "某知名企业家在公开演讲中宣布了公司的新战略规划，并提到了具体目标。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 95,
+    "content": "某社交媒体用户匿名声称某城市即将发生洪水，未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 96,
+    "content": "某知名医院发布了一则关于新型疗法的公告，附带了临床试验数据。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 97,
+    "content": "某普通用户在社交媒体上发帖称某地出现了不明飞行物，附带了一段不清晰的视频。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 98,
+    "content": "某政府网站发布了关于新政策的通知，内容详细且来源可信。",
+    "correctAnswer": "true"
+  },
+  {
+    "id": 99,
+    "content": "某社交媒体用户转发了一条信息，称某地发生了严重暴力事件，但未提到具体来源。",
+    "correctAnswer": "false"
+  },
+  {
+    "id": 100,
+    "content": "某知名媒体报道称某国领导人即将访问我国，并提到了行程安排。",
+    "correctAnswer": "true"
+  }
+]

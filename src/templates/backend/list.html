@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分页新闻列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --secondary-color: #f50057;
+            --accent-color: #00bcd4;
+            --light-bg: #f5f7fa;
+            --dark-text: #2c3e50;
+            --light-text: #7f8c8d;
+            --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .page-header {
+            position: relative;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0;
+            display: inline-block;
+        }
+
+        .page-header .total-count {
+            font-size: 1rem;
+            color: var(--light-text);
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button button {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button button:hover {
+            background-color: #303f9f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-button button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button button svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button button:hover svg {
+            transform: translateX(-3px);
+        }
+
+        .filter-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition-normal);
+        }
+
+        .filter-section:hover {
+            box-shadow: var(--hover-shadow);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-title i {
+            color: var(--accent-color);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-actions button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            transition: var(--transition-normal);
+        }
+
+        .reset-btn {
+            background-color: #f1f1f1;
+            color: var(--dark-text);
+        }
+
+        .reset-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .apply-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .apply-btn:hover {
+            background-color: #303f9f;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--dark-text);
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            transition: var(--transition-normal);
+            box-shadow: none;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+        }
+
+        .news-card {
+            background-color: white;
+            transition: var(--transition-normal);
+            margin-bottom: 20px;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .news-card h5 {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .news-card h5 a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition-normal);
+        }
+
+        .news-card h5 a:hover {
+            color: var(--secondary-color);
+        }
+
+        .news-card p {
+            color: var(--dark-text);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .news-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: var(--light-text);
+            font-size: 0.85rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .news-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .news-meta-item i {
+            color: var(--accent-color);
+        }
+
+        .label-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .label-rumor {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+
+        .label-fact {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+
+        .label-unverified {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+        }
+
+        .credibility-indicator {
+            display: inline-block;
+            width: 50px;
+            height: 6px;
+            background-color: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .credibility-bar {
+            height: 100%;
+            background-color: #4caf50;
+        }
+
+        .pagination {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .page-item .page-link {
+            color: var(--primary-color);
+            border: none;
+            margin: 0 3px;
+            border-radius: 8px;
+            transition: var(--transition-normal);
+        }
+
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .page-item .page-link:hover {
+            background-color: rgba(63, 81, 181, 0.1);
+            color: var(--primary-color);
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading i {
+            margin-right: 8px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--light-text);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        /* 日期范围选择器自定义样式 */
+        .daterangepicker {
+            font-family: 'Noto Sans SC', sans-serif;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            border: none;
+        }
+
+        .daterangepicker .ranges li {
+            border-radius: 4px;
+            color: var(--dark-text);
+        }
+
+        .daterangepicker .ranges li.active {
+            background-color: var(--primary-color);
+        }
+
+        .daterangepicker td.active,
+        .daterangepicker td.active:hover {
+            background-color: var(--primary-color);
+        }
+
+        .daterangepicker .drp-buttons .btn {
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .daterangepicker .drp-buttons .applyBtn {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .daterangepicker .drp-buttons .cancelBtn {
+            color: var(--dark-text);
+            border-color: #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .filter-section {
+                padding: 15px;
+            }
+
+            .news-card {
+                padding: 15px;
+            }
+
+            .back-button {
+                top: 10px;
+                left: 10px;
+            }
+
+            .back-button button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .daterangepicker {
+                width: 300px;
+            }
+
+            .daterangepicker .ranges {
+                float: none;
+                margin: 0;
+                width: 100%;
+            }
+
+            .daterangepicker .drp-calendar {
+                max-width: 270px;
+            }
+
+            .daterangepicker.show-ranges .drp-calendar.left {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-button">
+            <button onclick="history.back()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83l5.58-5.58L12 4l-8 8 8 8 1.41-1.41-6.58-6.58 6.58-6.58z" />
+                </svg>
+                返回
+            </button>
+        </div>
+
+        <div class="page-header">
+            <h2>新闻列表</h2>
+            <small class="total-count" id="totalCount"></small>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-section">
+            <div class="filter-header">
+                <h5 class="filter-title"><i class="fas fa-filter"></i> 筛选条件</h5>
+                <div class="filter-actions">
+                    <button class="reset-btn" id="resetFilters"><i class="fas fa-undo"></i> 重置</button>
+                    <button class="apply-btn" id="applyFilters"><i class="fas fa-check"></i> 应用</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="searchInput"><i class="fas fa-search"></i> 搜索新闻</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="输入标题或摘要">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="platformSelect"><i class="fas fa-globe"></i> 平台</label>
+                        <select class="form-select" id="platformSelect">
+                            <option value="">所有平台</option>
+                            <!-- 动态生成的选项将插入到这里 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="labelSelect"><i class="fas fa-tag"></i> 标签</label>
+                        <select class="form-select" id="labelSelect">
+                            <option value="">所有标签</option>
+                            <option value="谣言">谣言</option>
+                            <option value="事实">事实</option>
+                            <option value="待验证">待验证</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="credibilityRange"><i class="fas fa-chart-line"></i> 可信度范围</label>
+                        <input type="text" class="form-control" id="credibilityRange" placeholder="0-1">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="propagationPlatformSelect"><i class="fas fa-share-alt"></i> 传播平台</label>
+                        <select class="form-select" id="propagationPlatformSelect">
+                            <option value="">所有传播平台</option>
+                            <option value="快手">快手</option>
+                            <option value="今日头条">今日头条</option>
+                            <option value="微博">微博</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="dateRange"><i class="fas fa-calendar-alt"></i> 发布时间范围</label>
+                        <input type="text" class="form-control" id="dateRange" placeholder="选择日期范围" readonly>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="perPageSelect"><i class="fas fa-list-ol"></i> 每页数量</label>
+                        <select class="form-select" id="perPageSelect">
+                            <option value="10">10条/页</option>
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label><i class="fas fa-bolt"></i> 自动应用</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="applyFiltersOnChange">
+                            <label class="form-check-label" for="applyFiltersOnChange">选择后自动应用</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新闻列表 -->
+        <div id="newsContainer"></div>
+
+        <!-- 分页 -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination" id="pagination"></ul>
+        </nav>
+
+        <!-- 加载提示 -->
+        <div class="loading" id="loading"><i class="fas fa-spinner"></i> 加载中...</div>
+    </div>
+
+    <script>
+        // 初始化参数
+        let currentPage = 1;
+        let totalPages = 1;
+        let perPage = 20;
+        let isLoading = false;
+
+        // 获取筛选参数
+        function getFilters() {
+            const searchQuery = document.getElementById('searchInput').value;
+            const platform = document.getElementById('platformSelect').value;
+            const label = document.getElementById('labelSelect').value;
+            const credibilityRange = document.getElementById('credibilityRange').value;
+            const [minCredibility, maxCredibility] = credibilityRange.split('-').map(Number);
+            const dateRange = document.getElementById('dateRange').value;
+            const [startDate, endDate] = dateRange.split(' - ');
+            const propagationPlatform = document.getElementById('propagationPlatformSelect').value;
+
+            return {
+                q: searchQuery,
+                platform: platform,
+                label: label,
+                min_credibility: minCredibility || 0,
+                max_credibility: maxCredibility || 100,
+                start_date: startDate,
+                end_date: endDate,
+                propagation_platform: propagationPlatform
+            };
+        }
+
+        // 加载数据
+        function loadPage(page) {
+            if (isLoading) return;
+
+            isLoading = true;
+            showLoading();
+
+            const filters = getFilters();
+            const queryParams = new URLSearchParams({
+                page: page,
+                per_page: perPage,
+                ...filters
+            });
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/list?${queryParams}`);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    renderNews(response.articles);
+                    updatePagination(response.pagination);
+                    hideLoading();
+                    isLoading = false;
+
+                    // 滚动到顶部
+                    if (page > 1) {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }
+                } else {
+                    hideLoading();
+                    isLoading = false;
+                    showError('加载数据失败，请稍后重试');
+                }
+            };
+
+            xhr.onerror = function () {
+                hideLoading();
+                isLoading = false;
+                showError('网络错误，请检查您的连接');
+            };
+
+            xhr.send();
+        }
+
+        // 渲染新闻列表
+        function renderNews(articles) {
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = '';
+
+            if (!articles || articles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-newspaper"></i>
+                        <h4>暂无数据</h4>
+                        <p>没有找到符合条件的新闻，请尝试调整筛选条件</p>
+                    </div>
+                `;
+                return;
+            }
+
+            articles.forEach(article => {
+                // 确定标签样式
+                let labelClass = '';
+                if (article.label === '谣言') {
+                    labelClass = 'label-rumor';
+                } else if (article.label === '事实') {
+                    labelClass = 'label-fact';
+                } else if (article.label === '待验证') {
+                    labelClass = 'label-unverified';
+                }
+
+                // 计算可信度条的宽度百分比
+                const credibilityPercent = article.credibility && article.credibility.score
+                    ? Math.min(Math.max(article.credibility.score * 100, 0), 100)
+                    : 0;
+
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.innerHTML = `
+                    <h5><a href="/news/${article.news_id}">${article.title ? article.title : '无标题'}</a></h5>
+                    <p>${article.summary || '暂无摘要'}</p>
+                    <div class="news-meta">
+                        <div class="news-meta-item">
+                            <i class="fas fa-globe"></i>
+                            <span>平台：${article.platform || '未知'}</span>
+                        </div>
+                        <div class="news-meta-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>可信度：
+                                <div class="credibility-indicator">
+                                    <div class="credibility-bar" style="width: ${credibilityPercent}%"></div>
+                                </div>
+                                ${article.credibility ? article.credibility.score : '未知'}
+                            </span>
+                        </div>
+                        <div class="news-meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>发布日期：${article.publish_time || '未知'}</span>
+                        </div>
+                        <div class="news-meta-item">
+                            <i class="fas fa-tag"></i>
+                            <span>标签：<span class="label-tag ${labelClass}">${article.label || '未分类'}</span></span>
+                        </div>
+                        <div class="news-meta-item">
+                            <i class="fas fa-hashtag"></i>
+                            <span>类别：${article.hashtag ? article.hashtag : '无'}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 更新分页控件
+        function updatePagination(pagination) {
+            const paginationEl = document.getElementById('pagination');
+            paginationEl.innerHTML = '';
+
+            // 上一页
+            paginationEl.appendChild(createPageItem('<i class="fas fa-chevron-left"></i>',
+                pagination.current_page > 1 ? pagination.current_page - 1 : 1,
+                pagination.current_page === 1));
+
+            // 页码
+            const startPage = Math.max(1, pagination.current_page - 2);
+            const endPage = Math.min(pagination.total_pages, pagination.current_page + 2);
+
+            // 如果起始页不是1，显示第一页和省略号
+            if (startPage > 1) {
+                paginationEl.appendChild(createPageItem('1', 1));
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('li');
+                    ellipsis.className = 'page-item disabled';
+                    ellipsis.innerHTML = '<span class="page-link">...</span>';
+                    paginationEl.appendChild(ellipsis);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationEl.appendChild(createPageItem(i, i, i === pagination.current_page));
+            }
+
+            // 如果结束页不是最后一页，显示省略号和最后一页
+            if (endPage < pagination.total_pages) {
+                if (endPage < pagination.total_pages - 1) {
+                    const ellipsis = document.createElement('li');
+                    ellipsis.className = 'page-item disabled';
+                    ellipsis.innerHTML = '<span class="page-link">...</span>';
+                    paginationEl.appendChild(ellipsis);
+                }
+                paginationEl.appendChild(createPageItem(pagination.total_pages, pagination.total_pages));
+            }
+
+            // 下一页
+            paginationEl.appendChild(createPageItem('<i class="fas fa-chevron-right"></i>',
+                pagination.current_page < pagination.total_pages ?
+                    pagination.current_page + 1 : pagination.total_pages,
+                pagination.current_page === pagination.total_pages));
+
+            // 更新总数
+            document.getElementById('totalCount').textContent =
+                `共 ${pagination.total_items} 条`;
+        }
+
+        function createPageItem(label, page, active = false, disabled = false) {
+            const li = document.createElement('li');
+            li.className = `page-item ${active ? 'active' : ''} ${disabled ? 'disabled' : ''}`;
+
+            const a = document.createElement('a');
+            a.className = 'page-link';
+            a.href = '#';
+            a.innerHTML = label;
+
+            if (!disabled) {
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    if (page !== currentPage && !isLoading) {
+                        currentPage = page;
+                        loadPage(page);
+                    }
+                };
+            }
+
+            li.appendChild(a);
+            return li;
+        }
+
+        // 工具函数
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            // 创建一个错误提示
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+            errorDiv.setAttribute('role', 'alert');
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            // 添加到页面顶部
+            const container = document.querySelector('.container');
+            container.insertBefore(errorDiv, container.firstChild);
+
+            // 5秒后自动消失
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+                setTimeout(() => errorDiv.remove(), 300);
+            }, 5000);
+        }
+
+        // 事件监听
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                loadPage(1);
+            }
+        });
+
+        // 重置筛选器
+        document.getElementById('resetFilters').addEventListener('click', function () {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('platformSelect').value = '';
+            document.getElementById('labelSelect').value = '';
+            document.getElementById('credibilityRange').value = '';
+            document.getElementById('dateRange').value = '';
+            document.getElementById('propagationPlatformSelect').value = '';
+            document.getElementById('perPageSelect').value = '20';
+            document.getElementById('applyFiltersOnChange').checked = false;
+            perPage = 20;
+            loadPage(1);
+        });
+
+        // 应用筛选器
+        document.getElementById('applyFilters').addEventListener('click', function () {
+            loadPage(1);
+        });
+
+        document.getElementById('perPageSelect').addEventListener('change', function () {
+            perPage = parseInt(this.value);
+            loadPage(1);
+        });
+
+        // 获取平台数据并生成选项
+        function loadPlatforms() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/platforms');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const platforms = JSON.parse(xhr.responseText);
+                    const platformSelect = document.getElementById('platformSelect');
+
+                    // 清空现有选项
+                    platformSelect.innerHTML = '<option value="">所有平台</option>';
+
+                    // 动态生成选项
+                    platforms.forEach(platform => {
+                        const option = document.createElement('option');
+                        option.value = platform;
+                        option.textContent = platform;
+                        platformSelect.appendChild(option);
+                    });
+                }
+            };
+
+            xhr.send();
+        }
+
+        // 初始化加载
+        loadPlatforms();
+        loadPage(1);
+    </script>
+
+    <!-- 添加Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 添加 jQuery 和 daterangepicker 相关JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script>
+        $(function () {
+            $('#dateRange').daterangepicker({
+                autoUpdateInput: false,
+                opens: 'left',
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    applyLabel: '确定',
+                    cancelLabel: '取消',
+                    fromLabel: '从',
+                    toLabel: '至',
+                    customRangeLabel: '自定义',
+                    weekLabel: 'W',
+                    daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                    monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                    firstDay: 1
+                },
+                ranges: {
+                    '今天': [moment(), moment()],
+                    '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    '最近7天': [moment().subtract(6, 'days'), moment()],
+                    '最近30天': [moment().subtract(29, 'days'), moment()],
+                    '本月': [moment().startOf('month'), moment().endOf('month')],
+                    '上个月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                }
+            });
+
+            $('#dateRange').on('apply.daterangepicker', function (ev, picker) {
+                $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+                // 应用筛选
+                if ($('#applyFiltersOnChange').prop('checked')) {
+                    loadPage(1);
+                }
+            });
+
+            $('#dateRange').on('cancel.daterangepicker', function (ev, picker) {
+                $(this).val('');
+            });
+        });
+    </script>
+</body>
+
+</html>

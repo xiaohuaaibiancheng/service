@@ -1,0 +1,665 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}AI生成内容检测 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式 */
+    body {
+        background: #202123;
+        color: #fff;
+    }
+
+    /* 确保导航栏可见 */
+    .navbar {
+        position: relative;
+        z-index: 1000;
+    }
+
+    /* 动态背景效果 */
+    .animated-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background: #202123;
+        overflow: hidden;
+    }
+
+    .floating-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
+        filter: blur(1px);
+    }
+
+    .grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 15s linear infinite;
+    }
+
+    @keyframes gridMove {
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            transform: translateY(50px);
+        }
+    }
+
+    /* Hero 区域样式 */
+    .hero-section {
+        position: relative;
+        min-height: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        text-align: center;
+        padding: 20px 0 10px;
+        overflow: hidden;
+        margin: 0;
+    }
+
+    .hero-content {
+        padding-top: 10px;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: #fff;
+        text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        max-width: 600px;
+        margin: 0 auto 0.5rem;
+    }
+
+    /* 板块选择按钮样式 */
+    .section-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin: 30px 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .section-button {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 15px 30px;
+        color: #fff;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 180px;
+        justify-content: center;
+    }
+
+    .section-button:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .section-button.active {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+    }
+
+    /* 内容区域样式 */
+    .section-content {
+        display: none;
+        animation: fadeIn 0.5s ease-out;
+        position: relative;
+        z-index: 2;
+    }
+
+    .section-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* 检测卡片样式 */
+    .detection-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 30px;
+        height: 100%;
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+    }
+
+    .detection-card:hover {
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .detection-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .detection-icon i {
+        font-size: 2rem;
+        color: #0A84FF;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 15px 0;
+    }
+
+    .feature-list li {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .feature-list li i {
+        color: #0A84FF;
+        margin-right: 10px;
+    }
+
+    .btn-detect {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 30px;
+        color: #fff;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 15px;
+    }
+
+    .btn-detect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(10, 132, 255, 0.3);
+        color: #fff;
+    }
+
+    /* 检测表单样式 */
+    .detection-form {
+        max-width: 800px;
+        margin: 20px auto;
+        display: none;
+    }
+
+    .detection-form.active {
+        display: block;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff !important;
+        padding: 12px;
+    }
+
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(10, 132, 255, 0.5);
+        box-shadow: 0 0 0 0.2rem rgba(10, 132, 255, 0.25);
+    }
+
+    .form-label {
+        color: #fff;
+        margin-bottom: 8px;
+    }
+
+    .detection-methods {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 30px 0;
+    }
+
+    .method-button {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        color: #fff;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 200px;
+    }
+
+    .method-button:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .method-button.active {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+    }
+
+    .method-button i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #0A84FF;
+    }
+
+    .method-button.active i {
+        color: #fff;
+    }
+
+    .method-button h4 {
+        margin: 10px 0;
+        font-size: 1.1rem;
+    }
+
+    .method-button p {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+    }
+
+    .result-container {
+        max-width: 600px;
+        margin: 20px auto;
+        text-align: center;
+    }
+
+    .probability-text {
+        font-size: 1.5rem;
+        margin-top: 20px;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        z-index: 1;
+        background: #202123;
+        padding: 20px;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 动态背景 -->
+<div class="animated-background">
+    <div class="floating-particles"></div>
+    <div class="grid-overlay"></div>
+</div>
+
+<!-- Hero 区域 -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">AI生成内容检测</h1>
+            <p class="hero-subtitle">专业的AI生成内容识别系统，支持文本和图片双重检测</p>
+        </div>
+    </div>
+</section>
+
+<!-- 板块选择按钮 -->
+<div class="container">
+    <div class="section-buttons">
+        <button class="section-button active" data-section="detection">
+            <i class="fas fa-robot"></i>AI检测
+        </button>
+        <button class="section-button" data-section="features">
+            <i class="fas fa-star"></i>技术优势
+        </button>
+        <button class="section-button" data-section="cases">
+            <i class="fas fa-clipboard-list"></i>最近案例
+        </button>
+        <button class="section-button" data-section="faq">
+            <i class="fas fa-question-circle"></i>常见问题
+        </button>
+    </div>
+
+    <!-- AI检测内容 -->
+    <div id="detection" class="section-content active">
+        <div class="detection-methods">
+            <div class="method-button" onclick="showDetectionForm('text')">
+                <i class="fas fa-file-alt"></i>
+                <h4>AI文本检测</h4>
+                <p>检测文本是否由AI生成</p>
+            </div>
+            <div class="method-button" onclick="showDetectionForm('image')">
+                <i class="fas fa-image"></i>
+                <h4>AI检测</h4>
+                <p>检测图片是否为AI制作</p>
+            </div>
+        </div>
+
+        <!-- 文本检测表单 -->
+        <div id="text-form" class="detection-form">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">AI文本检测</h3>
+                    <form>
+                        <div class="mb-4">
+                            <label class="form-label">输入文本内容</label>
+                            <textarea class="form-control" rows="6" placeholder="请输入或粘贴需要检测的文本内容"></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">开始检测</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="result-container">
+                <div class="chart-wrapper">
+                    <canvas id="probabilityChart"></canvas>
+                </div>
+                <div id="probabilityText" class="probability-text"></div>
+            </div>
+        </div>
+
+        <!-- 图片检测表单 -->
+        <div id="image-form" class="detection-form">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">AI图片检测</h3>
+                    <form>
+                        <div class="mb-4">
+                            <label class="form-label">上传图片文件</label>
+                            <input type="file" class="form-control" accept="image/*">
+                            <small class="text-muted d-block mt-2">支持JPEG、PNG等主流图片格式，单个文件大小不超过10MB</small>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">开始检测</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技术优势 -->
+    <div id="features" class="section-content">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="detection-card">
+                    <div class="detection-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>深度学习模型</h3>
+                    <p>采用最新的深度学习技术，包括BERT语言模型和CNN视觉识别</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="detection-card">
+                    <div class="detection-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>高准确率</h3>
+                    <p>文本检测准确率96%，视频检测准确率94%，持续优化提升</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="detection-card">
+                    <div class="detection-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <h3>实时更新</h3>
+                    <p>模型库持续更新，适应最新的AI生成技术特征</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近案例 -->
+    <div id="cases" class="section-content">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="detection-card">
+                    <h3>AI生成文本案例</h3>
+                    <p>某科技文章被检测为AI生成内容，置信度95%</p>
+                    <div class="mt-3">
+                        <small class="text-muted">检测时间：2024-02-20</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="detection-card">
+                    <h3>深度伪造视频案例</h3>
+                    <p>某网红视频被识别为AI换脸，置信度98%</p>
+                    <div class="mt-3">
+                        <small class="text-muted">检测时间：2024-02-19</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 常见问题 -->
+    <div id="faq" class="section-content">
+        <div class="detection-card">
+            <h3 class="mb-4">常见问题解答</h3>
+            <div class="mb-4">
+                <h5>支持检测哪些AI模型生成的内容？</h5>
+                <p>支持检测GPT系列、文心一言等主流AI模型生成的内容，覆盖面广泛。</p>
+            </div>
+            <div class="mb-4">
+                <h5>检测需要多长时间？</h5>
+                <p>文本检测通常在30秒内完成，视频检测根据长度可能需要1-3分钟。</p>
+            </div>
+            <div>
+                <h5>检测准确率如何？</h5>
+                <p>文本检测准确率96%以上，视频检测准确率94%以上，并持续优化更新。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="jsonTableContainer" class="container mt-4">
+    <h3>检测结果</h3>
+    <table id="jsonTable" class="table table-dark table-striped">
+        <thead>
+            <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // 板块切换功能
+        const sectionButtons = document.querySelectorAll('.section-button');
+        const sectionContents = document.querySelectorAll('.section-content');
+
+        sectionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 移除所有活动状态
+                sectionButtons.forEach(b => b.classList.remove('active'));
+                sectionContents.forEach(c => c.classList.remove('active'));
+
+                // 添加当前活动状态
+                button.classList.add('active');
+                const sectionId = button.getAttribute('data-section');
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 处理文本检测表单提交
+        const textForm = document.querySelector('#text-form form');
+        textForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const textArea = textForm.querySelector('textarea');
+            const textContent = textArea.value;
+
+            try {
+                const response = await fetch('/frontend/detect/ai_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text_content: textContent })
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    const probability = result.probability;
+                    updateProbabilityDisplay(probability);
+                } else {
+                    alert(`错误: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('错误:', error);
+                alert('检测过程中出现错误，请稍后重试。');
+            }
+        });
+
+        // 处理图片检测表单提交
+        const imageForm = document.querySelector('#image-form form');
+        imageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = imageForm.querySelector('input[type="file"]');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('请上传图片文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/frontend/detect/ai_image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    const probability = result.probability;
+                    updateProbabilityDisplay(probability);
+                } else {
+                    alert(`错误: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('错误:', error);
+                alert('检测过程中出现错误，请稍后重试。');
+            }
+        });
+    });
+
+    let chartInstance = null; // 用于存储图表实例
+
+    function updateProbabilityDisplay(probability) {
+        // 更新文字输出
+        const probabilityText = document.getElementById('probabilityText');
+        probabilityText.textContent = `AI生成的概率: ${(probability * 100).toFixed(2)}%`;
+
+        // 获取Canvas上下文
+        const ctx = document.getElementById('probabilityChart').getContext('2d');
+
+        // 如果已有图表实例，先销毁它
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        // 创建新的图表实例
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['AI生成', '非AI生成'],
+                datasets: [{
+                    data: [probability, 1 - probability],
+                    backgroundColor: ['#0A84FF', '#ccc'],
+                    borderColor: ['#0A84FF', '#ccc'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'AI生成概率'
+                    }
+                }
+            }
+        });
+    }
+
+    // 检测方式切换功能
+    function showDetectionForm(type) {
+        // 移除所有按钮的活动状态
+        document.querySelectorAll('.method-button').forEach(button => {
+            button.classList.remove('active');
+        });
+
+        // 隐藏所有表单
+        document.querySelectorAll('.detection-form').forEach(form => {
+            form.classList.remove('active');
+        });
+
+        // 添加当前按钮的活动状态
+        event.currentTarget.classList.add('active');
+
+        // 显示对应的表单
+        document.getElementById(`${type}-form`).classList.add('active');
+    }
+</script>
+{% endblock %}

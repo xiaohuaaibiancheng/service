@@ -1,0 +1,83 @@
+{
+  "news_id": "news_plf_20250225180427026959_umh01nn3_576cfe",
+  "publish_time": "2025/02/16",
+  "platform": "微博",
+  "txt_path": "../text/国务院原副总理邹家华同志逝世享年99岁.txt",
+  "img_path": [],
+  "check_time": "2025/02/25",
+  "label": "谣言",
+  "url": "",
+  "title": "国务院原副总理邹家华同志逝世享年99岁",
+  "content": "新华社北京2月17日电 中国共产党的优秀党员，久经考验的忠诚的共产主义战士，无产阶级革命家，我国经济建设战线、国防工业战线和社会主义法制建设的杰出领导人，中国共产党第十四届中央政治局委员，国务院原副总理，第九届全国人民代表大会常务委员会副委员长邹家华同志，因病于2025年2月16日23时42分在北京逝世，享年99岁。",
+  "pic_url": "",
+  "hashtag": "政治",
+  "summary": "新华社北京2月17日电 中国共产党的优秀党员，久经考验的忠诚的共产主义战士，无产阶级革命家，我国经济建设战线、国防工业战线和社会主义法制建设的杰出领导人，中国共产党第十四届中央政治局委员，国务院原副总理，第九届全国人民代表大会常务委员会副委员长邹家华同志，因病于2025年2月16日23时42分在北京逝世，享年99岁",
+  "credibility": {
+    "score": 0.57,
+    "dimension_scores": {
+      "source": 0.96,
+      "content": 0.96,
+      "logic": 0.81,
+      "propagation": 0.6
+    },
+    "verification": {
+      "crowdsource_progress": 7,
+      "expert_verified": null
+    }
+  },
+  "propagation": {
+    "timeline": [
+      {
+        "timestamp": "2025-02-25T18:04:27.023357",
+        "platform": "知乎",
+        "shares": 190,
+        "geo_distribution": {
+          "浙江": 24,
+          "广东": 38,
+          "海外": 59
+        }
+      },
+      {
+        "timestamp": "2025-02-25T18:04:27.023357",
+        "platform": "微博",
+        "shares": 413,
+        "geo_distribution": {
+          "浙江": 43,
+          "广东": 59,
+          "海外": 39
+        }
+      },
+      {
+        "timestamp": "2025-02-25T18:04:27.023357",
+        "platform": "抖音",
+        "shares": 135,
+        "geo_distribution": {
+          "浙江": 41,
+          "广东": 50,
+          "海外": 43
+        }
+      }
+    ],
+    "user_profile": {
+      "age_dist": {
+        "18-25": 39,
+        "26-35": 46,
+        "36-50": 13
+      },
+      "device_ratio": {
+        "Mobile": 75,
+        "PC": 20
+      }
+    }
+  },
+  "relations": {
+    "related_rumors": [
+      "谣言ID2"
+    ],
+    "knowledge_nodes": [
+      "量子计算"
+    ]
+  },
+  "iscredit": null,
+  "location": "北京"
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>众筹证据链可视化看板</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3f51b5;
+      --primary-light: #757de8;
+      --primary-dark: #002984;
+      --secondary: #ff4081;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --background: #f5f7fa;
+      --card-bg: #ffffff;
+      --border-radius: 12px;
+      --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background-color: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 2rem 0;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-top: 0.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 2rem;
+      align-items: center;
+    }
+
+    .search-container {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .search-container i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    input,
+    select {
+      padding: 12px 12px 12px 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      transition: var(--transition);
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+
+    select {
+      padding-left: 12px;
+      cursor: pointer;
+      background-color: white;
+      min-width: 150px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      font-family: 'Noto Sans SC', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    button.secondary {
+      background-color: white;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    button.secondary:hover {
+      background-color: rgba(63, 81, 181, 0.1);
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .evidence-item {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      padding: 1.5rem;
+      transition: var(--transition);
+      border-top: 4px solid var(--primary);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .evidence-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .evidence-item h3 {
+      color: var(--primary);
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .evidence-item p {
+      font-size: 1rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      flex-grow: 1;
+    }
+
+    .meta {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
+
+    .meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge {
+      background-color: rgba(63, 81, 181, 0.1);
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #e0e0e0;
+    }
+
+    .empty-state p {
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-group {
+        width: 100%;
+      }
+
+      button {
+        flex: 1;
+      }
+
+      .evidence-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <h1>众筹证据链可视化看板</h1>
+    <p>实时监控与分析众筹项目的证据数据</p>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="controls">
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search" placeholder="搜索证据内容...">
+        </div>
+        <select id="filter">
+          <option value="">所有类别</option>
+          <option value="聊天记录">聊天记录</option>
+          <option value="银行流水">银行流水</option>
+          <option value="视频证据">视频证据</option>
+        </select>
+        <div class="btn-group">
+          <button onclick="loadData()"><i class="fas fa-sync-alt"></i> 搜索</button>
+          <button onclick="exportData()" class="secondary"><i class="fas fa-download"></i> 导出CSV</button>
+        </div>
+      </div>
+
+      <div id="evidence-chain" class="evidence-grid"></div>
+
+      <div id="loading">
+        <div class="spinner"></div>
+        <span>证据链正在加载...</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 自动刷新时间（单位：毫秒）
+    const AUTO_REFRESH_INTERVAL = 30000; // 30秒
+
+    async function loadData() {
+      // 显示加载提示
+      const loadingElement = document.getElementById('loading');
+      loadingElement.style.display = 'flex';
+
+      try {
+        const search = document.getElementById('search').value;
+        const category = document.getElementById('filter').value;
+
+        const response = await fetch(`/api/evidence?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`);
+
+        if (!response.ok) throw new Error(`HTTP错误! 状态码: ${response.status}`);
+
+        const data = await response.json();
+        renderEvidence(data);
+      } catch (error) {
+        console.error('数据加载失败:', error);
+        loadingElement.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #d32f2f;"></i><span style="color: #d32f2f;">数据加载失败，请稍后重试！</span>';
+      } finally {
+        // 无论成功失败都保持显示2秒后隐藏
+        setTimeout(() => {
+          loadingElement.style.display = 'none';
+        }, 2000);
+      }
+    }
+
+    function renderEvidence(data) {
+      const container = document.getElementById('evidence-chain');
+      container.innerHTML = '';
+
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>未找到匹配的证据</p>
+          </div>
+        `;
+        return;
+      }
+
+      data.forEach(item => {
+        const elem = document.createElement('div');
+        elem.className = 'evidence-item';
+
+        // 格式化日期
+        const date = new Date(item.timestamp);
+        const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+        // 根据类别选择图标
+        let categoryIcon = 'fa-file-alt';
+        if (item.category === '聊天记录') categoryIcon = 'fa-comments';
+        else if (item.category === '银行流水') categoryIcon = 'fa-money-bill-wave';
+        else if (item.category === '视频证据') categoryIcon = 'fa-video';
+
+        elem.innerHTML = `
+          <h3>${item.title}</h3>
+          <p>${item.content}</p>
+          <div class="meta">
+            <span><i class="fas ${categoryIcon}"></i> <span class="badge">${item.category}</span></span>
+            <span><i class="fas fa-building"></i> ${item.source}</span>
+            <span><i class="fas fa-clock"></i> ${formattedDate}</span>
+          </div>
+        `;
+        container.appendChild(elem);
+      });
+    }
+
+    function exportData() {
+      // 暂停自动刷新
+      clearInterval(refreshInterval);
+
+      try {
+        const search = document.getElementById('search').value;
+        const category = document.getElementById('filter').value;
+
+        // 显示加载提示
+        const loadingElement = document.getElementById('loading');
+        loadingElement.style.display = 'flex';
+        loadingElement.innerHTML = '<div class="spinner"></div><span>正在准备导出数据...</span>';
+
+        // 使用正确的导出端点
+        const exportUrl = `/export?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`;
+
+        // 创建一个隐藏的a标签来触发下载
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = exportUrl;
+        a.download = `众筹证据链_${new Date().toISOString().slice(0, 10)}.csv`;
+
+        // 触发下载
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        document.body.removeChild(a);
+
+        loadingElement.innerHTML = '<i class="fas fa-check-circle" style="color: #4caf50;"></i><span style="color: #4caf50;">导出成功!</span>';
+        setTimeout(() => {
+          loadingElement.style.display = 'none';
+        }, 2000);
+      } catch (error) {
+        console.error('导出失败:', error);
+        loadingElement.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #d32f2f;"></i><span style="color: #d32f2f;">导出失败，请稍后重试！</span>';
+        setTimeout(() => {
+          loadingElement.style.display = 'none';
+        }, 2000);
+      } finally {
+        // 导出完成后重新启动自动刷新
+        refreshInterval = setInterval(loadData, AUTO_REFRESH_INTERVAL);
+      }
+    }
+
+    // 添加输入框回车搜索功能
+    document.getElementById('search').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        loadData();
+      }
+    });
+
+    // 初始化加载并启动自动刷新
+    let refreshInterval;
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      refreshInterval = setInterval(loadData, AUTO_REFRESH_INTERVAL);
+    });
+
+    // 当用户进行交互时重置刷新计时器
+    ['input', 'change'].forEach(event => {
+      document.getElementById('search').addEventListener(event, () => {
+        clearInterval(refreshInterval);
+        refreshInterval = setInterval(loadData, AUTO_REFRESH_INTERVAL);
+      });
+      document.getElementById('filter').addEventListener(event, () => {
+        clearInterval(refreshInterval);
+        refreshInterval = setInterval(loadData, AUTO_REFRESH_INTERVAL);
+      });
+    });
+  </script>
+</body>
+
+</html>

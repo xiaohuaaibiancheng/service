@@ -1,0 +1,22 @@
+[
+    {
+        "img": "https://ai-bot.cn/wp-content/uploads/2023/03/copyleaks-icon.png",
+        "description": "Ai内容检测与分级",
+        "url": "https://copyleaks.com/"
+    },
+    {
+        "img": "https://ai-bot.cn/wp-content/uploads/2023/03/sapling-ai-icon.png",
+        "description": "Sapling.ai推出的免费在线Al内容检测工具",
+        "url": "https://sapling.ai/ai-content-detector"
+    },
+    {
+        "img": "https://ai-bot.cn/wp-content/uploads/2023/03/writecream-icon.png",
+        "description": "Vritecream推出的AI内容检测工具",
+        "url": "https://www.writecream.com/ai-content-detector/"
+    },
+    {
+        "img": "https://ai-bot.cn/wp-content/uploads/2023/03/writefull-icon.png",
+        "description": "在线检查文本是否由GPT-3或ChatGPT:生成",
+        "url": "https://x.writefull.com/gpt-detector"
+    }
+]

@@ -1,0 +1,113 @@
+.container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.main-content {
+  flex-grow: 1;
+}
+
+.news-card {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.credibility-bar {
+  height: 4px;
+  background: #eee;
+  margin-top: 10px;
+  position: relative;
+}
+
+.credibility-score {
+  position: absolute;
+  left: 0;
+  padding: 2px 5px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+.tags {
+  margin: 10px 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.trend-chart {
+  height: 60px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.collect-btn {
+  float: right;
+  padding: 5px 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.timeline {
+  margin: 20px 0;
+}
+
+.timeline-items {
+  position: relative;
+  height: 100px;
+}
+
+.timeline-item {
+  position: absolute;
+  width: 200px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.time {
+  display: block;
+  font-weight: bold;
+}
+
+/* 其他样式 */
+.progress-bar {
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #333;
+}

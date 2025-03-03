@@ -1,0 +1,528 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}分享的对话 - {{ title }} - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 全局样式 */
+  body {
+    background: #202123;
+    color: #fff;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* 确保导航栏可见 */
+  .navbar {
+    position: relative;
+    z-index: 1000;
+  }
+
+  /* 动态背景效果 */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: #202123;
+    overflow: hidden;
+  }
+
+  .floating-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
+    filter: blur(1px);
+  }
+
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 15s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(50px);
+    }
+  }
+
+  /* 聊天容器 */
+  .shared-chat-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: rgba(32, 33, 35, 0.7);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* 聊天头部 */
+  .shared-chat-header {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .shared-chat-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .shared-chat-title i {
+    margin-right: 10px;
+    color: #0A84FF;
+  }
+
+  .shared-chat-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .shared-chat-action-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .shared-chat-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* 聊天消息区域 */
+  .shared-chat-messages {
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  /* 消息样式 */
+  .message {
+    display: flex;
+    margin: 20px 0;
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+  }
+
+  .message-content {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .message-content:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .message-text {
+    padding: 8px 0;
+  }
+
+  .message-actions {
+    display: none;
+    margin-top: 10px;
+  }
+
+  .message:hover .message-actions {
+    display: flex;
+  }
+
+  .message-action-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+
+  .message-action-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  /* 输入区域 */
+  .shared-chat-input-container {
+    padding: 20px;
+    background: rgba(32, 33, 35, 0.7);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .shared-chat-input-wrapper {
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .shared-chat-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 15px;
+    font-size: 1rem;
+  }
+
+  .shared-chat-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+  }
+
+  .send-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    border: none;
+    border-radius: 10px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
+  }
+
+  .send-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  /* 只读提示 */
+  .readonly-notice {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    margin: 20px;
+    color: #ffc107;
+  }
+
+  /* 滚动条美化 */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 添加动态背景容器 -->
+<div class="animated-background">
+  <div class="floating-particles"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="shared-chat-container">
+  <!-- 聊天头部 -->
+  <div class="shared-chat-header">
+    <h1 class="shared-chat-title">
+      <i class="fas fa-share-alt"></i>
+      {{ title }}
+    </h1>
+    <div class="shared-chat-actions">
+      <button class="shared-chat-action-btn" onclick="copyShareLink()">
+        <i class="fas fa-copy"></i>
+        复制链接
+      </button>
+      <button class="shared-chat-action-btn" onclick="window.location.href='/ai_chat'">
+        <i class="fas fa-comment"></i>
+        开始新对话
+      </button>
+    </div>
+  </div>
+
+  <!-- 聊天消息区域 -->
+  <div class="shared-chat-messages" id="shared-chat-messages">
+    {% for msg in messages %}
+    <div class="message {% if msg.role == 'user' %}user-message{% else %}ai-message{% endif %}">
+      <div class="message-avatar {% if msg.role == 'user' %}user-avatar{% else %}ai-avatar{% endif %}">
+        <i class="fas {% if msg.role == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+      </div>
+      <div class="message-content">
+        <div class="message-text">{{ msg.content }}</div>
+        <div class="message-actions">
+          <button class="message-action-btn" onclick="copyMessage('{{ msg.content }}')">
+            <i class="fas fa-copy"></i> 复制
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if is_readonly %}
+  <!-- 只读提示 -->
+  <div class="readonly-notice">
+    <i class="fas fa-lock me-2"></i>
+    此对话为只读模式，您不能回复
+  </div>
+  {% else %}
+  <!-- 输入区域 -->
+  <div class="shared-chat-input-container">
+    <div class="typing-suggestions">
+      <small class="text-muted">
+        <i class="fas fa-lightbulb me-1"></i>
+        提示：按 Enter 发送，Shift + Enter 换行
+      </small>
+    </div>
+    <div class="shared-chat-input-wrapper">
+      <textarea class="shared-chat-input" id="shared-chat-input" placeholder="输入消息..." rows="1"
+        onkeydown="handleKeyDown(event)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendReply()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 当前分享ID
+  const shareId = "{{ share_id }}";
+  // 是否正在等待响应
+  let isWaiting = false;
+
+  // 页面加载时初始化
+  document.addEventListener('DOMContentLoaded', function () {
+    // 自动滚动到底部
+    const messagesContainer = document.getElementById('shared-chat-messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    {% if not is_readonly %}
+    // 自动调整输入框高度
+    const chatInput = document.getElementById('shared-chat-input');
+    chatInput.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+    {% endif %}
+  });
+
+  // 复制消息
+  function copyMessage(message) {
+    navigator.clipboard.writeText(message)
+      .then(() => {
+        alert('复制成功');
+      })
+      .catch(err => console.error('复制失败:', err));
+  }
+
+  // 复制分享链接
+  function copyShareLink() {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        alert('链接已复制到剪贴板');
+      })
+      .catch(err => console.error('复制失败:', err));
+  }
+
+  {% if not is_readonly %}
+  // 处理键盘事件
+  function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendReply();
+    }
+  }
+
+  // 发送回复
+  function sendReply() {
+    const input = document.getElementById('shared-chat-input');
+    const message = input.value.trim();
+
+    if (!message || isWaiting) return;
+
+    // 添加用户消息
+    const messagesContainer = document.getElementById('shared-chat-messages');
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.className = 'message user-message';
+    userMessageDiv.innerHTML = `
+            <div class="message-avatar user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-text">${message}</div>
+                <div class="message-actions">
+                    <button class="message-action-btn" onclick="copyMessage('${message.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-copy"></i> 复制
+                    </button>
+                </div>
+            </div>
+        `;
+    messagesContainer.appendChild(userMessageDiv);
+
+    // 清空输入框
+    input.value = '';
+    input.style.height = 'auto';
+
+    // 设置等待状态
+    isWaiting = true;
+    document.getElementById('send-btn').disabled = true;
+
+    // 添加AI思考中的消息
+    const thinkingDiv = document.createElement('div');
+    thinkingDiv.className = 'message ai-message';
+    thinkingDiv.id = 'thinking-message';
+    thinkingDiv.innerHTML = `
+            <div class="message-avatar ai-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-text">思考中<span class="thinking-dots">...</span></div>
+            </div>
+        `;
+    messagesContainer.appendChild(thinkingDiv);
+
+    // 滚动到底部
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // 动画思考中的点
+    let dots = 0;
+    const thinkingInterval = setInterval(() => {
+      dots = (dots + 1) % 4;
+      const dotsText = '.'.repeat(dots);
+      document.querySelector('.thinking-dots').textContent = dotsText;
+    }, 300);
+
+    // 发送请求
+    fetch(`/api/shared/${shareId}/reply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message })
+    })
+      .then(response => response.json())
+      .then(data => {
+        clearInterval(thinkingInterval);
+
+        if (data.status === 'success') {
+          // 移除思考中的消息
+          document.getElementById('thinking-message').remove();
+
+          // 添加AI回复
+          const aiMessageDiv = document.createElement('div');
+          aiMessageDiv.className = 'message ai-message';
+          aiMessageDiv.innerHTML = `
+                    <div class="message-avatar ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">${data.reply}</div>
+                        <div class="message-actions">
+                            <button class="message-action-btn" onclick="copyMessage('${data.reply.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-copy"></i> 复制
+                            </button>
+                        </div>
+                    </div>
+                `;
+          messagesContainer.appendChild(aiMessageDiv);
+
+          // 滚动到底部
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+          throw new Error(data.message || '发送消息失败');
+        }
+      })
+      .catch(error => {
+        clearInterval(thinkingInterval);
+        console.error('Error sending message:', error);
+        alert('发送消息失败: ' + error.message);
+        document.getElementById('thinking-message').remove();
+      })
+      .finally(() => {
+        isWaiting = false;
+        document.getElementById('send-btn').disabled = false;
+      });
+  }
+  {% endif %}
+</script>
+{% endblock %}

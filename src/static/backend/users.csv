@@ -1,0 +1,3 @@
+id,username,password_hash,created_at
+1,felix,$2b$12$YcPTckT8BmM9b9zASjutMecvu2qMTKi/yDyjD3Mu/nplvqAWq8716,2025-02-21T18:46:10.096113
+2,john,$2b$12$foilClegmLkL2uWqdyQNgezC3jUmL8IpGr2T.vxDOKCQCqtSll926,2025-02-21T18:57:57.497493

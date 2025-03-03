@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>虚假新闻检测测试</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+
+    h3 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: 500;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    #result-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    #result-modal h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .close {
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close:hover {
+      color: #3498db;
+    }
+
+    #result-content {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .question {
+      margin-bottom: 25px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h3>虚假新闻检测测试</h3>
+
+  <div class="container">
+    <form id="fake-news-test">
+      <!-- 问题1 -->
+      <div class="question">
+        <label for="question1">问题1：什么是虚假新闻？</label>
+        <select id="question1" name="question1">
+          <option value="option1">A: 真实的新闻报道</option>
+          <option value="option2">B: 不准确或误导性的新闻</option>
+          <option value="option3">C: 新闻记者的个人观点</option>
+          <option value="option4">D: 只在社交媒体上出现的新闻</option>
+        </select>
+      </div>
+      <!-- 问题2 -->
+      <div class="question">
+        <label for="question2">问题2：以下哪种特征是虚假新闻的常见表现？</label>
+        <select id="question2" name="question2">
+          <option value="option1">A: 提供多个可靠的信息来源</option>
+          <option value="option2">B: 标题与正文内容不符</option>
+          <option value="option3">C: 包含详细的数据和事实</option>
+          <option value="option4">D: 由知名媒体发布</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题3 -->
+        <label for="question3">问题3：如何有效识别虚假新闻？</label>
+        <select id="question3" name="question3">
+          <option value="option1">A: 只看新闻的标题</option>
+          <option value="option2">B: 查询多个可靠来源进行验证</option>
+          <option value="option3">C: 相信所有社交媒体上的信息</option>
+          <option value="option4">D: 转发给朋友确认</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题4 -->
+        <label for="question4">问题4：以下哪种类型的虚假新闻最为常见？</label>
+        <select id="question4" name="question4">
+          <option value="option1">A: 完全虚构的新闻</option>
+          <option value="option2">B: 部分虚构的新闻</option>
+          <option value="option3">C: 误导性标题</option>
+          <option value="option4">D: 真实新闻</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题5 -->
+        <label for="question5">问题5：在验证新闻真实性时，以下哪种工具最为可靠？</label>
+        <select id="question5" name="question5">
+          <option value="option1">A: 社交媒体上的热门帖子</option>
+          <option value="option2">B: 官方政府网站</option>
+          <option value="option3">C: 事实核查网站（如FactCheck.org）</option>
+          <option value="option4">D: 朋友的转发</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题6 -->
+        <label for="question6">问题6：虚假新闻可能对社会造成哪种影响？</label>
+        <select id="question6" name="question6">
+          <option value="option1">A: 提高公众的知情权</option>
+          <option value="option2">B: 引导公众对事件的误解</option>
+          <option value="option3">C: 增强社会的信任感</option>
+          <option value="option4">D: 以上都不是</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题7 -->
+        <label for="question7">问题7：以下哪种行为有助于防范虚假新闻？</label>
+        <select id="question7" name="question7">
+          <option value="option1">A: 定期分享未经验证的新闻</option>
+          <option value="option2">B: 在社交媒体上发布未经确认的信息</option>
+          <option value="option3">C: 学习辨别新闻的来源和内容</option>
+          <option value="option4">D: 相信所有媒体的报道</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题8 -->
+        <label for="question8">问题8：虚假新闻的主要目的是什么？</label>
+        <select id="question8" name="question8">
+          <option value="option1">A: 提供真实的信息</option>
+          <option value="option2">B: 误导公众以达到某种目的</option>
+          <option value="option3">C: 增强媒体的可信度</option>
+          <option value="option4">D: 提高新闻的阅读量</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题9 -->
+        <label for="question9">问题9：以下哪种新闻最不容易被识别为虚假新闻？</label>
+        <select id="question9" name="question9">
+          <option value="option1">A: 包含明显错误的新闻</option>
+          <option value="option2">B: 部分真实、部分虚构的新闻</option>
+          <option value="option3">C: 完全虚构的新闻</option>
+          <option value="option4">D: 真实的新闻报道</option>
+        </select>
+      </div>
+      <div class="question">
+        <!-- 问题10 -->
+        <label for="question10">问题10：识别虚假新闻时，以下哪种态度是最重要的？</label>
+        <select id="question10" name="question10">
+          <option value="option1">A: 过分相信自己的直觉</option>
+          <option value="option2">B: 主动质疑和核实信息</option>
+          <option value="option3">C: 只接受符合自己观点的信息</option>
+          <option value="option4">D: 从不怀疑任何新闻</option>
+        </select>
+      </div>
+      <!-- 其他问题以相同的格式重复 -->
+      <!-- ... -->
+
+      <!-- 提交按钮 -->
+      <button type="submit">提交答案</button>
+    </form>
+  </div>
+
+  <!-- 结果模态弹窗 -->
+  <div id="result-modal">
+    <h3>测试结果</h3>
+    <div id="result-content"></div>
+    <span class="close" onclick="closeModal()">×</span>
+  </div>
+
+  <script>
+    // 保持原有功能代码不变
+    document.getElementById('fake-news-test').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const answers = {};
+      const selects = document.querySelectorAll('select');
+      selects.forEach(select => {
+        answers[select.id] = select.value;
+      });
+
+      fetch('/submit_answer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(answers)
+      })
+        .then(response => response.json())
+        .then(data => {
+          const resultContent = `
+                    <p>您的得分: ${data.score}/${data.total_questions}</p>
+                    <p>正确率: ${data.accuracy}%</p>
+                    <p>评级: ${data.evaluation}</p>
+                `;
+          document.getElementById('result-content').innerHTML = resultContent;
+          showModal();
+        });
+    });
+
+    function showModal() {
+      document.getElementById('result-modal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('result-modal').style.display = 'none';
+    }
+
+    window.onclick = function (event) {
+      const modal = document.getElementById('result-modal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+
+</html>

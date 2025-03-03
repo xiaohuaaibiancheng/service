@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+
+    </style>
+    <style>
+        /* 反馈弹窗的样式 */
+        #feedbackModal .modal-content {
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #feedbackModal .modal-header {
+            background-color: #2e8f82;
+            color: white;
+        }
+
+        #feedbackModal .modal-title {
+            font-weight: 600;
+        }
+
+        #feedbackModal .close {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        #feedbackModal .modal-body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        #feedbackModal textarea {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        /* 投票弹窗的样式 */
+        #voteModal .modal-content {
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #voteModal .modal-header {
+            background-color: #3498db;
+            color: white;
+        }
+
+        #voteModal .modal-title {
+            font-weight: 600;
+        }
+
+        #voteModal .close {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        #voteModal .modal-body {
+            padding: 20px;
+            background-color: #f8f9fa;
+            text-align: center;
+        }
+
+        #voteModal .btn {
+            width: 100px;
+            margin: 0 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* 添加一个平滑的弹出效果 */
+        .modal {
+            transition: all 0.3s ease;
+        }
+
+        .modal-dialog {
+            transform: translateY(-30px);
+        }
+
+        .modal.show .modal-dialog {
+            transform: translateY(0);
+        }
+
+        body {
+            background-color: #f4f7fc;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: rgb(255, 255, 255);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-body {
+            padding: 25px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        h3 {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h5,
+        h6 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .news-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .progress-bar-custom {
+            height: 20px;
+            border-radius: 10px;
+            background-color: #f3f3f3;
+        }
+
+        .circle-progress {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 600;
+            background-color: #f8f9fa;
+            margin: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .circle-progress:hover {
+            transform: scale(1.05);
+        }
+
+        .related-news .card-body ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .related-news .card-body ul li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .related-news .card-body ul li:hover {
+            background-color: #f8f9fa;
+        }
+
+        .quick-links {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: rgb(255, 255, 255);
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            transition: all 0.3s;
+            width: 220px;
+        }
+
+        .quick-links.collapsed {
+            transform: translateX(calc(100% + 20px));
+        }
+
+        .quick-links-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background-color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: left;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            background-color: #2e8f82;
+            border: 1px solid rgba(66, 136, 109, 0.05);
+        }
+
+        .btn-primary:hover {
+            background-color: #3498db;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .auth-status {
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .auth-status.authentic {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .auth-status.unauthentic {
+            background-color: #f5e9e9;
+            color: #c62828;
+        }
+
+        .auth-icon {
+            margin-right: 5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .checkmark path {
+            stroke: #2e7d32;
+        }
+
+        .cross path {
+            stroke: #c62828;
+        }
+
+        .auth-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .progress {
+            background: rgb(91, 202, 54);
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #4da1ff, #4dabf7);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-text {
+            color: rgb(158, 82, 82);
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 进度完成时的样式 */
+        .progress-bar[aria-valuenow="100"] {
+            background: linear-gradient(45deg, #4da1ff, #4dabf7);
+            position: relative;
+        }
+
+        .progress-bar[aria-valuenow="100"]::after {
+            content: "✓";
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4da1ff;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* 添加悬停效果 */
+        .progress-bar:hover {
+            transform: scale(1.02);
+            transition: transform 0.3s ease;
+        }
+
+        .fixed-action-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fixed-action-btn button {
+            background: rgb(28, 219, 130);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fixed-action-btn button:hover {
+            transform: scale(1.05);
+            background: #3498db;
+            color: white;
+        }
+
+        .fixed-action-btn button svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .fixed-action-btn button span {
+            font-size: 16px;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .quick-links {
+                width: 200px;
+            }
+        }
+    </style>
+    <!-- 返回按钮 -->
+    <style>
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button button {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button button:hover {
+            background-color: rgba(76, 175, 80, 1);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-button button:active {
+            background-color: rgba(76, 175, 80, 1);
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button button svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button button:hover svg {
+            transform: translateX(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 在页面的左上角添加返回按钮 -->
+    <div class="back-button">
+        <button onclick="history.back()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 11H7.83l5.58-5.58L12 4l-8 8 8 8 1.41-1.41-6.58-6.58 6.58-6.58z" />
+            </svg>
+            返回
+        </button>
+    </div>
+
+
+
+    <button class="quick-links-toggle" onclick="toggleQuickLinks()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 5h18M3 12h18M3 19h18" />
+        </svg>
+    </button>
+
+    <div class="quick-links" id="quickLinks">
+        <button class="btn btn-primary" onclick="scrollToSection('basic-info')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M2 12h20" />
+            </svg>
+            基本信息
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('credibility')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path
+                    d="M12 14l6.16-3.42a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path
+                    d="M12 14l-6.16-3.42a12.083 12.083 0 00-1.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 006.824-2.998 12.078 12.078 0 001.665-6.479L12 14z" />
+            </svg>
+            可信度
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('propagation-timeline')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            传播
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('geo-distribution')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12" y2="16" />
+            </svg>
+            地理
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('user-profile')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+            </svg>
+            用户
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('related-images')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            图片
+        </button>
+        <button class="btn btn-primary" onclick="scrollToSection('related-news')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                    d="M16 4v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.659 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0Z" />
+            </svg>
+            相关新闻
+        </button>
+        <!-- 在现有的按钮之后添加新的按钮 -->
+        <button class="btn btn-primary" onclick="scrollToSection('related-news')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            新闻关系节点
+        </button>
+
+    </div>
+
+    <div class="container mt-4">
+        <!-- 新闻基本信息 -->
+        <div class="card" id="basic-info">
+            <div class="card-body">
+                <h3 class="mb-4">{{ article.title }}</h3>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span class="font-weight-bold">平台：</span>
+                            <span class="text-muted">{{ article.platform }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between">
+                            <span class="font-weight-bold">发布时间：</span>
+                            <span class="text-muted">{{ article.publish_time }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">专家认证：</span>
+                            <div class="auth-status {{ 'authentic' if article.iscredit else 'unauthentic' }}">
+                                <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
+                                    <path class="checkmark" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <svg class="auth-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
+                                    <path class="cross" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6m-7.343 10h.01M6 6h12m-9.643 4L6 14m-1.5 4h8m-1.5-8L6 6m8 4h.01m-1.5 4h.01m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                <span class="auth-text">{{ '已认证' if article.iscredit else '未认证' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">众筹进度：</span>
+                            <div class="progress progress-bar-custom" style="height: 25px; width: 200px;">
+                                <div class="progress-bar bg-gradient" role="progressbar"
+                                    style="width: {{ article.credibility.verification.crowdsource_progress }}%"
+                                    aria-valuenow="{{ article.credibility.verification.crowdsource_progress }}"
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    <span class="progress-text">{{ article.credibility.verification.crowdsource_progress
+                                        }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h5 class="font-weight-bold mb-2">内容：</h5>
+                    <p class="text-muted">{{ article.content or '无' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 可信度评分 -->
+        <div class="card" id="credibility">
+            <div class="card-body">
+                <h5 class="mb-4">可信度评分: {{ article.credibility.score * 100 }}%</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="credibilityChart" class="w-100 h-300"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex flex-wrap justify-content-center">
+                            <div class="circle-progress bg-gradient-from-t to-t"
+                                style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+                                {{ article.credibility.dimension_scores.source }}%
+                                <small class="d-block text-white">来源</small>
+                            </div>
+                            <div class="circle-progress bg-gradient-from-t to-t"
+                                style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                                {{ article.credibility.dimension_scores.content }}%
+                                <small class="d-block text-white">内容</small>
+                            </div>
+                            <div class="circle-progress bg-gradient-from-t to-t"
+                                style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);">
+                                {{ article.credibility.dimension_scores.logic }}%
+                                <small class="d-block text-white">逻辑</small>
+                            </div>
+                            <div class="circle-progress bg-gradient-from-t to-t"
+                                style="background: linear-gradient(135deg, #9C27B0 0%, #8E24AA 100%);">
+                                {{ article.credibility.dimension_scores.propagation }}%
+                                <small class="d-block text-white">传播</small>
+                            </div>
+                            <div class="circle-progress bg-gradient-from-t to-t"
+                                style="background: linear-gradient(135deg, #ef542e 0%, #8E24AA 100%);">
+                                {{ article.credibility.dimension_scores.AI }}%
+                                <small class="d-block text-white">ai生成</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="propagation-timeline">
+            <div class="card-body">
+                <h6 class="mb-3">传播时间线</h6>
+                <div class="chart-container">
+                    <canvas id="propagationTimelineChart" class="w-100 h-300"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- 传播地理分布 -->
+        <div class="card" id="geo-distribution">
+            <div class="card-body">
+                <h6 class="mb-3">传播地理分布</h6>
+                <div class="chart-container">
+                    <canvas id="geoDistributionChart" class="w-100 h-300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户画像 -->
+        <div class="card" id="user-profile">
+            <div class="card-body">
+                <h6 class="mb-3">用户画像</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="chart-container">
+                            <h6 class="mb-2">年龄分布</h6>
+                            <canvas id="ageDistChart" class="w-100 h-200"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <h6 class="mb-2">设备分布</h6>
+                            <canvas id="deviceDistChart" class="w-100 h-200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 相关图片 -->
+        <div class="card" id="related-images">
+            <div class="card-body">
+                <h6 class="mb-3">相关图片</h6>
+                <div class="news-image">
+                    {% if article.pic_url %}
+                    <img src="{{ url_for('backend.proxy_image', url=article.pic_url) }}" alt="新闻图片"
+                        style="max-width: 100%; height: auto;" class="img-fluid rounded"
+                        onerror="this.style.display='none'; document.querySelector('#no-image').style.display = 'block';">
+                    {% endif %}
+                    <div id="no-image" style="display: none;">
+                        <p class="text-muted">无</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 相关新闻 -->
+        <div class="card related-news" id="related-news">
+            <div class="card-body">
+                <h6 class="mb-3">相关新闻</h6>
+                <div class="list-group">
+
+                    {% for related_news in article.relations.related_rumors %}
+                    <a href="/news/{{related_news}}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="font-weight-bold">{{ related_news }}</span>
+                            <small class="text-muted">相关新闻</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <!-- 新闻节点 -->
+        <!-- 新闻关系节点 -->
+        <div class="card related-news" id="related-news">
+            <div class="card-body">
+                <h6 class="mb-4">新闻关系节点</h6>
+                <div class="chart-container">
+                    <iframe src="{{ url_for('backend.graph') }}?elements={{ elements }}" frameborder="0" width="100%"
+                        height="600" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    <!-- 右下角互动区 -->
+    <div class="fixed-action-btn">
+        <div class="fixed-action-btn-container">
+            <div class="fixed-action-btn-list">
+                <button class="btn btn-primary" onclick="shareArticle()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                            d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3V5c0-.49-.04-.98-.12-1.08-2.63-.81-5.43-1.77-5.43-4.81 0-1.81.87-2.99 1.49-3.6.54.26 1.05.42 1.5.42 1.07 0 1.38-.45 1.38-1.04 0-.23.3-.46.46-.7.42-.72.81-1.08 1.52-1.49c-.28-.08-.52-.28-.52-.51-.01-.12-.02-.25-.02-.48 0-1.08.48-1.8 1.27-1.8.34-.21 1.16-.21 2.19.09.66.31 1.36.95 1.36 1.63 0 1.16-.91 2.92-2.92 3.92.02.13.05.24.05.24.15 0 .28-.06.4-.14.54.64-.14 1.08-.48 1.08-1.25 0-.54-.3-1.12-.87-1.81-.35-.33-.45-1.49.39-1.81.84-.36 1.38-.73 1.38-1.16 0-.74-.41-1.08-1.23-1.08-1.66 0-.17.47-.4.82-.4.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.48.02.13.05.24.05.24.21.07.4.27.4.92 2.92-3.08 3.92-3.08.92.65 1.79 1.62 2.15 2.15.54.56 1.27.82 2.15 1.82-1.15 1.4-2.55 1.4-2.55.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83.72.83 1.45 0 1.54-.84 1.52-1.6.84 1.4 2.45 1.4 2.45.45.37.83。"
+                            </svg>
+                            <span class="font-weight-bold ml-2">分享</span>
+                </button>
+                <button class="btn btn-primary" onclick="openFeedback()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 6v6m0 0v6m0-6h6m-6 0-6-6" />
+                    </svg>
+                    <span class="font-weight-bold ml-2">反馈</span>
+                </button>
+                <button class="btn btn-primary" onclick="openVote()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <span class="font-weight-bold ml-2">投票</span>
+                </button>
+                <button class="btn btn-primary" onclick="addToFavorites()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                    <span class="font-weight-bold ml-2">收藏</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    <!-- 反馈弹窗 -->
+    <div id="feedbackModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">提交反馈</h5>
+                    <button type="button" class="close" onclick="closeFeedback()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="feedbackText" class="form-control" rows="5" placeholder="请输入您的反馈..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeFeedback()">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitFeedback()">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 投票弹窗 -->
+    <div id="voteModal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">请选择投票选项</h5>
+                    <button type="button" class="close" onclick="closeVote()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-around">
+                        <button id="agreeButton" class="btn btn-success" onclick="submitVote('agree')">赞同</button>
+                        <button id="disagreeButton" class="btn btn-danger" onclick="submitVote('disagree')">不赞同</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeVote()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleQuickLinks() {
+            const quickLinks = document.getElementById('quickLinks');
+            quickLinks.classList.toggle('collapsed');
+        }
+
+        function shareArticle() {
+            // 检查Web Share API是否可用
+            if (navigator.share) {
+                // 获取当前页面的标题和URL
+                const title = document.title;
+                const url = document.location.href;
+
+                // 使用Web Share API分享
+                navigator.share({
+                    title: title,
+                    url: url,
+                    text: `分享给你一个不错的文章：${title}`
+                })
+                    .then(() => {
+                        console.log('分享成功！');
+                    })
+                    .catch(error => {
+                        console.error('分享失败：', error);
+                    });
+            } else {
+                // 如果不支持Web Share API，提供一个回退方案
+                // 比如手动复制链接
+                const copyText = document.createElement('textarea');
+                copyText.value = document.location.href;
+                document.body.appendChild(copyText);
+                copyText.select();
+                document.execCommand('copy');
+                document.body.removeChild(copyText);
+
+                alert('链接已复制到剪贴板，你可以粘贴分享给好友！');
+            }
+        }
+
+
+    </script>
+
+    <script>
+        const credibilityScores = {{ article.credibility.dimension_scores | tojson }};
+        const geoDistribution = {{ article.propagation.timeline[0].geo_distribution | tojson }};
+        const ageDist = {{ article.propagation.user_profile.age_dist | tojson }};
+        const deviceDist = {{ article.propagation.user_profile.device_ratio | tojson }};
+
+        // 绘制可信度评分维度图
+        const ctx1 = document.getElementById('credibilityChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'radar',
+            data: {
+                labels: ['Source', 'Content', 'Logic', 'Propagation', 'ai'],
+                datasets: [{
+                    label: '可信度评分维度',
+                    data: [
+                        credibilityScores.source,
+                        credibilityScores.content,
+                        credibilityScores.logic,
+                        credibilityScores.propagation,
+                        credibilityScores.AI
+                    ],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: '#ff0000',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // 绘制传播地理分布图
+        const ctx2 = document.getElementById('geoDistributionChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(geoDistribution),
+                datasets: [{
+                    label: '传播地理分布',
+                    data: Object.values(geoDistribution),
+                    backgroundColor: ['#ff9999', '#66b3ff', '#99ff99'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // 绘制年龄分布图
+        const ctx3 = document.getElementById('ageDistChart').getContext('2d');
+        new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(ageDist),
+                datasets: [{
+                    label: '年龄分布',
+                    data: Object.values(ageDist),
+                    backgroundColor: ['#ff9999', '#66b3ff', '#99ff99'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // 绘制设备分布图
+        const ctx4 = document.getElementById('deviceDistChart').getContext('2d');
+        new Chart(ctx4, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(deviceDist),
+                datasets: [{
+                    label: '设备分布',
+                    data: Object.values(deviceDist),
+                    backgroundColor: ['#ff9999', '#66b3ff'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleQuickLinks() {
+            const quickLinks = document.getElementById('quickLinks');
+            quickLinks.classList.toggle('collapsed');
+        }
+    </script>
+    <script>
+        const propagationTimelineData = {{ article.propagation.timeline | tojson }};
+
+        // 提取时间线数据并格式化为图表需要的格式
+        const timestamps = propagationTimelineData.map(entry => entry.timestamp);
+        const shares = propagationTimelineData.map(entry => entry.shares);
+
+        // 绘制传播时间线图表
+        const ctx = document.getElementById('propagationTimelineChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps, // 时间戳作为X轴标签
+                datasets: [{
+                    label: '分享量',
+                    data: shares, // 分享量作为Y轴数据
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    fill: true,
+                    lineTension: 0.4, // 设置曲线平滑度
+                    pointRadius: 5,
+                    pointBackgroundColor: '#3498db'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'category', // X轴为类别型
+                        title: {
+                            display: true,
+                            text: '时间'
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10 // 最大显示10个标签
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '分享量'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                return '分享量: ' + tooltipItem.raw;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        var newsId = '{{ article.news_id }}';  // 将后端传递的news_id赋值给一个变量
+    </script>
+    <!-- 反馈js -->
+    <script>
+        // 打开反馈弹窗
+        function openFeedback() {
+            document.getElementById("feedbackModal").style.display = "block";
+        }
+
+        // 关闭反馈弹窗
+        function closeFeedback() {
+            document.getElementById("feedbackModal").style.display = "none";
+        }
+
+        // 提交反馈
+        function submitFeedback() {
+            const feedback = document.getElementById("feedbackText").value;
+
+            if (feedback.trim() === "") {
+                alert("反馈内容不能为空！");
+                return;
+            }
+
+            // 使用 Fetch API 将反馈内容发送到后端
+            fetch('/submit_feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ feedback: feedback, id: newsId }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert("反馈提交成功！");
+                    closeFeedback();  // 提交成功后关闭弹窗
+                })
+                .catch(error => {
+                    console.error("提交失败:", error);
+                    alert("反馈提交失败，请稍后再试！");
+                });
+        }
+    </script>
+    <!-- 投票js -->
+    <script>
+        // 打开投票弹窗
+        function openVote() {
+            document.getElementById("voteModal").style.display = "block";
+        }
+
+        // 关闭投票弹窗
+        function closeVote() {
+            document.getElementById("voteModal").style.display = "none";
+        }
+
+        // 提交投票
+        function submitVote(option) {
+            // 发送投票结果到后端
+            fetch('/submit_vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vote: option, id: newsId }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert("投票成功！");
+                    closeVote();  // 投票成功后关闭弹窗
+                })
+                .catch(error => {
+                    console.error("投票失败:", error);
+                    alert("投票失败，请稍后再试！");
+                });
+        }
+    </script>
+    <script>
+        <!-- 收藏 -->
+        function addToFavorites() {
+            const newsId = '{{ article.news_id }}';
+            const title = '{{ article.title }}';
+            const description = '{{ article.summary }}';
+            const date = '{{ article.publish_time }}';
+            const content = '{{ article.content }}';
+
+            fetch('/add_to_favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: newsId,
+                    title: title,
+                    description: description,
+                    date: date
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("已成功加入收藏！");
+                        // 更新按钮状态
+                        const favoriteButton = document.querySelector('.btn-primary[onclick="addToFavorites()"]');
+                        favoriteButton.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+    <span class="font-weight-bold ml-2">已收藏</span>
+    `;
+                        favoriteButton.disabled = true; // 禁用按钮
+                    } else {
+                        alert(data.message || "加入收藏失败，请稍后再试！");
+                    }
+                })
+                .catch(error => {
+                    console.error("加入收藏失败:", error);
+                    alert("加入收藏失败，请稍后再试！");
+                });
+        }
+    </script>
+
+</body>
+
+</html>

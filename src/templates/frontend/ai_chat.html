@@ -1,0 +1,1472 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}AI助手 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式 */
+    body {
+        background: #202123;
+        color: #fff;
+        min-height: 100vh;
+        position: relative;
+    }
+
+    /* 确保导航栏可见 */
+    .navbar {
+        position: relative;
+        z-index: 1000;
+    }
+
+
+    /* 动态背景效果 */
+    .animated-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background: #202123;
+        overflow: hidden;
+    }
+
+    .floating-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
+        filter: blur(1px);
+    }
+
+    .grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 15s linear infinite;
+    }
+
+    @keyframes gridMove {
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            transform: translateY(50px);
+        }
+    }
+
+    /* 整体布局 */
+    .chat-container {
+        display: flex;
+        height: calc(100vh - 150px);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 侧边栏样式 */
+    .chat-sidebar {
+        width: 260px;
+        background: rgba(32, 33, 35, 0.7);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: width 0.3s ease;
+        position: relative;
+        z-index: 2;
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-sidebar.collapsed {
+        width: 60px;
+    }
+
+    /* 新建聊天按钮 */
+    .new-chat-btn {
+        margin: 15px;
+        padding: 12px;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+        border-radius: 15px;
+        color: white;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .new-chat-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(10, 132, 255, 0.3);
+    }
+
+    .new-chat-btn i {
+        margin-right: 10px;
+    }
+
+    /* 聊天历史列表 */
+    .chat-history {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 10px;
+    }
+
+    .chat-item {
+        padding: 10px;
+        margin: 5px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-item:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-item.active {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    }
+
+    .chat-item i {
+        margin-right: 10px;
+        font-size: 14px;
+    }
+
+    .chat-item-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 聊天主区域 */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.02);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 聊天消息区域 */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    /* 欢迎页面 */
+    .welcome-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        color: #fff;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* 欢迎页面标题样式 */
+    .welcome-title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-title-icon {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
+    }
+
+    .welcome-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        color: #666;
+    }
+
+    .example-queries {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        width: 80%;
+        max-width: 800px;
+    }
+
+    .example-query {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 15px;
+        margin: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .example-query:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* 消息样式 */
+    .message {
+        display: flex;
+        margin: 20px;
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    }
+
+    .message-content {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message-content:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .message-text {
+        padding: 8px 0;
+    }
+
+    .message-actions {
+        display: none;
+        margin-top: 10px;
+    }
+
+    .message:hover .message-actions {
+        display: flex;
+    }
+
+    .message-action-btn {
+        background: transparent;
+        border: none;
+        color: #666;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-right: 10px;
+    }
+
+    .message-action-btn:hover {
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    /* 输入区域 */
+    .chat-input-container {
+        padding: 20px;
+        background: rgba(32, 33, 35, 0.7);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 2;
+    }
+
+    .chat-input-wrapper {
+        position: relative;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: #fff;
+        padding: 15px;
+        font-size: 1rem;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
+    }
+
+    .send-btn {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+        border-radius: 10px;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
+    }
+
+    .send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    /* 用户设置区域 */
+    .user-settings {
+        padding: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-settings-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: #fff;
+        padding: 10px;
+        margin: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .user-settings-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    /* 模态框样式 */
+    .modal-content {
+        background: #202123;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .chat-container {
+            flex-direction: column;
+        }
+
+        .chat-sidebar {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+        }
+
+        .example-queries {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* 隐藏帮助按钮 */
+    .btn-help {
+        display: none !important;
+    }
+
+    /* 在 extra_css 中添加 */
+    @keyframes typing {
+        from {
+            width: 0
+        }
+
+        to {
+            width: 100%
+        }
+    }
+
+    .typing-effect {
+        overflow: hidden;
+        white-space: nowrap;
+        animation: typing 2s steps(40, end);
+    }
+
+    /* 功能提示卡片悬浮效果 */
+    .feature-tips .row>div {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-tips .row>div:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 加载动画优化 */
+    .typing-indicator span {
+        animation: blink 1s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+
+        0%,
+        100% {
+            opacity: 0.2;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* 新增波纹效果 */
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple:after {
+        content: "";
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+        background-repeat: no-repeat;
+        background-position: 50%;
+        transform: scale(10, 10);
+        opacity: 0;
+        transition: transform .5s, opacity 1s;
+    }
+
+    .ripple:active:after {
+        transform: scale(0, 0);
+        opacity: .3;
+        transition: 0s;
+    }
+
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* 修改折叠按钮样式 */
+    .collapse-btn {
+        position: absolute;
+        right: -12px;
+        top: 20px;
+        width: 24px;
+        height: 24px;
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 50%;
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .collapse-btn:hover {
+        background: #f5f5f5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 修改折叠状态的样式 */
+    .chat-sidebar.collapsed {
+        width: 60px;
+    }
+
+    /* 优化图标旋转效果 */
+    .collapse-btn i {
+        transition: transform 0.3s ease;
+        font-size: 14px;
+    }
+
+    .chat-sidebar.collapsed .collapse-btn i {
+        transform: rotate(180deg);
+    }
+
+    /* 折叠时的内容调整 */
+    .chat-sidebar.collapsed .new-chat-btn {
+        padding: 12px 0;
+        justify-content: center;
+    }
+
+    .chat-sidebar.collapsed .chat-item {
+        padding: 10px 0;
+        justify-content: center;
+    }
+
+    .chat-sidebar.collapsed .user-settings-btn {
+        padding: 10px 0;
+        justify-content: center;
+    }
+
+    /* 修改表单控件样式 */
+    .form-control,
+    .form-select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(10, 132, 255, 0.5);
+        color: #fff;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 添加动态背景容器 -->
+<div class="animated-background">
+    <div class="floating-particles"></div>
+    <div class="grid-overlay"></div>
+</div>
+
+<div class="chat-container">
+    <!-- 侧边栏 -->
+    <div class="chat-sidebar" id="chatSidebar">
+        <!-- 添加折叠按钮 -->
+        <div class="collapse-btn" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+
+        <!-- 新建聊天按钮 -->
+        <button class="new-chat-btn" onclick="createNewChat()">
+            <i class="fas fa-plus"></i>
+            <span>新建聊天</span>
+        </button>
+
+        <!-- 聊天历史列表 -->
+        <div class="chat-history" id="chat-history">
+            <!-- 历史记录将通过JavaScript动态加载 -->
+        </div>
+
+        <!-- 用户设置 -->
+        <div class="user-settings">
+            <button class="user-settings-btn" onclick="showSettings()">
+                <i class="fas fa-cog"></i>
+                <span class="ms-2">设置</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 聊天主区域 -->
+    <div class="chat-main">
+        <!-- 聊天消息区域 -->
+        <div class="chat-messages" id="chat-messages">
+            <!-- 欢迎页面 -->
+            <div class="welcome-container" id="welcome-container">
+                <div class="welcome-title-container">
+                    <i class="fas fa-robot welcome-title-icon"></i>
+                    <h1 class="welcome-title">AI助手</h1>
+                </div>
+                <p class="welcome-subtitle">我可以帮助您分析新闻真实性，回答问题，提供建议</p>
+
+                <div class="example-queries">
+                    <div class="example-query" onclick="sendExampleQuery(this)">
+                        分析一下这条新闻的真实性：[粘贴新闻内容]
+                    </div>
+                    <div class="example-query" onclick="sendExampleQuery(this)">
+                        如何识别深度伪造视频？
+                    </div>
+                    <div class="example-query" onclick="sendExampleQuery(this)">
+                        帮我总结一下这篇文章：[粘贴文章内容]
+                    </div>
+                    <div class="example-query" onclick="sendExampleQuery(this)">
+                        什么是虚假新闻的常见特征？
+                    </div>
+                </div>
+            </div>
+
+            <!-- 消息将通过JavaScript动态加载 -->
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="chat-input-container">
+            <div class="typing-suggestions">
+                <small class="text-muted">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    提示：按 Enter 发送，Shift + Enter 换行
+                </small>
+            </div>
+            <div class="chat-input-wrapper">
+                <textarea class="chat-input" id="chat-input" placeholder="输入消息..." rows="1"
+                    onkeydown="handleKeyDown(event)"></textarea>
+                <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加功能提示悬浮卡片 -->
+<div class="feature-tooltip" id="featureTooltip">
+    <div class="tooltip-content">
+        <h6><i class="fas fa-star me-2"></i>功能亮点</h6>
+        <ul class="list-unstyled">
+            <li><i class="fas fa-check me-2"></i>实时AI对话</li>
+            <li><i class="fas fa-check me-2"></i>新闻真伪检测</li>
+            <li><i class="fas fa-check me-2"></i>深度新闻解读</li>
+            <li><i class="fas fa-check me-2"></i>多维度分析</li>
+        </ul>
+    </div>
+</div>
+
+<!-- 分享模态框 -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">分享对话</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">分享链接</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="share-link" readonly>
+                        <button class="btn btn-outline-primary" onclick="copyShareLink()">复制</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">分享选项</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="share-readonly">
+                        <label class="form-check-label" for="share-readonly">
+                            只读模式（接收者不能回复）
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="generateShareLink()">生成链接</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 设置模态框 -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">设置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">主题</label>
+                    <select class="form-select" id="theme-select">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                        <option value="system">跟随系统</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">字体大小</label>
+                    <select class="form-select" id="font-size-select">
+                        <option value="small">小</option>
+                        <option value="medium" selected>中</option>
+                        <option value="large">大</option>
+                    </select>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label">OpenAI API密钥</label>
+                    <input type="password" class="form-control" id="api-key-input" placeholder="输入您的OpenAI API密钥">
+                    <small class="text-muted">您的API密钥仅存储在本地会话中，不会被永久保存</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">API Base URL (可选)</label>
+                    <input type="text" class="form-control" id="base-url-input"
+                        placeholder="例如: https://api.openai.com/v1">
+                    <small class="text-muted">如果使用代理或自定义端点，请设置此项</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 当前聊天ID
+    let currentChatId = null;
+    // 消息列表
+    let messages = [];
+    // 是否正在等待响应
+    let isWaiting = false;
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', function () {
+        // 加载聊天历史
+        loadChatHistory();
+
+        // 自动调整输入框高度
+        const chatInput = document.getElementById('chat-input');
+        chatInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // 设置默认的API密钥和base_url
+        setDefaultApiSettings();
+    });
+
+    // 加载聊天历史
+    function loadChatHistory() {
+        fetch('/frontend/chat/list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const historyContainer = document.getElementById('chat-history');
+                    historyContainer.innerHTML = '';
+
+                    data.chats.forEach(chat => {
+                        const chatItem = document.createElement('div');
+                        chatItem.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+                        chatItem.dataset.id = chat.id;
+
+                        chatItem.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center w-100">
+                                <div class="d-flex align-items-center" style="flex: 1; overflow: hidden;">
+                                    <i class="fas fa-comment me-2"></i>
+                                    <div class="chat-item-title">${chat.title}</div>
+                                </div>
+                                <button class="btn btn-sm text-danger delete-chat-btn" 
+                                        onclick="event.stopPropagation(); deleteChat('${chat.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+
+                        chatItem.addEventListener('click', () => loadChat(chat.id));
+                        historyContainer.appendChild(chatItem);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading chat history:', error));
+    }
+
+    // 加载特定聊天
+    function loadChat(chatId) {
+        fetch(`/frontend/chat/${chatId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentChatId = chatId;
+                    messages = data.messages || [];
+
+                    // 更新UI
+                    document.getElementById('welcome-container').style.display = 'none';
+                    renderMessages();
+
+                    // 更新侧边栏选中状态
+                    document.querySelectorAll('.chat-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.dataset.id === chatId) {
+                            item.classList.add('active');
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading chat:', error));
+    }
+
+    // 创建新聊天
+    function createNewChat() {
+        fetch('/frontend/chat/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: '新对话' })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 切换到新聊天，但不删除当前聊天
+                    currentChatId = data.chat_id;
+                    messages = [{
+                        role: 'assistant',
+                        content: '您好！我是AI助手，很高兴为您服务。您可以询问我关于新闻真实性分析的任何问题。'
+                    }];
+
+                    // 更新UI
+                    document.getElementById('welcome-container').style.display = 'none';
+                    renderMessages();
+
+                    // 更新聊天历史
+                    loadChatHistory();
+
+                    // 更新侧边栏选中状态
+                    document.querySelectorAll('.chat-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                }
+            })
+            .catch(error => console.error('Error creating new chat:', error));
+    }
+
+    // 渲染消息
+    function renderMessages() {
+        const messagesContainer = document.getElementById('chat-messages');
+        // 保留欢迎容器
+        const welcomeContainer = document.getElementById('welcome-container');
+        messagesContainer.innerHTML = '';
+        messagesContainer.appendChild(welcomeContainer);
+
+        messages.forEach((msg, index) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar ${msg.role === 'user' ? 'user-avatar' : 'ai-avatar'}">
+                    <i class="fas ${msg.role === 'user' ? 'fa-user' : 'fa-robot'}"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">${msg.content}</div>
+                    <div class="message-actions">
+                        <button class="message-action-btn" onclick="copyMessage(${index})">
+                            <i class="fas fa-copy"></i> 复制
+                        </button>
+                        ${msg.role === 'assistant' ? `
+                        <button class="message-action-btn" onclick="shareMessage(${index})">
+                            <i class="fas fa-share"></i> 分享
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+        });
+
+        // 滚动到底部
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // 发送消息
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+
+        if (!message || isWaiting) return;
+
+        // 如果没有当前聊天，创建一个新的
+        if (!currentChatId) {
+            createNewChat();
+            return;
+        }
+
+        // 添加用户消息
+        messages.push({ role: 'user', content: message });
+        renderMessages();
+
+        // 清空输入框
+        input.value = '';
+        input.style.height = 'auto';
+
+        // 设置等待状态
+        isWaiting = true;
+        document.getElementById('send-btn').disabled = true;
+
+        // 添加AI思考中的消息
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.className = 'message ai-message';
+        thinkingDiv.id = 'thinking-message';
+        thinkingDiv.innerHTML = `
+            <div class="message-avatar ai-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-text">思考中<span class="thinking-dots">...</span></div>
+            </div>
+        `;
+        document.getElementById('chat-messages').appendChild(thinkingDiv);
+
+        // 动画思考中的点
+        let dots = 0;
+        const thinkingInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            const dotsText = '.'.repeat(dots);
+            document.querySelector('.thinking-dots').textContent = dotsText;
+        }, 300);
+
+        // 准备请求数据
+        const requestData = { message };
+
+        // 如果本地存储有API密钥和base_url，添加到请求中
+        const localApiKey = localStorage.getItem('api_key');
+        const localBaseUrl = localStorage.getItem('base_url');
+        if (localApiKey) {
+            requestData.api_key = localApiKey;
+        }
+        if (localBaseUrl) {
+            requestData.base_url = localBaseUrl;
+        }
+
+        // 发送请求
+        fetch(`/frontend/chat/${currentChatId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(thinkingInterval);
+
+                if (data.status === 'success') {
+                    // 移除思考中的消息
+                    document.getElementById('thinking-message').remove();
+
+                    // 添加AI回复
+                    messages.push({ role: 'assistant', content: data.reply });
+                    renderMessages();
+
+                    // 更新聊天历史（标题可能已更新）
+                    loadChatHistory();
+                } else {
+                    throw new Error(data.message || '发送消息失败');
+                }
+            })
+            .catch(error => {
+                clearInterval(thinkingInterval);
+                console.error('Error sending message:', error);
+                alert('发送消息失败: ' + error.message);
+                document.getElementById('thinking-message').remove();
+            })
+            .finally(() => {
+                isWaiting = false;
+                document.getElementById('send-btn').disabled = false;
+            });
+    }
+
+    // 处理键盘事件
+    function handleKeyDown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    // 发送示例查询
+    function sendExampleQuery(element) {
+        document.getElementById('chat-input').value = element.textContent.trim();
+        sendMessage();
+    }
+
+    // 复制消息
+    function copyMessage(index) {
+        const message = messages[index].content;
+        navigator.clipboard.writeText(message)
+            .then(() => {
+                // 显示复制成功提示
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-success';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            复制成功
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+
+                // 自动移除
+                toast.addEventListener('hidden.bs.toast', () => {
+                    toast.remove();
+                });
+            })
+            .catch(err => console.error('复制失败:', err));
+    }
+
+    // 分享消息
+    function shareMessage(index) {
+        const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+        shareModal.show();
+
+        // 存储当前要分享的消息索引
+        document.getElementById('shareModal').dataset.messageIndex = index;
+    }
+
+    // 生成分享链接
+    function generateShareLink() {
+        const modal = document.getElementById('shareModal');
+        const messageIndex = modal.dataset.messageIndex;
+        const isReadOnly = document.getElementById('share-readonly').checked;
+
+        // 调用分享API
+        fetch('/frontend/chat/share', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chat_id: currentChatId,
+                message_index: messageIndex ? parseInt(messageIndex) : null,
+                is_readonly: isReadOnly
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('share-link').value = window.location.origin + data.share_url;
+                } else {
+                    throw new Error(data.message || '生成分享链接失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating share link:', error);
+                alert('生成分享链接失败: ' + error.message);
+            });
+    }
+
+    // 复制分享链接
+    function copyShareLink() {
+        const linkInput = document.getElementById('share-link');
+        linkInput.select();
+        document.execCommand('copy');
+
+        // 显示复制成功提示
+        alert('链接已复制到剪贴板');
+    }
+
+    // 显示设置
+    function showSettings() {
+        const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+
+        // 获取当前设置
+        fetch('/frontend/chat/settings')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 显示当前设置（API密钥会被隐藏，只显示是否已设置）
+                    // 优先使用本地存储的值
+                    const localApiKey = localStorage.getItem('api_key');
+                    const localBaseUrl = localStorage.getItem('base_url');
+
+                    document.getElementById('api-key-input').value = localApiKey || data.api_key || 'sk-your-default-api-key';
+                    document.getElementById('base-url-input').value = localBaseUrl || data.base_url || 'https://api.chatanywhere.tech';
+                }
+            })
+            .catch(error => {
+                console.error('获取设置失败:', error);
+                // 如果获取失败，使用本地存储的值
+                const localApiKey = localStorage.getItem('api_key');
+                const localBaseUrl = localStorage.getItem('base_url');
+
+                if (localApiKey) {
+                    document.getElementById('api-key-input').value = localApiKey;
+                }
+                if (localBaseUrl) {
+                    document.getElementById('base-url-input').value = localBaseUrl;
+                }
+            });
+
+        settingsModal.show();
+    }
+
+    // 保存设置
+    function saveSettings() {
+        const theme = document.getElementById('theme-select').value;
+        const fontSize = document.getElementById('font-size-select').value;
+        const apiKey = document.getElementById('api-key-input').value;
+        const baseUrl = document.getElementById('base-url-input').value;
+
+        // 应用主题和字体设置
+        document.body.dataset.theme = theme;
+        document.body.dataset.fontSize = fontSize;
+
+        // 保存到本地存储
+        localStorage.setItem('chat-theme', theme);
+        localStorage.setItem('chat-font-size', fontSize);
+
+        // 关闭模态框
+        const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+        if (modal) {
+            modal.hide();
+        }
+
+        // 如果提供了API密钥或base_url，则发送到后端
+        if (apiKey || baseUrl) {
+            // 先保存到本地存储作为备份
+            localStorage.setItem('api_key', apiKey);
+            localStorage.setItem('base_url', baseUrl);
+
+            fetch('/frontend/chat/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    api_key: apiKey,
+                    base_url: baseUrl
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('保存设置失败，状态码:', response.status);
+                        // 如果是405错误，可能是路由问题，尝试使用本地存储的值
+                        if (response.status === 405) {
+                            alert('设置已保存到本地，但未能同步到服务器。这不会影响聊天功能。');
+                            return { status: 'success', message: '设置已保存到本地' };
+                        }
+                        throw new Error('网络响应不正确，状态码: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // 显示成功消息
+                        alert('设置已更新');
+                    } else {
+                        throw new Error(data.message || '更新设置失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating settings:', error);
+                    alert('更新设置失败: ' + error.message + '。但设置已保存到本地，聊天功能不受影响。');
+                });
+        }
+    }
+
+    // 删除聊天
+    function deleteChat(chatId) {
+        if (!confirm('确定要删除这个对话吗？此操作不可撤销。')) return;
+
+        fetch(`/frontend/chat/delete/${chatId}`, {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 如果删除的是当前聊天，清空消息
+                    if (chatId === currentChatId) {
+                        currentChatId = null;
+                        messages = [];
+                        document.getElementById('welcome-container').style.display = 'flex';
+                        renderMessages();
+                    }
+
+                    // 更新聊天历史
+                    loadChatHistory();
+                } else {
+                    throw new Error(data.message || '删除失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting chat:', error);
+                alert('删除失败: ' + error.message);
+            });
+    }
+
+    // 导出聊天
+    function exportChat(format = 'json') {
+        if (!currentChatId) return;
+
+        // 准备导出数据
+        const exportData = {
+            id: currentChatId,
+            messages: messages
+        };
+
+        let content, filename, type;
+
+        if (format === 'json') {
+            content = JSON.stringify(exportData, null, 2);
+            filename = `chat_${currentChatId.split('_')[1]}.json`;
+            type = 'application/json';
+        } else if (format === 'text') {
+            content = messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}: ${msg.content}`).join('\n\n');
+            filename = `chat_${currentChatId.split('_')[1]}.txt`;
+            type = 'text/plain';
+        } else if (format === 'html') {
+            content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>聊天记录</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        .message { margin-bottom: 20px; }
+                        .user { color: #1890ff; }
+                        .ai { color: #10a37f; }
+                    </style>
+                </head>
+                <body>
+                    <h1>聊天记录</h1>
+                    ${messages.map(msg => `
+                        <div class="message">
+                            <strong class="${msg.role === 'user' ? 'user' : 'ai'}">${msg.role === 'user' ? '用户' : 'AI'}:</strong>
+                            <p>${msg.content}</p>
+                        </div>
+                    `).join('')}
+                </body>
+                </html>
+            `;
+            filename = `chat_${currentChatId.split('_')[1]}.html`;
+            type = 'text/html';
+        }
+
+        // 创建下载链接
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // 清理
+        URL.revokeObjectURL(url);
+    }
+
+    // 添加波纹效果
+    document.querySelectorAll('.ripple').forEach(button => {
+        button.addEventListener('click', function (e) {
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const circle = document.createElement('div');
+            circle.style.left = `${x}px`;
+            circle.style.top = `${y}px`;
+            circle.classList.add('ripple-effect');
+
+            button.appendChild(circle);
+            setTimeout(() => circle.remove(), 1000);
+        });
+    });
+
+    // 优化消息显示动画
+    function appendMessage(content, isUser) {
+        // ... 原有代码 ...
+
+        // 添加淡入动画
+        const message = document.createElement('div');
+        message.className = `message ${isUser ? 'user' : ''} fade-in`;
+
+        // 使用打字机效果显示内容
+        if (!isUser) {
+            let i = 0;
+            const typing = setInterval(() => {
+                if (i < content.length) {
+                    messageText.textContent += content[i];
+                    i++;
+                } else {
+                    clearInterval(typing);
+                }
+            }, 30);
+        } else {
+            messageText.textContent = content;
+        }
+    }
+
+    // 添加滚动动画
+    function smoothScroll(element, target, duration) {
+        const start = element.scrollTop;
+        const distance = target - start;
+        const startTime = performance.now();
+
+        function animation(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            element.scrollTop = start + distance * easeInOutQuad(progress);
+
+            if (progress < 1) {
+                requestAnimationFrame(animation);
+            }
+        }
+
+        requestAnimationFrame(animation);
+    }
+
+    function easeInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    // 侧边栏折叠控制
+    function toggleSidebar() {
+        const sidebar = document.getElementById('chatSidebar');
+        sidebar.classList.toggle('collapsed');
+
+        // 保存状态到本地存储
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+
+    // 页面加载时恢复侧边栏状态
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('chatSidebar');
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+        if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+        }
+    });
+
+    // 设置默认的API密钥和base_url
+    function setDefaultApiSettings() {
+        // 内置的API密钥和base_url
+        const defaultApiKey = "sk-GRq26cv5F72b4eS7I4VnBOGzDZK2sI5PT5fRSLuStEEHxnhC";
+        const defaultBaseUrl = "https://api.chatanywhere.tech";
+
+        // 将默认值设置到输入框中
+        document.getElementById('api-key-input').value = defaultApiKey;
+        document.getElementById('base-url-input').value = defaultBaseUrl;
+
+        // 保存到本地存储
+        localStorage.setItem('api_key', defaultApiKey);
+        localStorage.setItem('base_url', defaultBaseUrl);
+
+        // 发送到后端保存
+        fetch('/frontend/chat/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                api_key: defaultApiKey,
+                base_url: defaultBaseUrl
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('API设置请求失败，状态码:', response.status);
+                    throw new Error('API设置请求失败，状态码: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('默认API设置已加载');
+                } else {
+                    console.error('加载默认API设置失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('加载默认API设置出错:', error);
+                // 已经保存到本地存储，所以这里不需要额外操作
+                console.log('API设置已保存到本地存储');
+            });
+    }
+</script>
+{% endblock %}

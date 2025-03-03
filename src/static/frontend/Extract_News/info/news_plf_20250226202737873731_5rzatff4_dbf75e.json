@@ -1,0 +1,83 @@
+{
+  "news_id": "news_plf_20250226202737873731_5rzatff4_dbf75e",
+  "publish_time": "2025/02/26",
+  "platform": "微博",
+  "txt_path": "../text/未命名新闻.txt",
+  "img_path": [],
+  "check_time": "2025/02/26",
+  "label": "谣言",
+  "url": "",
+  "title": "未命名新闻",
+  "content": "",
+  "pic_url": "",
+  "hashtag": "其他",
+  "summary": "无法生成摘要：文本为空",
+  "credibility": {
+    "score": 0.68,
+    "dimension_scores": {
+      "source": 0.96,
+      "content": 0.85,
+      "logic": 0.88,
+      "propagation": 0.76
+    },
+    "verification": {
+      "crowdsource_progress": 8,
+      "expert_verified": null
+    }
+  },
+  "propagation": {
+    "timeline": [
+      {
+        "timestamp": "2025-02-26T20:27:37.871722",
+        "platform": "知乎",
+        "shares": 121,
+        "geo_distribution": {
+          "浙江": 42,
+          "广东": 53,
+          "海外": 62
+        }
+      },
+      {
+        "timestamp": "2025-02-26T20:27:37.871722",
+        "platform": "微博",
+        "shares": 1497,
+        "geo_distribution": {
+          "浙江": 27,
+          "广东": 46,
+          "海外": 37
+        }
+      },
+      {
+        "timestamp": "2025-02-26T20:27:37.871722",
+        "platform": "抖音",
+        "shares": 1110,
+        "geo_distribution": {
+          "浙江": 35,
+          "广东": 45,
+          "海外": 24
+        }
+      }
+    ],
+    "user_profile": {
+      "age_dist": {
+        "18-25": 44,
+        "26-35": 30,
+        "36-50": 16
+      },
+      "device_ratio": {
+        "Mobile": 71,
+        "PC": 25
+      }
+    }
+  },
+  "relations": {
+    "related_rumors": [
+      "谣言ID5"
+    ],
+    "knowledge_nodes": [
+      "区块链"
+    ]
+  },
+  "iscredit": null,
+  "location": ""
+}

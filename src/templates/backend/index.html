@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谣言检测平台 - 可信度可视化中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 将CSS样式分离到单独的样式块，提高可维护性 -->
+    <style>
+        /* 变量定义 */
+        :root {
+            --tech-blue: #1976D2;
+            --tech-blue-light: rgba(25, 118, 210, 0.1);
+            --graphite-gray: #2D3436;
+            --red: #FF4444;
+            --amber: #FFC107;
+            --green: #4CAF50;
+            --light-gray: #f5f7fa;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 6px 16px rgba(0, 0, 0, 0.3);
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-xl: 24px;
+            --transition-normal: all 0.3s ease;
+        }
+
+        /* 基础样式 */
+        body {
+            margin: 0;
+            font-family: "微软雅黑", "Segoe UI", Roboto, sans-serif;
+            background: var(--light-gray);
+            color: var(--graphite-gray);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 头部导航样式 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+            margin-right: 32px;
+        }
+
+        .nav-items {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-left: 32px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--graphite-gray);
+            text-decoration: none;
+            font-size: 16px;
+            transition: var(--transition-normal);
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .nav-item:hover {
+            color: var(--tech-blue);
+            background-color: var(--tech-blue-light);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+
+        /* 搜索栏样式 */
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 2px solid var(--tech-blue);
+            border-radius: var(--border-radius-xl);
+            font-size: 16px;
+            transition: var(--transition-normal);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--tech-blue);
+            box-shadow: 0 0 0 4px var(--tech-blue-light);
+        }
+
+        /* 搜索结果样式 */
+        #search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--white);
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            border-radius: var(--border-radius-sm);
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+
+        .search-result-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background-color: var(--light-gray);
+        }
+
+        .search-result-item a {
+            color: var(--graphite-gray);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: block;
+        }
+
+        .search-result-item a:hover {
+            color: var(--tech-blue);
+        }
+
+        #search-results div:last-child {
+            border-bottom: none;
+        }
+
+        /* 主内容区域样式 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            padding: 24px;
+            flex-grow: 1;
+            min-height: calc(100vh - 200px);
+        }
+
+        .card-container {
+            background: var(--white);
+            border-radius: var(--border-radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition-normal);
+        }
+
+        .card-container:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-container h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--tech-blue);
+            font-size: 20px;
+            border-bottom: 2px solid var(--light-gray);
+            padding-bottom: 10px;
+        }
+
+        /* 地图容器样式 */
+        .map-container {
+            width: 100%;
+            height: calc(100% - 40px);
+            position: relative;
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        #map-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* iframe 通用样式 */
+        iframe {
+            width: 100%;
+            height: calc(100% - 40px);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+        }
+
+        /* 加载动画样式 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: var(--border-radius-sm);
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--tech-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        .loading-text {
+            font-family: "微软雅黑", "Segoe UI", sans-serif;
+            color: var(--graphite-gray);
+            font-size: 14px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .map-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 5;
+            display: flex;
+            gap: 8px;
+        }
+
+        .map-control-btn {
+            background-color: var(--white);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            color: var(--tech-blue);
+            transition: var(--transition-normal);
+        }
+
+        .map-control-btn:hover {
+            background-color: var(--tech-blue-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 警报气泡样式 */
+        .alert-bubble {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--red);
+            color: var(--white);
+            padding: 16px 24px;
+            border-radius: var(--border-radius-lg);
+            animation: breath 1.5s infinite;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            transition: var(--transition-normal);
+        }
+
+        .alert-bubble:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes breath {
+            0% {
+                transform: translateY(0);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 0.9;
+            }
+        }
+
+        /* 媒体排行样式 */
+        .media-ranking {
+            display: flex;
+            overflow-x: auto;
+            padding: 16px 32px;
+            background: var(--white);
+            gap: 24px;
+            margin-top: 0;
+            border-top: 1px solid #eee;
+            position: sticky;
+            bottom: 0;
+            z-index: 50;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            scrollbar-width: thin;
+            scrollbar-color: var(--tech-blue) var(--light-gray);
+        }
+
+        .media-ranking::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .media-ranking::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+
+        .media-ranking::-webkit-scrollbar-thumb {
+            background-color: var(--tech-blue);
+            border-radius: 20px;
+        }
+
+        .media-item {
+            flex: 0 0 200px;
+            padding: 16px;
+            background: var(--white);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+        }
+
+        .media-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* AI助手弹窗样式 */
+        .ai-popup {
+            position: fixed;
+            bottom: 100px;
+            left: 40px;
+            background-color: var(--white);
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--border-radius-md);
+            display: none;
+            z-index: 1001;
+            min-width: 800px;
+            max-width: 900px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease-out;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        .ai-popup.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .ai-popup iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: var(--border-radius-md);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            font-size: 24px;
+            color: var(--graphite-gray);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .close-btn:hover {
+            color: var(--red);
+            background-color: rgba(0, 0, 0, 0.1);
+            transform: rotate(90deg);
+        }
+
+        /* 悬浮按钮样式 */
+        .floating-buttons {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .floating-btn {
+            background-color: var(--tech-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transform: translateY(100px);
+            transition: var(--transition-normal);
+            min-width: 160px;
+            height: 48px;
+        }
+
+        .floating-btn i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        .floating-btn:hover {
+            background-color: var(--green);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .dashboard {
+                gap: 16px;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .nav-items {
+                margin-left: 16px;
+                gap: 16px;
+                flex-wrap: wrap;
+            }
+
+            .search-bar {
+                order: 3;
+                max-width: 100%;
+                margin-top: 12px;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .card-container {
+                height: auto;
+                min-height: 400px;
+            }
+
+            .nav-items {
+                gap: 8px;
+            }
+
+            .nav-item {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+
+            .ai-popup {
+                min-width: 90%;
+                left: 5%;
+                right: 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <img src="../../static/backend/head.jpg" alt="平台LOGO" class="logo">
+
+        <div class="nav-items">
+            <a href="/" class="nav-item">
+                <i class="fas fa-home"></i> 前台
+            </a>
+            <a href="/rumor" class="nav-item">
+                <i class="fas fa-robot"></i> AI辟谣工坊
+            </a>
+            <a href="/edu" class="nav-item">
+                <i class="fas fa-shield-alt"></i> 虚假新闻判断教育中心
+            </a>
+            <a href="/tp" class="nav-item">
+                <i class="fas fa-concierge-bell"></i> 第三方服务
+            </a>
+            <a href="/logout" class="nav-item">
+                <i class="fas fa-user-times"></i> 退出
+            </a>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="search-input" placeholder="输入查询内容..." autocomplete="off">
+            <i class="fas fa-search" style="position: absolute; right: 16px; top: 12px; color: var(--tech-blue);"></i>
+            <div id="search-results"></div>
+        </div>
+
+        <a href="{{ url_for('backend.profile') }}" style="text-decoration: none; margin-left: 16px;">
+            <div class="user-center">
+                <i class="fas fa-user-circle" style="font-size: 32px; color: var(--tech-blue);"></i>
+            </div>
+        </a>
+    </header>
+
+    <main class="dashboard">
+        <div class="card-container">
+            <h2><i class="fas fa-map-marked-alt"></i> 热点地图</h2>
+            <div class="map-container">
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">地图数据加载中，首次加载可能需要较长时间...</div>
+                </div>
+                <div class="map-controls">
+                    <button class="map-control-btn" id="refreshMapBtn" title="刷新地图">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="map-control-btn" id="fullscreenMapBtn" title="全屏查看">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                <iframe id="map-iframe" data-src="/map" frameborder="0" scrolling="no" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div class="card-container">
+            <h2><i class="fas fa-chart-bar"></i> 数据统计</h2>
+            <iframe src="/statistic" frameborder="0"></iframe>
+        </div>
+
+        <div class="card-container">
+            <h2><i class="fas fa-fire"></i> 热点谣言推荐</h2>
+            <iframe src="/hotpot" frameborder="0"></iframe>
+        </div>
+
+        <div class="card-container">
+            <h2><i class="fas fa-clock"></i> 24小时传播TOP6</h2>
+            <iframe src="/dashboard" frameborder="0"></iframe>
+        </div>
+    </main>
+
+    <div class="alert-bubble" id="alert-bubble">
+        <h4><i class="fas fa-exclamation-triangle"></i> 重大谣言警报</h4>
+        <p>关于地震预测的不实信息</p>
+        <p id="countdown">剩余处置时间: 03:15</p>
+    </div>
+
+    <div class="ai-popup" id="ai-popup">
+        <button class="close-btn" id="close-btn">✖</button>
+        <iframe src="/ai_assistant" frameborder="0"></iframe>
+    </div>
+
+    <div class="floating-buttons">
+        <button class="floating-btn" id="history-btn">
+            <i class="fas fa-history"></i> 检测历史库
+        </button>
+        <button class="floating-btn" id="report-btn">
+            <i class="fas fa-flag"></i> 用户协作平台
+        </button>
+        <button class="floating-btn" id="ai-btn">
+            <i class="fas fa-robot"></i> AI助手
+        </button>
+    </div>
+
+    <footer class="media-ranking">
+        <div class="media-item">
+            <div class="name">新华社</div>
+            <div class="score" style="color: var(--green)">98.6</div>
+        </div>
+        <div class="media-item">
+            <div class="name">人民日报</div>
+            <div class="score" style="color: var(--green)">97.3</div>
+        </div>
+        <div class="media-item">
+            <div class="name">央视</div>
+            <div class="score" style="color: var(--green)">96.8</div>
+        </div>
+        <div class="media-item">
+            <div class="name">中国日报</div>
+            <div class="score" style="color: var(--green)">96.2</div>
+        </div>
+        <div class="media-item">
+            <div class="name">光明日报</div>
+            <div class="score" style="color: var(--green)">95.9</div>
+        </div>
+        <div class="media-item">
+            <div class="name">经济日报</div>
+            <div class="score" style="color: var(--green)">95.5</div>
+        </div>
+        <div class="media-item">
+            <div class="name">京华时报</div>
+            <div class="score" style="color: var(--green)">94.8</div>
+        </div>
+        <div class="media-item">
+            <div class="name">法制日报</div>
+            <div class="score" style="color: var(--green)">94.5</div>
+        </div>
+        <div class="media-item">
+            <div class="name">环球网</div>
+            <div class="score" style="color: var(--green)">94.1</div>
+        </div>
+        <div class="media-item">
+            <div class="name">第一财经</div>
+            <div class="score" style="color: var(--green)">93.7</div>
+        </div>
+    </footer>
+
+    <!-- 优化JavaScript代码，提高性能和可维护性 -->
+    <script>
+        // DOM元素缓存
+        const elements = {
+            historyBtn: document.getElementById("history-btn"),
+            reportBtn: document.getElementById("report-btn"),
+            aiBtn: document.getElementById("ai-btn"),
+            aiPopup: document.getElementById("ai-popup"),
+            closeBtn: document.getElementById("close-btn"),
+            floatingButtons: document.querySelector('.floating-buttons'),
+            mapIframe: document.getElementById('map-iframe'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            searchInput: document.getElementById('search-input'),
+            searchResults: document.getElementById('search-results'),
+            alertBubble: document.getElementById('alert-bubble'),
+            countdown: document.getElementById('countdown'),
+            refreshMapBtn: document.getElementById('refreshMapBtn'),
+            fullscreenMapBtn: document.getElementById('fullscreenMapBtn')
+        };
+
+        // 初始化函数
+        function init() {
+            setupEventListeners();
+            setupFloatingButtons();
+            setupMapLoading();
+            setupSearchFunctionality();
+            setupAlertSystem();
+            setupMapControls();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            elements.historyBtn.addEventListener("click", () => window.location.href = "/list");
+            elements.reportBtn.addEventListener("click", () => window.location.href = "/report");
+            elements.aiBtn.addEventListener("click", showAiPopup);
+            elements.closeBtn.addEventListener("click", hideAiPopup);
+        }
+
+        // AI助手弹窗功能
+        function showAiPopup() {
+            elements.aiPopup.style.display = "block";
+            // 使用setTimeout确保过渡效果生效
+            setTimeout(() => {
+                elements.aiPopup.classList.add("show");
+            }, 10);
+        }
+
+        function hideAiPopup() {
+            elements.aiPopup.classList.remove("show");
+            // 等待过渡效果完成后隐藏
+            setTimeout(() => {
+                elements.aiPopup.style.display = "none";
+            }, 400);
+        }
+
+        // 悬浮按钮功能
+        function setupFloatingButtons() {
+            const buttons = document.querySelectorAll('.floating-btn');
+
+            elements.floatingButtons.addEventListener('mouseover', () => {
+                buttons.forEach((button, index) => {
+                    // 添加延迟，创建连锁动画效果
+                    setTimeout(() => {
+                        button.style.transform = 'translateY(0)';
+                        button.style.opacity = '1';
+                    }, index * 100);
+                });
+            });
+
+            elements.floatingButtons.addEventListener('mouseleave', () => {
+                buttons.forEach((button, index) => {
+                    // 添加延迟，创建连锁动画效果
+                    setTimeout(() => {
+                        button.style.transform = 'translateY(100px)';
+                        button.style.opacity = '0';
+                    }, (buttons.length - index - 1) * 100);
+                });
+            });
+        }
+
+        // 地图加载功能
+        function setupMapLoading() {
+            // 使用Intersection Observer延迟加载iframe
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // 当地图容器进入视口时才加载iframe
+                        const iframe = entry.target;
+                        const src = iframe.getAttribute('data-src');
+                        if (src) {
+                            // 设置一个短暂的延迟，让页面其他部分先加载完
+                            setTimeout(() => {
+                                iframe.setAttribute('src', src);
+                                iframe.onload = () => {
+                                    // 地图加载完成后，淡入显示并隐藏加载动画
+                                    iframe.style.opacity = '1';
+                                    elements.loadingOverlay.style.opacity = '0';
+                                    setTimeout(() => {
+                                        elements.loadingOverlay.style.display = 'none';
+                                    }, 500);
+                                };
+                            }, 300);
+                        }
+                        // 加载后取消观察
+                        observer.unobserve(iframe);
+                    }
+                });
+            }, {
+                threshold: 0.1 // 当10%的元素可见时触发
+            });
+
+            // 开始观察地图iframe
+            observer.observe(elements.mapIframe);
+        }
+
+        // 设置地图控制按钮
+        function setupMapControls() {
+            // 刷新地图按钮
+            if (elements.refreshMapBtn) {
+                elements.refreshMapBtn.addEventListener('click', () => {
+                    // 显示加载动画
+                    elements.loadingOverlay.style.display = 'flex';
+                    elements.loadingOverlay.style.opacity = '1';
+
+                    // 重新加载iframe
+                    const src = elements.mapIframe.getAttribute('src');
+                    elements.mapIframe.style.opacity = '0';
+
+                    setTimeout(() => {
+                        elements.mapIframe.setAttribute('src', src);
+                        elements.mapIframe.onload = () => {
+                            elements.mapIframe.style.opacity = '1';
+                            elements.loadingOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                elements.loadingOverlay.style.display = 'none';
+                            }, 500);
+                        };
+                    }, 300);
+                });
+            }
+
+            // 全屏按钮
+            if (elements.fullscreenMapBtn) {
+                elements.fullscreenMapBtn.addEventListener('click', () => {
+                    const mapContainer = elements.mapIframe.closest('.map-container');
+
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen()
+                            .then(() => {
+                                elements.fullscreenMapBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                                elements.fullscreenMapBtn.title = '全屏查看';
+                            })
+                            .catch(err => {
+                                console.error('退出全屏失败:', err);
+                            });
+                    } else {
+                        mapContainer.requestFullscreen()
+                            .then(() => {
+                                elements.fullscreenMapBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                                elements.fullscreenMapBtn.title = '退出全屏';
+                            })
+                            .catch(err => {
+                                console.error('进入全屏失败:', err);
+                            });
+                    }
+                });
+            }
+        }
+
+        // 搜索功能
+        function setupSearchFunctionality() {
+            let searchTimeout;
+
+            elements.searchInput.addEventListener('input', function () {
+                const query = this.value;
+
+                // 清除之前的超时
+                clearTimeout(searchTimeout);
+
+                // 清空结果容器
+                elements.searchResults.innerHTML = '';
+
+                if (query.length >= 1) {
+                    // 设置延迟，减少请求频率
+                    searchTimeout = setTimeout(() => {
+                        fetchSearchResults(query);
+                    }, 300);
+                }
+            });
+
+            // 点击其他地方关闭搜索结果
+            document.addEventListener('click', function (e) {
+                if (!elements.searchBar.contains(e.target)) {
+                    elements.searchResults.innerHTML = '';
+                }
+            });
+        }
+
+        // 获取搜索结果
+        function fetchSearchResults(query) {
+            fetch(`/search?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    elements.searchResults.innerHTML = '';
+
+                    if (data.length > 0) {
+                        data.forEach(result => {
+                            const resultElement = document.createElement('div');
+                            resultElement.classList.add('search-result-item');
+                            resultElement.innerHTML = `<a href="/news/${result.news_id}">${result.title}</a>`;
+                            elements.searchResults.appendChild(resultElement);
+                        });
+                    } else {
+                        elements.searchResults.innerHTML = '<div class="search-result-item">没有找到相关内容</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('搜索请求失败:', error);
+                    elements.searchResults.innerHTML = '<div class="search-result-item">搜索服务暂时不可用</div>';
+                });
+        }
+
+        // 警报系统
+        function setupAlertSystem() {
+            fetch('/api/active-alert')
+                .then(response => {
+                    if (!response.ok) {
+                        elements.alertBubble.style.display = 'none';
+                        throw new Error('无活跃警报');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const { id, remaining_time } = data;
+
+                    if (remaining_time <= 0) {
+                        elements.alertBubble.style.display = 'none';
+                        return;
+                    }
+
+                    // 存储alert ID到元素属性
+                    elements.alertBubble.dataset.alertId = id;
+
+                    // 点击事件处理
+                    elements.alertBubble.addEventListener('click', function () {
+                        const alertId = this.dataset.alertId;
+                        fetch(`/api/alerts/${alertId}/resolve`, {
+                            method: 'POST'
+                        })
+                            .then(() => {
+                                window.location.href = `/news/${alertId}`;
+                            })
+                            .catch(() => {
+                                window.location.href = `/news/${alertId}`;
+                            });
+                    });
+
+                    // 启动倒计时
+                    startCountdown(remaining_time);
+                })
+                .catch(() => {
+                    elements.alertBubble.style.display = 'none';
+                });
+        }
+
+        // 倒计时功能
+        function startCountdown(seconds) {
+            let timeLeft = seconds;
+
+            const timer = setInterval(() => {
+                timeLeft = Math.max(timeLeft - 1, 0);
+
+                // 更新显示时间
+                const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                const secs = String(timeLeft % 60).padStart(2, '0');
+                elements.countdown.textContent = `剩余处置时间: ${mins}:${secs}`;
+
+                // 倒计时结束处理
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    elements.alertBubble.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

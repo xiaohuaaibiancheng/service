@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实时讨论区</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #3f51b5;
+      --primary-light: #757de8;
+      --primary-dark: #002984;
+      --secondary-color: #4caf50;
+      --secondary-light: #80e27e;
+      --secondary-dark: #087f23;
+      --background-color: #f5f7fa;
+      --card-color: #ffffff;
+      --text-color: #333333;
+      --text-secondary: #666666;
+      --border-radius: 16px;
+      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--background-color);
+      font-family: 'Noto Sans SC', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-color);
+      background-image: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      margin: 20px;
+      background-color: var(--card-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+
+    h2 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 2rem;
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      border-radius: 2px;
+    }
+
+    .chat-container {
+      height: 65vh;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      background-color: #f9fafc;
+      border: 1px solid #eaeef3;
+      scroll-behavior: smooth;
+    }
+
+    .chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    .message {
+      padding: 15px 20px;
+      border-radius: 18px;
+      margin-bottom: 20px;
+      max-width: 75%;
+      word-wrap: break-word;
+      position: relative;
+      transition: var(--transition);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      animation: messageAppear 0.3s ease-out forwards;
+    }
+
+    @keyframes messageAppear {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .left-message {
+      background-color: #fff;
+      margin-left: 15px;
+      border-top-left-radius: 4px;
+      align-self: flex-start;
+      border-left: 3px solid var(--primary-light);
+    }
+
+    .right-message {
+      background-color: var(--primary-light);
+      color: white;
+      margin-right: 15px;
+      border-top-right-radius: 4px;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .message-author {
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+    }
+
+    .left-message .message-author {
+      color: var(--primary-color);
+    }
+
+    .right-message .message-author {
+      color: #fff;
+    }
+
+    .message-author i {
+      margin-right: 8px;
+      font-size: 0.9em;
+    }
+
+    .message-time {
+      color: var(--text-secondary);
+      font-size: 0.8em;
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+
+    .right-message .message-time {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .message-content {
+      line-height: 1.6;
+      font-size: 1.05em;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      position: relative;
+      align-items: center;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 30px;
+      font-size: 1em;
+      transition: var(--transition);
+      outline: none;
+      background-color: #f9fafc;
+    }
+
+    #message-input:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px rgba(63, 81, 181, 0.1);
+    }
+
+    #message-input::placeholder {
+      color: #aaa;
+    }
+
+    .send-button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .send-button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+    }
+
+    .send-button:active {
+      transform: translateY(0);
+    }
+
+    .emoji-picker {
+      display: flex;
+      gap: 5px;
+      position: absolute;
+      right: 140px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .emoji-picker button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.4em;
+      transition: transform 0.2s ease;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .emoji-picker button:hover {
+      transform: scale(1.2);
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .message-status {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--secondary-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      animation: fadeIn 0.5s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .message-status .dot {
+      width: 10px;
+      height: 10px;
+      background-color: #fff;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-secondary);
+    }
+
+    .empty-state i {
+      font-size: 3em;
+      margin-bottom: 15px;
+      color: #ddd;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 10px 15px;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 20px;
+      margin-bottom: 15px;
+      width: fit-content;
+      font-size: 0.9em;
+      color: var(--text-secondary);
+    }
+
+    .typing-indicator span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: var(--text-secondary);
+      border-radius: 50%;
+      margin: 0 1px;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+      }
+
+      30% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+        border-radius: 12px;
+      }
+
+      h2 {
+        font-size: 1.6em;
+      }
+
+      .message {
+        max-width: 85%;
+        padding: 12px 15px;
+      }
+
+      .send-button {
+        padding: 12px 20px;
+      }
+
+      .emoji-picker {
+        position: static;
+        transform: none;
+        margin-top: 10px;
+        justify-content: center;
+      }
+
+      .input-area {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>实时讨论区</h2>
+    <div class="chat-container" id="chat-container">
+      <div class="empty-state" id="empty-state">
+        <i class="fas fa-comments"></i>
+        <p>暂无消息，开始聊天吧！</p>
+      </div>
+      <div class="typing-indicator" id="typing-indicator">
+        有人正在输入<span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="message-status">
+      <span class="dot"></span>
+      <span class="status">消息已发送</span>
+    </div>
+    <div class="input-area">
+      <input type="text" id="message-input" placeholder="输入你的消息...">
+      <div class="emoji-picker">
+        <button onclick="insertEmoji('😊')" title="微笑">😊</button>
+        <button onclick="insertEmoji('❤️')" title="爱心">❤️</button>
+        <button onclick="insertEmoji('👍')" title="赞">👍</button>
+        <button onclick="insertEmoji('🎉')" title="庆祝">🎉</button>
+      </div>
+      <button class="send-button" id="send-button">
+        <i class="fas fa-paper-plane"></i> 发送
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    // 加载消息历史
+    function getMessageHistory() {
+      const history = localStorage.getItem('messageHistory');
+      return history ? JSON.parse(history) : [];
+    }
+
+    // 保存消息到本地存储
+    function saveMessage(message) {
+      let history = getMessageHistory();
+      history.push(message);
+      localStorage.setItem('messageHistory', JSON.stringify(history));
+    }
+
+    // 初始化WebSocket连接
+    const socket = io();
+
+    // 显示消息状态
+    function showMessageStatus(message = "消息已发送") {
+      const status = document.querySelector('.message-status');
+      const statusText = document.querySelector('.message-status .status');
+      statusText.textContent = message;
+      status.style.display = 'flex';
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 3000);
+    }
+
+    // 插入表情符号
+    function insertEmoji(emoji) {
+      const input = document.getElementById('message-input');
+      input.value += emoji + ' ';
+      input.focus();
+    }
+
+    // 渲染消息
+    function renderMessage(message) {
+      const container = document.getElementById('chat-container');
+      const emptyState = document.getElementById('empty-state');
+
+      // 隐藏空状态提示
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${message.author === '系统' ? 'right-message' : 'left-message'}`;
+
+      const authorSpan = document.createElement('div');
+      authorSpan.className = 'message-author';
+
+      // 添加用户图标
+      const icon = document.createElement('i');
+      icon.className = message.author === '系统' ? 'fas fa-user-shield' : 'fas fa-user';
+      authorSpan.appendChild(icon);
+
+      const authorText = document.createTextNode(message.author);
+      authorSpan.appendChild(authorText);
+
+      const timeSpan = document.createElement('div');
+      timeSpan.className = 'message-time';
+      timeSpan.textContent = message.timestamp;
+
+      const contentSpan = document.createElement('div');
+      contentSpan.className = 'message-content';
+      contentSpan.textContent = message.content;
+
+      messageDiv.appendChild(authorSpan);
+      messageDiv.appendChild(timeSpan);
+      messageDiv.appendChild(contentSpan);
+
+      container.appendChild(messageDiv);
+
+      // 滚动到最新消息
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 加载历史消息
+    window.addEventListener('DOMContentLoaded', () => {
+      const history = getMessageHistory();
+      const emptyState = document.getElementById('empty-state');
+
+      if (history.length > 0) {
+        emptyState.style.display = 'none';
+        history.forEach(msg => renderMessage(msg));
+      }
+
+      // 添加回车键发送功能
+      document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('send-button').click();
+        }
+      });
+    });
+
+    // 监听新消息
+    socket.on('message_received', (msg) => {
+      renderMessage(msg);
+      saveMessage(msg);
+    });
+
+    // 模拟"正在输入"状态
+    socket.on('user_typing', () => {
+      const typingIndicator = document.getElementById('typing-indicator');
+      typingIndicator.style.display = 'block';
+
+      setTimeout(() => {
+        typingIndicator.style.display = 'none';
+      }, 3000);
+    });
+
+    // 发送消息
+    document.getElementById('send-button').addEventListener('click', () => {
+      const input = document.getElementById('message-input');
+      const content = input.value.trim();
+
+      if (content) {
+        input.value = '';
+
+        // 发送消息到服务器，不需要指定 author，后端会处理
+        socket.emit('new_message', { content: content });
+
+        // 显示发送状态
+        showMessageStatus();
+      }
+    });
+
+    // 自动滚动
+    window.addEventListener('resize', () => {
+      const container = document.getElementById('chat-container');
+      container.scrollTop = container.scrollHeight;
+    });
+  </script>
+</body>
+
+</html>

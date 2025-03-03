@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻传播路径图</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        #network-container {
+            width: 100%;
+            height: 600px;
+            margin: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+
+        .custom-tooltip {
+            position: absolute;
+            visibility: hidden;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+            line-height: 1.4;
+        }
+
+        .custom-tooltip h3 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .custom-tooltip div {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="network-container"></div>
+    <div id="node-tooltip" class="custom-tooltip"></div>
+
+    <script>
+        // 从Flask获取数据
+        fetch('/get_new_data')
+            .then(response => response.json())
+            .then(data => {
+                const nodes = new vis.DataSet(data.nodes);
+                const edges = new vis.DataSet(data.edges);
+
+                const container = document.getElementById("network-container");
+                const tooltip = document.getElementById("node-tooltip");
+
+                const options = {
+                    nodes: {
+                        shape: "dot",
+                        size: 30,
+                        font: {
+                            size: 14
+                        },
+                        borderWidth: 2,
+                        shadow: true,
+                        color: {
+                            background: "#6ab0de",
+                            border: "#4a8bc2",
+                            highlight: {
+                                background: "#ff5722",
+                                border: "#ff5722"
+                            }
+                        }
+                    },
+                    edges: {
+                        width: 2,
+                        smooth: true,
+                        arrows: "to",
+                        color: {
+                            color: "#999",
+                            highlight: "#ff5722"
+                        }
+                    },
+                    interaction: {
+                        hover: true,
+                        tooltipDelay: 0,
+                        dragNodes: true,
+                        dragView: true,
+                        zoomView: true
+                    },
+                    physics: {
+                        stabilization: true,
+                        barnesHut: {
+                            gravitationalConstant: -2000,
+                            springLength: 200,
+                            springConstant: 0.04
+                        }
+                    }
+                };
+
+                const network = new vis.Network(container, { nodes: nodes, edges: edges }, options);
+
+                // 鼠标移动事件处理
+                document.body.addEventListener("mousemove", function (e) {
+                    tooltip.style.left = e.pageX + 15 + "px";
+                    tooltip.style.top = e.pageY + 15 + "px";
+                });
+
+                // 节点悬停事件
+                network.on("hoverNode", function (params) {
+                    const node = nodes.get(params.node);
+                    if (node && node.tooltip) {
+                        tooltip.innerHTML = node.tooltip;
+                        tooltip.style.visibility = "visible";
+                        tooltip.style.transform = "scale(0.95)";
+                        setTimeout(() => {
+                            tooltip.style.transform = "scale(1)";
+                        }, 50);
+                    }
+                });
+
+                // 边悬停事件
+                network.on("hoverEdge", function (params) {
+                    const edge = edges.get(params.edge);
+                    if (edge && edge.tooltip) {
+                        tooltip.innerHTML = edge.tooltip;
+                        tooltip.style.visibility = "visible";
+                        tooltip.style.transform = "scale(0.95)";
+                        setTimeout(() => {
+                            tooltip.style.transform = "scale(1)";
+                        }, 50);
+                    }
+                });
+
+                network.on("blurNode", function () {
+                    tooltip.style.visibility = "hidden";
+                    tooltip.style.transform = "scale(0.95)";
+                });
+
+                network.on("blurEdge", function () {
+                    tooltip.style.visibility = "hidden";
+                    tooltip.style.transform = "scale(0.95)";
+                });
+            })
+            .catch(error => console.log('Error fetching data:', error));
+    </script>
+</body>
+
+</html>

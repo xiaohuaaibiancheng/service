@@ -1,0 +1,119 @@
+{
+    "felix": {
+        "favorites": [
+            {
+                "title": "成本只要1毛钱的人造鸡蛋泛滥",
+                "description": "无",
+                "date": "2023/1/31",
+                "id": "news_plf01A00004"
+            }
+        ],
+        "contributions": [
+            {
+                "time": "2025-02-24",
+                "type": "反馈",
+                "content": "不太对",
+                "new_id": "news_plf01A00001",
+                "status": "处理中",
+                "status_color": "warning"
+            },
+            {
+                "time": "2025-02-25",
+                "type": "投票",
+                "content": "agree",
+                "new_id": "news_plf01A00001",
+                "status": "处理中",
+                "status_color": "warning"
+            },
+            {
+                "time": "2025-02-25",
+                "type": "众筹验证",
+                "content": "123123",
+                "evidence_id": 6,
+                "status": "处理中",
+                "status_color": "warning"
+            }
+        ],
+        "achievement": {
+            "level": 3,
+            "progress": 65,
+            "badges": [
+                {
+                    "emoji": "🛡️",
+                    "name": "初级卫士",
+                    "description": "完成首次举报"
+                },
+                {
+                    "emoji": "🔍",
+                    "name": "真相猎人",
+                    "description": "参与5次验证"
+                },
+                {
+                    "emoji": "💰",
+                    "name": "众筹先锋",
+                    "description": "发起3次众筹"
+                },
+                {
+                    "emoji": "🔍",
+                    "name": "众筹先锋",
+                    "description": "发起3次众筹"
+                }
+            ]
+        },
+        "detection_history": {
+            "total_detections": 42,
+            "accuracy": 85.7,
+            "records": [
+                {
+                    "date": "2023-10-01",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 90
+                },
+                {
+                    "date": "2023-10-02",
+                    "result": "虚假",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 80
+                },
+                {
+                    "date": "2023-10-03",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95
+                }
+            ]
+        }
+    },
+    "john": {
+        "favorites": [
+            {
+                "title": "离婚窗口排长队",
+                "description": "无",
+                "date": "2023/2/2",
+                "id": "news_plf01A00001"
+            }
+        ],
+        "contributions": [
+            {
+                "time": "2025-02-25",
+                "type": "反馈",
+                "content": "有点假",
+                "new_id": "news_plf01A00001",
+                "status": "处理中",
+                "status_color": "warning"
+            },
+            {
+                "time": "2025-02-25",
+                "type": "投票",
+                "content": "disagree",
+                "new_id": "news_plf01A00001",
+                "status": "处理中",
+                "status_color": "warning"
+            }
+        ]
+    }
+}

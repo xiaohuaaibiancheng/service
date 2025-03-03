@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国事件热点地图</title>
+    <!-- 使用CDN加速，添加crossorigin属性提高加载效率 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js" crossorigin="anonymous"></script>
+    <!-- 预加载地图数据，减少等待时间 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js" as="script" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js" crossorigin="anonymous"></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #china-map {
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+        }
+
+
+
+
+
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="china-map"></div>
+
+    <script type="text/javascript">
+        // 性能优化：使用requestIdleCallback在浏览器空闲时初始化
+        const initMap = () => {
+            // 检查是否支持localStorage缓存
+            const supportsLocalStorage = (() => {
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            })();
+
+            // 初始化地图实例，使用渲染器参数提高性能
+            const myChart = echarts.init(document.getElementById('china-map'), null, {
+                renderer: 'canvas',
+                useDirtyRect: true // 使用脏矩形渲染提高性能
+            });
+
+            // 显示加载动画
+            myChart.showLoading({
+                text: '地图数据加载中...',
+                color: '#1976D2',
+                textColor: '#000',
+                maskColor: 'rgba(255, 255, 255, 0.8)',
+                zlevel: 0
+            });
+
+            // 定义标准省份列表（与ECharts地图匹配）
+            const allProvinces = [
+                '北京', '天津', '河北', '山西', '内蒙古', '辽宁', '吉林', '黑龙江',
+                '上海', '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南',
+                '湖北', '湖南', '广东', '广西', '海南', '重庆', '四川', '贵州',
+                '云南', '西藏', '陕西', '甘肃', '青海', '宁夏', '新疆', '香港',
+                '澳门', '台湾'
+            ];
+
+            // 检查缓存中是否有地图数据
+            let cachedMapData = null;
+            let cachedTimestamp = null;
+            const cacheKey = 'china_map_data';
+            const cacheTimeKey = 'china_map_timestamp';
+            const cacheExpiry = 30 * 60 * 1000; // 30分钟缓存过期
+
+            if (supportsLocalStorage) {
+                try {
+                    cachedTimestamp = localStorage.getItem(cacheTimeKey);
+                    if (cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < cacheExpiry) {
+                        cachedMapData = JSON.parse(localStorage.getItem(cacheKey));
+                    }
+                } catch (e) {
+                    console.warn('无法读取缓存数据', e);
+                    cachedMapData = null;
+                }
+            }
+
+            // 如果有缓存且未过期，直接使用缓存数据
+            if (cachedMapData) {
+                renderMap(cachedMapData.chinaGeoJson, cachedMapData.newsData);
+                hideLoading();
+            } else {
+                // 否则重新获取数据
+                // 使用Promise.all并行获取数据
+                Promise.all([
+                    fetch('/get_china_data').then(r => r.json()),
+                    fetch('/get_map_data').then(r => r.json())
+                ]).then(([chinaGeoJson, newsData]) => {
+                    // 缓存数据
+                    if (supportsLocalStorage) {
+                        try {
+                            localStorage.setItem(cacheKey, JSON.stringify({
+                                chinaGeoJson,
+                                newsData
+                            }));
+                            localStorage.setItem(cacheTimeKey, Date.now().toString());
+                        } catch (e) {
+                            console.warn('无法缓存数据', e);
+                        }
+                    }
+
+                    renderMap(chinaGeoJson, newsData);
+                    hideLoading();
+                }).catch(err => {
+                    console.error('获取地图数据失败', err);
+                    myChart.hideLoading();
+                    document.getElementById('china-map').innerHTML =
+                        '<div style="text-align:center;padding:20px;color:#f44336;">地图数据加载失败，请刷新页面重试</div>';
+                    hideLoading();
+                });
+            }
+
+            // 渲染地图的函数
+            function renderMap(chinaGeoJson, newsData) {
+                // 隐藏ECharts加载动画
+                myChart.hideLoading();
+
+                // 注册地图
+                echarts.registerMap('china', chinaGeoJson);
+
+                // 使用Web Worker进行数据处理（如果浏览器支持）
+                if (window.Worker) {
+                    const workerCode = `
+                        self.onmessage = function(e) {
+                            const { newsData, allProvinces } = e.data;
+                            
+                            // 统计各省事件数量
+                            const provinceStats = newsData.reduce((acc, item) => {
+                                const province = item.location?.replace(/省|市|自治区|特别行政区/g, '');
+                                if (province && allProvinces.includes(province)) {
+                                    acc[province] = (acc[province] || 0) + 1;
+                                }
+                                return acc;
+                            }, {});
+                            
+                            // 生成完整数据集
+                            const mapData = allProvinces.map(name => ({
+                                name,
+                                value: provinceStats[name] || 0
+                            }));
+                            
+                            self.postMessage({
+                                provinceStats,
+                                mapData
+                            });
+                        };
+                    `;
+
+                    const blob = new Blob([workerCode], { type: 'application/javascript' });
+                    const worker = new Worker(URL.createObjectURL(blob));
+
+                    worker.onmessage = function (e) {
+                        const { provinceStats, mapData } = e.data;
+                        setMapOption(provinceStats, mapData);
+                        worker.terminate();
+                    };
+
+                    worker.postMessage({ newsData, allProvinces });
+                } else {
+                    // 降级处理：在主线程中处理数据
+                    // 统计各省事件数量
+                    const provinceStats = newsData.reduce((acc, item) => {
+                        const province = item.location?.replace(/省|市|自治区|特别行政区/g, '');
+                        if (province && allProvinces.includes(province)) {
+                            acc[province] = (acc[province] || 0) + 1;
+                        }
+                        return acc;
+                    }, {});
+
+                    // 生成完整数据集
+                    const mapData = allProvinces.map(name => ({
+                        name,
+                        value: provinceStats[name] || 0
+                    }));
+
+                    setMapOption(provinceStats, mapData);
+                }
+            }
+
+            // 设置地图配置
+            function setMapOption(provinceStats, mapData) {
+                // 配置地图选项
+                const option = {
+                    backgroundColor: '#ffffff',
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: params => {
+                            const count = params.data?.value || 0;
+                            return `${params.name}<br/>事件数量：${count}`;
+                        },
+                        confine: true // 限制提示框在图表区域内
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: Math.max(...Object.values(provinceStats), 1),
+                        text: ['高', '低'],
+                        realtime: false,
+                        calculable: true,
+                        inRange: {
+                            color: ['#e0f2f1', '#004d40']
+                        },
+                        itemWidth: 10,
+                        itemHeight: 80,
+                        right: 10,
+                        bottom: 20,
+                        textStyle: {
+                            color: '#333'
+                        }
+                    },
+                    series: [{
+                        type: 'map',
+                        map: 'china',
+                        data: mapData,
+                        roam: true,
+                        zoom: 1.2,
+                        scaleLimit: {
+                            min: 1,
+                            max: 3
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                color: '#333',
+                                fontSize: 12
+                            },
+                            itemStyle: {
+                                areaColor: '#1976D2'
+                            }
+                        },
+                        itemStyle: {
+                            areaColor: '#f5f5f5',
+                            borderColor: '#ccc',
+                            borderWidth: 0.5
+                        },
+                        // 启用渐进渲染，提高性能
+                        progressive: 100,
+                        progressiveThreshold: 500
+                    }]
+                };
+
+                // 应用配置
+                myChart.setOption(option);
+            }
+
+            // 添加点击事件
+            myChart.on('click', function (params) {
+                var provinceName = params.name;
+                var url = '/province/' + provinceName;
+                window.parent.location.href = url;
+            });
+
+            // 添加窗口大小变化的响应式处理
+            window.addEventListener('resize', () => {
+                myChart.resize();
+            });
+        };
+
+        // 隐藏加载动画
+        function hideLoading() {
+            const loadingElement = document.getElementById('loading');
+            if (loadingElement) {
+                loadingElement.style.opacity = '0';
+                loadingElement.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // 使用requestIdleCallback或setTimeout在浏览器空闲时初始化地图
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(initMap);
+        } else {
+            setTimeout(initMap, 0);
+        }
+    </script>
+</body>
+
+</html>

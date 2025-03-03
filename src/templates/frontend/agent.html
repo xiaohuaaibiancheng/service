@@ -1,0 +1,365 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}新闻事实核查工具{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新闻事实核查工具</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0A84FF;
+      --secondary-color: #00C6FB;
+      --success-color: #22c55e;
+      --warning-color: #f59e0b;
+      --error-color: #ef4444;
+      --background-color: #202123;
+      --text-color: #fff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      font-weight: 600;
+      text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .form-group:hover {
+      transform: translateY(-2px);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background-color: #333;
+      color: #fff;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-1px);
+    }
+
+    .results {
+      margin-top: 2rem;
+    }
+
+    #progress {
+      padding: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .chart-container {
+      margin: 1.5rem 0;
+      padding: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-item {
+      margin: 1rem 0;
+      padding: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .result-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .result-item h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      font-size: 1.125rem;
+    }
+
+    .result-item p {
+      margin-bottom: 0.25rem;
+      color: #64748b;
+    }
+
+    .confidence {
+      color: #9ca3af;
+      font-size: 0.875rem;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      gap: 0.5rem;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .form-group {
+        padding: 1rem;
+      }
+    }
+
+    p.intro {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--text-color);
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1><i class="fas fa-search"></i> 新闻事实核查工具</h1>
+    <p class="intro">
+      本工具基于强大的搜索引擎和大型语言模型（LLM）技术，旨在帮助用户核查新闻的真实性和可信度。通过分析新闻标题、URL及发布日期，工具将提供一系列的数据分析结果和最终的事实判定，助您快速识别新闻是否为真实信息。
+    </p>
+    <form id="checkForm" class="fade-in">
+      <div class="form-group fade-in">
+        <label for="title"><i class="fas fa-heading"></i> 标题：</label>
+        <input type="text" id="title" name="title" required>
+      </div>
+      <div class="form-group fade-in">
+        <label for="url"><i class="fas fa-link"></i> URL：</label>
+        <input type="url" id="url" name="url" required>
+      </div>
+      <div class="form-group fade-in">
+        <label for="date"><i class="fas fa-calendar-alt"></i> 发布日期：</label>
+        <input type="date" id="date" name="date" required>
+      </div>
+      <button type="submit" class="fade-in"><i class="fas fa-search"></i> 开始核查</button>
+    </form>
+
+    <div class="results">
+      <div id="progress" class="fade-in"></div>
+      <div class="chart-container fade-in">
+        <canvas id="confidenceChart"></canvas>
+      </div>
+      <div class="chart-container fade-in">
+        <canvas id="finalVerdictChart"></canvas>
+      </div>
+      <div id="resultsList" class="fade-in"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('checkForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // 显示加载中提示
+      document.getElementById('progress').innerHTML = `
+    <i class="fas fa-spinner fa-spin"></i>
+    <span>正在进行事实核查...</span>
+  `;
+
+      try {
+        const response = await fetch('/agent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(data)
+        });
+
+        if (!response.ok) {
+          throw new Error('请求失败');
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          updateResultsDisplay(result);  // 更新页面显示
+          drawCharts(result.chart_data);  // 绘制图表
+        } else {
+          alert('事实核查失败，请检查输入是否正确。');
+        }
+      } catch (error) {
+        console.error('错误:', error);
+        alert('事实核查失败，请检查输入是否正确。');
+      }
+    });
+
+
+    function updateResultsDisplay(result) {
+      const resultsList = document.getElementById('resultsList');
+      resultsList.innerHTML = result.data.map(item => `
+        <div class="result-item fade-in">
+          <h4>${item.tool_type}</h4>
+          <p class="confidence">结果：${item.result}</p>
+          <p class="confidence">原因：${item.reason}</p>
+          <p class="confidence">置信度：${(item.confidence * 100).toFixed(2)}%</p>
+        </div>
+      `).join('');
+
+      document.getElementById('progress').innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>最终判定：${result.final_verdict}（置信度：${(result.confidence * 100).toFixed(2)}%）</span>
+      `;
+    }
+
+    function drawCharts(chartData) {
+      const ctx1 = document.getElementById('confidenceChart').getContext('2d');
+      new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: '置信度评分',
+            data: chartData.values,
+            backgroundColor: 'rgba(26, 115, 232, 0.5)',
+            borderColor: 'rgba(26, 115, 232, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 1
+            }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('finalVerdictChart').getContext('2d');
+      new Chart(ctx2, {
+        type: 'pie',
+        data: {
+          labels: ['判定结果'],
+          datasets: [{
+            data: [chartData.confidence],
+            backgroundColor: ['rgba(40, 167, 69, 0.5)'],
+            borderColor: ['rgba(40, 167, 69, 1)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: '最终判定'
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
+{% endblock %}

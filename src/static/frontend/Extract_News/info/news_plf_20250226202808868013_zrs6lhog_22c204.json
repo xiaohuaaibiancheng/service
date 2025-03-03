@@ -1,0 +1,83 @@
+{
+  "news_id": "news_plf_20250226202808868013_zrs6lhog_22c204",
+  "publish_time": "2025/02/26",
+  "platform": "百家号",
+  "txt_path": "../text/未命名新闻.txt",
+  "img_path": [],
+  "check_time": "2025/02/26",
+  "label": "真实",
+  "url": "",
+  "title": "未命名新闻",
+  "content": "",
+  "pic_url": "",
+  "hashtag": "其他",
+  "summary": "无法生成摘要：文本为空",
+  "credibility": {
+    "score": 0.71,
+    "dimension_scores": {
+      "source": 0.85,
+      "content": 0.7,
+      "logic": 0.92,
+      "propagation": 0.79
+    },
+    "verification": {
+      "crowdsource_progress": 8,
+      "expert_verified": null
+    }
+  },
+  "propagation": {
+    "timeline": [
+      {
+        "timestamp": "2025-02-26T20:28:08.866118",
+        "platform": "知乎",
+        "shares": 201,
+        "geo_distribution": {
+          "浙江": 31,
+          "广东": 39,
+          "海外": 44
+        }
+      },
+      {
+        "timestamp": "2025-02-26T20:28:08.866118",
+        "platform": "微博",
+        "shares": 1947,
+        "geo_distribution": {
+          "浙江": 28,
+          "广东": 44,
+          "海外": 76
+        }
+      },
+      {
+        "timestamp": "2025-02-26T20:28:08.866118",
+        "platform": "抖音",
+        "shares": 1109,
+        "geo_distribution": {
+          "浙江": 43,
+          "广东": 28,
+          "海外": 69
+        }
+      }
+    ],
+    "user_profile": {
+      "age_dist": {
+        "18-25": 33,
+        "26-35": 40,
+        "36-50": 18
+      },
+      "device_ratio": {
+        "Mobile": 83,
+        "PC": 11
+      }
+    }
+  },
+  "relations": {
+    "related_rumors": [
+      "谣言ID7"
+    ],
+    "knowledge_nodes": [
+      "量子计算"
+    ]
+  },
+  "iscredit": null,
+  "location": ""
+}

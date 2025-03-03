@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据统计</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+    }
+
+    .card-container {
+      max-width: 1000px;
+      height: 400px;
+      /* 增加高度以适应 2x2 布局 */
+      margin: 20px auto;
+      padding: 30px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #333333;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .data-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      /* 2列布局 */
+      grid-template-rows: repeat(2, 1fr);
+      /* 2行布局 */
+      gap: 20px;
+      /* 卡片之间的间距 */
+      height: 100%;
+      /* 占满父容器高度 */
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: 600;
+      color: #007BFF;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 1em;
+      color: #666666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card-container">
+    <div class="data-stats">
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.total_rumors }}</div>
+        <div class="stat-label">总谣言数量</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.handled_rumors }}</div>
+        <div class="stat-label">已处理谣言数量</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.handling_rate }}%</div>
+        <div class="stat-label">处置率</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ stats.avg_response_time }}小时</div>
+        <div class="stat-label">平均响应时间</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

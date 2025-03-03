@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 - 信息卫士</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #4895ef;
+      --accent-color: #4cc9f0;
+    }
+
+    body {
+      background: #f8f9fa;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    .container-main {
+      max-width: 1200px;
+      margin-top: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .nav-tabs {
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .nav-link {
+      color: #495057;
+      font-weight: 500;
+      border: none !important;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link.active {
+      color: var(--primary-color) !important;
+      background: transparent !important;
+    }
+
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary-color);
+      border-radius: 3px;
+    }
+
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(67, 97, 238, 0.15);
+    }
+
+    .badge-card {
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      color: white !important;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 4px;
+      background: #e9ecef;
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+      border-radius: 4px;
+    }
+
+    .table-hover tbody tr:hover {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .back-btn {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--secondary-color);
+      transform: translateX(-3px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container container-main">
+    <!-- 返回按钮 -->
+    <a href="/home" class="back-btn">
+      <i class="fas fa-chevron-left me-2"></i>返回首页
+    </a>
+
+    <h2 class="mb-4 fw-bold text-primary">个人中心</h2>
+
+    <!-- 导航标签 -->
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#favorites">
+          <i class="fas fa-bookmark me-2"></i>收藏夹
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#contributions">
+          <i class="fas fa-history me-2"></i>贡献记录
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#achievements">
+          <i class="fas fa-trophy me-2"></i>成就系统
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#detection-history">
+          <i class="fas fa-chart-line me-2"></i>检测历史
+        </a>
+      </li>
+    </ul>
+
+    <!-- 内容面板 -->
+    <div class="tab-content mt-4">
+      <!-- 收藏夹 -->
+      <div class="tab-pane fade show active" id="favorites">
+        <div class="row g-4">
+          {% if favorites %}
+          {% for item in favorites %}
+          <div class="col-lg-4 col-md-6" data-news-id="{{ item.id }}">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <i class="fas fa-file-alt fa-lg text-primary me-3"></i>
+                  <h5 class="card-title mb-0">{{ item.title }}</h5>
+                </div>
+                <p class="card-text text-muted">{{ item.description }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>{{ item.date }}
+                  </small>
+                  <div>
+                    <a href="/news/{{item.id}}" class="btn btn-sm btn-outline-primary me-2">
+                      <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeFromFavorites('{{ item.id }}')">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="col-12">
+            <div class="card text-center py-5">
+              <div class="card-body">
+                <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                <h5 class="text-muted">暂无收藏内容</h5>
+                <p class="text-muted mt-2">您还没有收藏任何内容，快去发现精彩信息吧！</p>
+                <a href="/list" class="btn btn-primary mt-3">
+                  <i class="fas fa-compass me-2"></i>去发现
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 贡献记录 -->
+      <div class="tab-pane fade" id="contributions">
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th><i class="fas fa-clock me-1"></i>时间</th>
+                    <th><i class="fas fa-tag me-1"></i>类型</th>
+                    <th><i class="fas fa-align-left me-1"></i>内容</th>
+                    <th><i class="fas fa-info-circle me-1"></i>状态</th>
+                    <th><i class="fas fa-text-height me-1"></i>新闻id</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if contributions %}
+                  {% for record in contributions %}
+                  <tr>
+                    <td>{{ record.time }}</td>
+                    <td>
+                      <span class="badge bg-primary-subtle text-primary">
+                        {{ record.type }}
+                      </span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 200px;">{{ record.content }}</td>
+                    <td>
+                      <span class="badge rounded-pill bg-{{ record.status_color }}">
+                        {{ record.status }}
+                      </span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 200px;">
+                      {% if record.new_id %}
+                      <a href="/news/{{ record.new_id }}">{{ record.new_id }}</a>
+                      {% else %}
+                      无
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="5">
+                      <div class="text-center py-5">
+                        <i class="fas fa-file-import fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">暂无贡献记录</p>
+                        <small class="text-muted">您的首次贡献将会出现在这里</small>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成就系统 -->
+      <div class="tab-pane fade" id="achievements">
+        <div class="row g-4">
+          {% if achievement %}
+          <!-- 等级卡片 -->
+          <div class="col-xl-3 col-md-6">
+            <div class="card badge-card border-0">
+              <div class="card-body text-center py-4">
+                <div class="achievement-emoji">🏅</div>
+                <h4 class="card-title mb-3">当前等级</h4>
+                <h2 class="display-5 mb-3">Lv. {{ achievement.level }}</h2>
+                <div class="progress">
+                  <div class="progress-bar" style="width: {{ achievement.progress }}%" role="progressbar"
+                    aria-valuenow="{{ achievement.progress }}" aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                </div>
+                <small class="opacity-75 mt-2 d-block">{{ achievement.progress }}% 进度</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- 徽章列表 -->
+          {% for badge in achievement.badges %}
+          <div class="col-xl-3 col-md-6">
+            <div class="card h-100">
+              <div class="card-body text-center py-4">
+                <div class="achievement-emoji">{{ badge.emoji }}</div>
+                <h4 class="card-title mb-3">{{ badge.name }}</h4>
+                <p class="text-muted mb-0">{{ badge.description }}</p>
+                <div class="mt-3">
+                  <small class="text-success">
+                    <i class="fas fa-award me-1"></i>
+                    获得时间：2023-08-15
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="col-12">
+            <div class="card text-center py-5">
+              <div class="card-body">
+                <i class="fas fa-medal fa-4x text-muted mb-4"></i>
+                <h5 class="text-muted">尚未获得成就</h5>
+                <p class="text-muted mt-2">通过参与社区贡献来解锁成就吧！</p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 检测历史 -->
+      <div class="tab-pane fade" id="detection-history">
+        <div class="row g-4">
+          <!-- 检测次数卡片 -->
+          <div class="col-md-6">
+            <div class="card h-100">
+              {% if detection_history%}
+              <div class="card-body">
+                <h5 class="card-title mb-3">
+                  <i class="fas fa-chart-bar me-2 text-primary"></i>检测次数
+                </h5>
+                <h2 class="display-5 mb-3">{{ detection_history.total_detections }}</h2>
+                <p class="text-muted mb-0">总检测次数</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 准确率卡片 -->
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title mb-3">
+                  <i class="fas fa-percent me-2 text-primary"></i>准确率
+                </h5>
+                <h2 class="display-5 mb-3">{{ detection_history.accuracy }}%</h2>
+                <p class="text-muted mb-0">平均准确率</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 检测历史表格 -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th><i class="fas fa-calendar-alt me-1"></i>日期</th>
+                        <th><i class="fas fa-check-circle me-1"></i>检测结果</th>
+                        <th><i class="fas fa-info-circle me-1"></i>状态</th>
+                        <th><i class="fas fa-percent me-1"></i>准确率</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      {% for record in detection_history.records %}
+                      <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.result }}</td>
+                        <td>
+                          <span class="badge rounded-pill bg-{{ record.status_color }}">
+                            {{ record.status }}
+                          </span>
+                        </td>
+                        <td>{{ record.accuracy }}%</td>
+                      </tr>
+                      {% endfor %}
+                      {% else %}
+                      <tr>
+                        <td colspan="4">
+                          <div class="text-center py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">暂无检测记录</p>
+                            <small class="text-muted">快去进行首次信息检测吧！</small>
+                          </div>
+                        </td>
+                      </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+  </div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function removeFromFavorites(newsId) {
+      if (!confirm("确定要移除这个收藏吗？")) return;
+
+      fetch('/remove_from_favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: newsId
+        }),
+      })
+        .then(response => {
+          if (!response.ok) throw new Error('网络响应异常');
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            const card = document.querySelector(`[data-news-id='${newsId}']`);
+            if (card) card.remove();
+            showToast('success', '已成功移除收藏！');
+          } else {
+            throw new Error(data.message);
+          }
+        })
+        .catch(error => {
+          console.error("移除收藏失败:", error);
+          showToast('error', error.message || "移除收藏失败，请稍后再试！");
+        });
+    }
+
+    function showToast(type, message) {
+      const toastContainer = document.querySelector('.toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type} border-0`;
+      toast.setAttribute('role', 'alert', 'aria-live', 'assertive', 'aria-atomic', 'true');
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      toastContainer.appendChild(toast);
+      new bootstrap.Toast(toast, { autohide: true, delay: 3000 }).show();
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+
+</html>

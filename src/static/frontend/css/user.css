@@ -1,0 +1,115 @@
+/* 用户中心基础样式 */
+.user-sidebar {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.user-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: block;
+}
+
+.user-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.user-menu li {
+    margin-bottom: 10px;
+}
+
+.user-menu a {
+    display: block;
+    padding: 10px 15px;
+    color: #333;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+/* 通知样式 */
+.notification-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+}
+
+.notification-item.unread {
+    background: #f0f7ff;
+}
+
+/* 收藏卡片样式 */
+.favorite-card {
+    transition: all 0.3s;
+}
+
+.favorite-card:hover {
+    transform: translateY(-5px);
+}
+
+/* 检测记录表格样式 */
+.table th {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    padding: 6px 10px;
+}
+
+.btn-sm {
+    margin: 0 2px;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+/* 检测记录样式 */
+.table-responsive {
+    margin: 0 -1px; /* 修复横向滚动条问题 */
+}
+
+.table th {
+    background-color: #f8f9fa;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    padding: 6px 10px;
+    font-weight: normal;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    margin: 0 2px;
+}
+
+.pagination {
+    margin-bottom: 0;
+}
+
+/* 筛选器样式 */
+.form-select, .form-control {
+    border-radius: 5px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .row > div {
+        margin-bottom: 10px;
+    }
+} 

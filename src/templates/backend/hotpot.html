@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>热点谣言推荐</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+    }
+
+    .card-container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 30px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #333333;
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .rumor-highlights {
+      display: flex;
+      flex-wrap: wrap;
+      /* 允许换行 */
+      gap: 20px;
+      /* 卡片之间的间距 */
+    }
+
+    .rumor-item {
+      flex: 1 1 calc(33.33% - 20px);
+      /* 每行3个，减去间距 */
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .rumor-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .rumor-item h3 {
+      font-size: 1.2em;
+      color: #007BFF;
+      margin-bottom: 10px;
+    }
+
+    .rumor-item p {
+      font-size: 0.9em;
+      color: #666666;
+    }
+
+    .rumor-item a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .rumor-item a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card-container">
+
+    <div class="rumor-highlights">
+      {% for rumor in hot_rumors %}
+      <div class="rumor-item">
+        <a href="/news/{{ rumor.news_id }}" target='_parent'>
+          <h3>{{ rumor.title }}</h3>
+          <p>来源：{{ rumor.platform }}</p>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+
+</html>

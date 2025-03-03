@@ -1,0 +1,275 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}联系我们 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 全局样式 */
+    body {
+        background: #202123;
+        color: #fff;
+        min-height: 100vh;
+        position: relative;
+    }
+
+    /* 确保导航栏可见 */
+    .navbar {
+        position: relative;
+        z-index: 1000;
+    }
+
+    /* 动态背景效果 */
+    .animated-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background: #202123;
+        overflow: hidden;
+    }
+
+    .floating-particles {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent, rgba(10,132,255,0.1));
+        filter: blur(1px);
+    }
+
+    .grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 15s linear infinite;
+    }
+
+    @keyframes gridMove {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(50px); }
+    }
+
+    /* 内容容器 */
+    .contact-container {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    /* 标题样式 */
+    .contact-title {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .contact-title h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(10,132,255,0.3);
+        margin-bottom: 20px;
+    }
+
+    /* 联系方式卡片 */
+    .contact-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-bottom: 50px;
+    }
+
+    .contact-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .contact-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255,255,255,0.08);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .contact-card i {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .contact-card h3 {
+        font-size: 1.2rem;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+
+    .contact-card p {
+        color: #ccc;
+        line-height: 1.6;
+    }
+
+    /* 联系表单样式 */
+    .contact-form {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 40px;
+        backdrop-filter: blur(10px);
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-title i {
+        margin-right: 15px;
+        font-size: 1.5rem;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        color: #fff;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+        color: #fff;
+        padding: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(255,255,255,0.08);
+        border-color: #0A84FF;
+        box-shadow: 0 0 0 2px rgba(10,132,255,0.2);
+        outline: none;
+    }
+
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .submit-btn {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        padding: 12px 30px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(10,132,255,0.3);
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .contact-methods {
+            grid-template-columns: 1fr;
+        }
+        
+        .contact-container {
+            padding: 15px;
+        }
+        
+        .contact-form {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 动态背景 -->
+<div class="animated-background">
+    <div class="floating-particles"></div>
+    <div class="grid-overlay"></div>
+</div>
+
+<div class="contact-container">
+    <div class="contact-title">
+        <h1>联系我们</h1>
+    </div>
+
+    <!-- 联系方式 -->
+    <div class="contact-methods">
+        <div class="contact-card">
+            <i class="fas fa-envelope"></i>
+            <h3>电子邮件</h3>
+            <p>support@fakenews.com</p>
+        </div>
+        <div class="contact-card">
+            <i class="fas fa-phone-alt"></i>
+            <h3>联系电话</h3>
+            <p>+86 123 4567 8900</p>
+        </div>
+        <div class="contact-card">
+            <i class="fas fa-map-marker-alt"></i>
+            <h3>地址</h3>
+            <p>中国北京市海淀区</p>
+        </div>
+    </div>
+
+    <!-- 联系表单 -->
+    <div class="contact-form">
+        <h2 class="form-title">
+            <i class="fas fa-paper-plane"></i>
+            发送消息
+        </h2>
+        <form>
+            <div class="form-group">
+                <label class="form-label">姓名</label>
+                <input type="text" class="form-control" placeholder="请输入您的姓名">
+            </div>
+            <div class="form-group">
+                <label class="form-label">邮箱</label>
+                <input type="email" class="form-control" placeholder="请输入您的邮箱">
+            </div>
+            <div class="form-group">
+                <label class="form-label">主题</label>
+                <input type="text" class="form-control" placeholder="请输入消息主题">
+            </div>
+            <div class="form-group">
+                <label class="form-label">消息内容</label>
+                <textarea class="form-control" placeholder="请输入您的消息内容"></textarea>
+            </div>
+            <button type="submit" class="submit-btn">发送消息</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 
