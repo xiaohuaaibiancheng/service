@@ -698,7 +698,8 @@
         {% endif %}
 
         <!-- 页码 -->
-        {% for p in range(max(1, current_page-2), min(current_page+3, total_pages+1)) %}
+        {% set ns = namespace(max=max) %}
+        {% for p in range(ns.max(1, current_page-2), min(current_page+3, total_pages+1)) %}
         <li class="{% if p == current_page %}active{% endif %}">
           {% if p == current_page %}
           <span>{{ p }}</span>

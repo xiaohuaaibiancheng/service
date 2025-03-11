@@ -9,6 +9,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
+# 导入配置
+from src.config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL, OPENAI_TEMPERATURE
+
 from src.frontend.models import (
     NewsAnalysisResult, Credibility, CredibilityDimensionScores,
     VerificationInfo, Propagation, TimelineEvent, UserProfile, Relations
@@ -20,9 +23,9 @@ logger = logging.getLogger(__name__)
 
 def get_llm_client(api_key=None, base_url=None):
     """获取LLM客户端"""
-    # 优先使用传入的API密钥，其次使用环境变量
-    api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
-    base_url = base_url or os.environ.get("OPENAI_API_BASE", "https://api.chatanywhere.tech")
+    # 优先使用传入的API密钥，其次使用配置中的密钥
+    api_key = api_key or OPENAI_API_KEY
+    base_url = base_url or OPENAI_BASE_URL
     
     if not api_key:
         logger.warning("未提供OpenAI API密钥，将使用模拟数据")
@@ -30,8 +33,8 @@ def get_llm_client(api_key=None, base_url=None):
     
     try:
         llm = ChatOpenAI(
-            model_name="gpt-4o-mini",
-            temperature=0.2,
+            model_name=OPENAI_MODEL,
+            temperature=OPENAI_TEMPERATURE,
             openai_api_key=api_key,
             openai_api_base=base_url
         )

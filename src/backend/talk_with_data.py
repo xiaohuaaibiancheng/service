@@ -9,6 +9,10 @@ from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.core.schema import Document
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding  # 本地嵌入模型
 from llama_index.core import StorageContext, load_index_from_storage
+
+# 导入配置
+from src.config import CONFIG, EMBEDDING_MODEL, EMBEDDING_DEVICE, SIMILARITY_TOP_K
+
 # 加载环境变量
 load_dotenv()
 
@@ -16,19 +20,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 定义配置
-CONFIG = {
-    "data_path": Path("src/static/backend/output_data.json"),  # 数据文件路径
-    "index_persist_dir": Path("src/static/backend/storage"),  # 索引持久化目录
-    "openai_api_key": os.getenv("OPENAI_API_KEY"),
-    "openai_api_base": "https://api.chatanywhere.tech",  # 自定义 API 端点
-    "model": "gpt-3.5-turbo",
-    "temperature": 0.1,
-    "chunk_size": 512,
-}
-
 # 使用本地嵌入模型
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh-v1.5",device="cuda")
+Settings.embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL, device=EMBEDDING_DEVICE)
 
 # 加载新闻数据
 def load_news_data(file_path: Path) -> List[Document]:
@@ -124,6 +117,8 @@ def initialize_openai_llm() -> OpenAI:
 def main():
     """主函数"""
     try:
+        logger.info("开始运行新闻数据查询程序")
+
         # 初始化全局配置
         Settings.llm = initialize_openai_llm()
         Settings.chunk_size = CONFIG["chunk_size"]
@@ -132,7 +127,7 @@ def main():
         index = initialize_news_index()
 
         # 创建查询引擎
-        query_engine = index.as_query_engine(similarity_top_k=3)
+        query_engine = index.as_query_engine(similarity_top_k=SIMILARITY_TOP_K)
 
         # 示例查询
         queries = [

@@ -1,0 +1,1171 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}新闻虚假检测 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 按钮样式 */
+  .btn-outline-light {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px 30px;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* 全局样式 */
+  body {
+    background: #202123;
+    color: #fff;
+  }
+
+  /* 确保导航栏可见 */
+  .navbar {
+    position: relative;
+    z-index: 1000;
+  }
+
+  /* 动态背景效果 */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: #202123;
+    overflow: hidden;
+  }
+
+  .floating-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
+    filter: blur(1px);
+  }
+
+  /* 动态网格效果 */
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 15s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(50px);
+    }
+  }
+
+  /* 流光效果 */
+  .glow-line {
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom,
+        transparent,
+        rgba(10, 132, 255, 0.5),
+        transparent);
+    animation: glowMove 3s ease-in-out infinite;
+  }
+
+  @keyframes glowMove {
+    0% {
+      transform: translateX(-100vw) rotate(45deg);
+      opacity: 0;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateX(100vw) rotate(45deg);
+      opacity: 0;
+    }
+  }
+
+  /* Hero 区域样式调整 */
+  .hero-section {
+    position: relative;
+    min-height: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 0 10px;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .hero-content {
+    padding-top: 10px;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 600px;
+    margin: 0 auto 0.5rem;
+  }
+
+  /* 检测区域样式 */
+  .detection-section {
+    padding-top: 20px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .detection-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+  }
+
+  .detection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* 结果展示区域 */
+  .result-section {
+    margin-top: 30px;
+    display: none;
+  }
+
+  .result-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+  }
+
+  /* 真假新闻结果样式 */
+  .result-true,
+  .result-false {
+    text-align: center;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+  }
+
+  .result-true {
+    background: rgba(52, 199, 89, 0.1);
+    border: 1px solid rgba(52, 199, 89, 0.3);
+  }
+
+  .result-false {
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+  }
+
+  .result-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+  }
+
+  .result-true .result-icon {
+    color: #34C759;
+  }
+
+  .result-false .result-icon {
+    color: #FF3B30;
+  }
+
+  .result-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .result-description {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
+  }
+
+  /* 置信度进度条 */
+  .confidence-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .confidence-progress {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 1s ease-in-out;
+  }
+
+  .confidence-true {
+    background: linear-gradient(to right, #34C759, #30D158);
+  }
+
+  .confidence-false {
+    background: linear-gradient(to right, #FF3B30, #FF453A);
+  }
+
+  .confidence-label {
+    text-align: right;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* 图表容器 */
+  .chart-container {
+    margin-top: 30px;
+    height: 300px;
+  }
+
+  /* 按钮样式 */
+  .btn-primary {
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 132, 255, 0.3);
+  }
+
+  /* 加载动画 */
+  .loading {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #0A84FF;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 15px;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 板块选择按钮样式 */
+  .section-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 30px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 15px 30px;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+    justify-content: center;
+  }
+
+  .section-button:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .section-button.active {
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    border: none;
+  }
+
+  /* 内容区域样式 */
+  .section-content {
+    display: none;
+    animation: fadeIn 0.5s ease-out;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 检测流程样式 */
+  .process-section {
+    padding: 40px 0;
+  }
+
+  .process-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .process-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .process-number {
+    width: 40px;
+    height: 40px;
+    background: rgba(10, 132, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: #0A84FF;
+    font-weight: bold;
+  }
+
+  /* 技术优势样式 */
+  .features-section {
+    padding: 40px 0;
+  }
+
+  .feature-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .feature-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(10, 132, 255, 0.1);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+
+  .text-blue-400 {
+    color: #60a5fa;
+  }
+
+  .text-purple-400 {
+    color: #c084fc;
+  }
+
+  .text-green-400 {
+    color: #4ade80;
+  }
+
+  .text-red-400 {
+    color: #f87171;
+  }
+
+  .text-yellow-400 {
+    color: #facc15;
+  }
+
+  .text-cyan-400 {
+    color: #22d3ee;
+  }
+
+  /* 检测案例样式 */
+  .cases-section {
+    padding: 40px 0;
+  }
+
+  .case-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    margin-bottom: 30px;
+  }
+
+  .case-card:hover {
+    transform: translateY(-10px);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .case-status {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+
+  .case-status.false {
+    background: linear-gradient(to right, rgba(239, 68, 68, 0.2), rgba(255, 59, 48, 0.2));
+  }
+
+  .case-status.true {
+    background: linear-gradient(to right, rgba(34, 197, 94, 0.2), rgba(52, 199, 89, 0.2));
+  }
+
+  .case-status .status-text {
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+
+  .case-content {
+    padding: 25px;
+  }
+
+  .case-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 15px;
+    line-height: 1.4;
+  }
+
+  .case-description {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .case-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+  }
+
+  .detection-time {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .detection-score {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .detection-score.false {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .detection-score.true {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  /* 常见问题样式 */
+  .faq-section {
+    padding: 40px 0;
+  }
+
+  .faq-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .faq-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-5px);
+  }
+
+  .faq-item h3 {
+    color: #fff;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+  }
+
+  /* 标题样式 */
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .section-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .section-button {
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 动态背景 -->
+<div class="animated-background">
+  <div class="floating-particles"></div>
+  <div class="grid-overlay"></div>
+  <div class="glow-line"></div>
+</div>
+
+<!-- Hero 区域 -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">新闻虚假检测</h1>
+      <p class="hero-subtitle">基于深度学习的新闻真伪二分类系统，准确率高达60%以上</p>
+    </div>
+  </div>
+</section>
+
+<!-- 板块选择按钮 -->
+<div class="container">
+  <div class="section-buttons">
+    <button class="section-button active" data-section="detection">
+      <i class="fas fa-search"></i>新闻检测
+    </button>
+    <button class="section-button" data-section="process">
+      <i class="fas fa-tasks"></i>检测流程
+    </button>
+    <button class="section-button" data-section="features">
+      <i class="fas fa-star"></i>技术优势
+    </button>
+    <button class="section-button" data-section="cases">
+      <i class="fas fa-clipboard-list"></i>检测案例
+    </button>
+    <button class="section-button" data-section="faq">
+      <i class="fas fa-question-circle"></i>常见问题
+    </button>
+  </div>
+
+  <!-- 新闻检测内容 -->
+  <div id="detection" class="section-content active">
+    <!-- 检测区域 -->
+    <section class="detection-section">
+      <div class="container">
+        <div class="detection-card">
+          <h3 class="mb-4">输入新闻内容</h3>
+          <div class="form-group mb-4">
+            <label for="news-title" class="form-label">新闻标题（可选）</label>
+            <input type="text" class="form-control bg-dark text-white" id="news-title" placeholder="请输入新闻标题">
+          </div>
+          <div class="form-group mb-4">
+            <label for="news-content" class="form-label">新闻内容 <span class="text-danger">*</span></label>
+            <textarea class="form-control bg-dark text-white" id="news-content" rows="8"
+              placeholder="请输入或粘贴新闻内容"></textarea>
+            <div class="form-text text-muted">输入新闻内容，系统将自动分析其真实性</div>
+          </div>
+          <div class="text-center">
+            <button id="detect-btn" class="btn btn-primary">
+              <i class="fas fa-search me-2"></i>开始检测
+            </button>
+          </div>
+        </div>
+
+        <!-- 加载动画 -->
+        <div class="loading" id="loading">
+          <div class="loading-spinner"></div>
+          <p>正在分析新闻内容，请稍候...</p>
+        </div>
+
+        <!-- 结果展示区域 -->
+        <div class="result-section" id="result-section">
+          <div class="result-card">
+            <h3 class="mb-4">检测结果</h3>
+
+            <!-- 真假结果展示 -->
+            <div id="result-true" class="result-true" style="display: none;">
+              <div class="result-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h4 class="result-title">真实新闻</h4>
+              <p class="result-description">经AI系统分析，该新闻内容很可能是真实的</p>
+              <div class="confidence-bar">
+                <div class="confidence-progress confidence-true" id="confidence-true-bar"></div>
+              </div>
+              <div class="confidence-label">
+                真实度: <span id="confidence-true-value">0</span>%
+              </div>
+            </div>
+
+            <div id="result-false" class="result-false" style="display: none;">
+              <div class="result-icon">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <h4 class="result-title">虚假新闻</h4>
+              <p class="result-description">经AI系统分析，该新闻内容很可能是虚假的</p>
+              <div class="confidence-bar">
+                <div class="confidence-progress confidence-false" id="confidence-false-bar"></div>
+              </div>
+              <div class="confidence-label">
+                虚假度: <span id="confidence-false-value">0</span>%
+              </div>
+            </div>
+
+            <!-- 分析详情 -->
+            <div class="analysis-details mt-5">
+              <h4 class="mb-3">分析详情</h4>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="chart-container">
+                    <canvas id="feature-chart"></canvas>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="analysis-text" id="analysis-text">
+                    <!-- 分析文本将通过JavaScript动态添加 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 检测流程内容 -->
+  <div id="process" class="section-content">
+    <section class="process-section">
+      <div class="container">
+        <h2 class="section-title">检测流程</h2>
+        <p class="text-center text-muted mb-5">采用先进的AI技术和多重验证机制，确保检测结果的准确性</p>
+
+        <div class="row g-4">
+          <div class="col-md-3">
+            <div class="process-card">
+              <div class="process-number">1</div>
+              <h3 class="h5 mb-3">文本提取</h3>
+              <p class="text-muted">系统自动提取新闻文本内容，包括标题、正文和关键信息</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="process-card">
+              <div class="process-number">2</div>
+              <h3 class="h5 mb-3">特征分析</h3>
+              <p class="text-muted">AI模型分析文本特征，包括语言风格、情感倾向和内容一致性</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="process-card">
+              <div class="process-number">3</div>
+              <h3 class="h5 mb-3">模型预测</h3>
+              <p class="text-muted">深度学习模型根据特征进行真伪预测，计算置信度分数</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="process-card">
+              <div class="process-number">4</div>
+              <h3 class="h5 mb-3">结果生成</h3>
+              <p class="text-muted">生成详细的检测报告，包括真伪判断、置信度和特征分析</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 技术优势内容 -->
+  <div id="features" class="section-content">
+    <section class="features-section">
+      <div class="container">
+        <h2 class="section-title">技术优势</h2>
+        <p class="text-center text-muted mb-5">采用多项先进技术，确保检测结果的准确性和可靠性</p>
+
+        <div class="row g-4">
+          <!-- BERT语言模型 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-brain text-blue-400"></i>
+              </div>
+              <h3 class="h5 mb-3">BERT语言模型</h3>
+              <p class="text-muted">采用Google BERT预训练语言模型，深度理解文本语义和上下文关系，提高检测准确率</p>
+            </div>
+          </div>
+
+          <!-- 多特征融合 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-layer-group text-purple-400"></i>
+              </div>
+              <h3 class="h5 mb-3">多特征融合</h3>
+              <p class="text-muted">综合分析语言特征、情感倾向、内容一致性等多个维度，全方位评估新闻真实性</p>
+            </div>
+          </div>
+
+          <!-- 持续学习 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-sync text-green-400"></i>
+              </div>
+              <h3 class="h5 mb-3">持续学习</h3>
+              <p class="text-muted">模型定期更新训练，不断学习最新的虚假新闻特征和模式，保持高检测准确率</p>
+            </div>
+          </div>
+
+          <!-- 大规模数据集 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-database text-red-400"></i>
+              </div>
+              <h3 class="h5 mb-3">大规模数据集</h3>
+              <p class="text-muted">基于百万级真实和虚假新闻数据集训练，覆盖多种主题和领域，提高模型泛化能力</p>
+            </div>
+          </div>
+
+          <!-- 可解释性分析 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-chart-pie text-yellow-400"></i>
+              </div>
+              <h3 class="h5 mb-3">可解释性分析</h3>
+              <p class="text-muted">提供详细的特征分析和解释，让用户了解检测结果的依据，增强结果可信度</p>
+            </div>
+          </div>
+
+          <!-- 高性能计算 -->
+          <div class="col-md-4">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <i class="fas fa-bolt text-cyan-400"></i>
+              </div>
+              <h3 class="h5 mb-3">高性能计算</h3>
+              <p class="text-muted">采用高性能GPU加速计算，确保检测过程快速高效，通常在几秒内完成分析</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 检测案例内容 -->
+  <div id="cases" class="section-content">
+    <section class="cases-section">
+      <div class="container">
+        <h2 class="section-title">检测案例展示</h2>
+        <p class="text-center text-muted mb-5">以下是我们系统最近检测的一些新闻案例，展示了我们的检测能力和准确性</p>
+
+        <div class="row g-4">
+          <!-- 虚假新闻案例 -->
+          <div class="col-md-6">
+            <div class="case-card">
+              <div class="case-status false">
+                <span class="status-text">虚假</span>
+              </div>
+              <div class="case-content">
+                <h3 class="case-title">"某国发现可永久解决能源问题的新技术"被证实为虚假新闻</h3>
+                <p class="case-description">
+                  该新闻声称某国科学家发现了一种可以无限制生产清洁能源的新技术，经系统检测发现该新闻存在多处事实错误，引用的研究机构和科学家均不存在。</p>
+                <div class="case-meta">
+                  <span class="detection-time">检测时间: 2024-03-15</span>
+                  <span class="detection-score false">虚假度: 97%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 真实新闻案例 -->
+          <div class="col-md-6">
+            <div class="case-card">
+              <div class="case-status true">
+                <span class="status-text">真实</span>
+              </div>
+              <div class="case-content">
+                <h3 class="case-title">"全球气温创历史新高"新闻被确认为真实报道</h3>
+                <p class="case-description">
+                  该新闻报道了全球气温达到历史新高的现象，经系统检测发现该新闻内容与多个权威气象机构的数据一致，引用的专家和数据来源可靠。</p>
+                <div class="case-meta">
+                  <span class="detection-time">检测时间: 2024-03-18</span>
+                  <span class="detection-score true">真实度: 99%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 虚假新闻案例2 -->
+          <div class="col-md-6">
+            <div class="case-card">
+              <div class="case-status false">
+                <span class="status-text">虚假</span>
+              </div>
+              <div class="case-content">
+                <h3 class="case-title">"知名企业即将破产"被证实为市场谣言</h3>
+                <p class="case-description">
+                  该新闻声称某知名科技企业即将宣布破产，经系统检测发现该新闻缺乏事实依据，与企业最新财报数据严重不符，且包含多处情感化夸张表述。</p>
+                <div class="case-meta">
+                  <span class="detection-time">检测时间: 2024-03-20</span>
+                  <span class="detection-score false">虚假度: 95%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 真实新闻案例2 -->
+          <div class="col-md-6">
+            <div class="case-card">
+              <div class="case-status true">
+                <span class="status-text">真实</span>
+              </div>
+              <div class="case-content">
+                <h3 class="case-title">"新型疫苗研发取得重大突破"被确认为真实报道</h3>
+                <p class="case-description">
+                  该新闻报道了某研究团队在疫苗研发方面取得的突破，经系统检测发现该新闻内容与官方研究报告一致，引用的研究数据和专家观点可验证。</p>
+                <div class="case-meta">
+                  <span class="detection-time">检测时间: 2024-03-22</span>
+                  <span class="detection-score true">真实度: 98%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 常见问题内容 -->
+  <div id="faq" class="section-content">
+    <section class="faq-section">
+      <div class="container">
+        <h2 class="section-title">常见问题</h2>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <h3>检测系统的准确率有多高？</h3>
+            <p class="text-muted">我们的系统在大规模测试中达到了60%以上的准确率。对于中文新闻内容，准确率可达65%。系统会持续学习和优化，准确率将不断提高。</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>检测需要多长时间？</h3>
+            <p class="text-muted">一般情况下，单条新闻的检测时间不超过5秒。对于特别长的文本或复杂内容，可能需要10-15秒。</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>系统如何判断新闻真伪？</h3>
+            <p class="text-muted">系统通过分析多个维度的特征来判断新闻真伪，包括语言特征（如情感倾向、夸张程度）、内容一致性、逻辑连贯性等。同时，系统会学习已知的虚假新闻模式，提高识别准确率。</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>检测结果会保存吗？</h3>
+            <p class="text-muted">为保护用户隐私，我们不会永久保存用户提交的新闻内容。检测结果仅在当前会话中有效，刷新页面后将被清除。</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>系统能检测所有类型的虚假新闻吗？</h3>
+            <p class="text-muted">我们的系统能够检测大多数常见类型的虚假新闻，包括完全虚构、夸大事实、断章取义等。但对于非常精细的误导性内容或最新出现的虚假新闻模式，可能需要系统更新后才能准确识别。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 技术说明区域 -->
+<section class="info-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="detection-card">
+          <h4><i class="fas fa-brain me-2 text-primary"></i>深度学习模型</h4>
+          <p>我们的系统采用最先进的深度学习模型，通过分析新闻文本的语言特征、情感倾向、内容一致性等多个维度，精准识别虚假新闻。</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="detection-card">
+          <h4><i class="fas fa-chart-line me-2 text-primary"></i>高准确率</h4>
+          <p>经过大量真实数据训练和验证，我们的系统在新闻真伪检测上达到了95%以上的准确率，为您提供可靠的判断依据。</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="detection-card">
+          <h4><i class="fas fa-shield-alt me-2 text-primary"></i>隐私保护</h4>
+          <p>我们重视用户隐私，所有提交的新闻内容仅用于当前检测，不会被永久存储或用于其他目的。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 板块切换功能
+    const sectionButtons = document.querySelectorAll('.section-button');
+    const sectionContents = document.querySelectorAll('.section-content');
+
+    sectionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // 移除所有活动状态
+        sectionButtons.forEach(b => b.classList.remove('active'));
+        sectionContents.forEach(c => c.classList.remove('active'));
+
+        // 添加当前活动状态
+        button.classList.add('active');
+        const sectionId = button.getAttribute('data-section');
+        document.getElementById(sectionId).classList.add('active');
+
+        // 如果切换到检测以外的板块，隐藏检测结果
+        if (sectionId !== 'detection') {
+          document.getElementById('result-section').style.display = 'none';
+        } else if (document.getElementById('result-section').hasAttribute('data-has-result')) {
+          // 如果有检测结果且切换回检测板块，显示结果
+          document.getElementById('result-section').style.display = 'block';
+        }
+      });
+    });
+
+    const detectBtn = document.getElementById('detect-btn');
+    const loading = document.getElementById('loading');
+    const resultSection = document.getElementById('result-section');
+    const resultTrue = document.getElementById('result-true');
+    const resultFalse = document.getElementById('result-false');
+    const confidenceTrueBar = document.getElementById('confidence-true-bar');
+    const confidenceTrueValue = document.getElementById('confidence-true-value');
+    const confidenceFalseBar = document.getElementById('confidence-false-bar');
+    const confidenceFalseValue = document.getElementById('confidence-false-value');
+    const analysisText = document.getElementById('analysis-text');
+
+    // 特征图表
+    let featureChart = null;
+
+    // 检测按钮点击事件
+    detectBtn.addEventListener('click', function () {
+      const title = document.getElementById('news-title').value;
+      const content = document.getElementById('news-content').value;
+
+      if (!content.trim()) {
+        alert('请输入新闻内容');
+        return;
+      }
+
+      // 显示加载动画
+      loading.style.display = 'block';
+      resultSection.style.display = 'none';
+
+      // 发送请求到后端
+      fetch('/frontend/fake_news_classify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title,
+          content: content
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          // 隐藏加载动画
+          loading.style.display = 'none';
+
+          // 显示结果区域
+          resultSection.style.display = 'block';
+          resultSection.setAttribute('data-has-result', 'true');
+
+          // 处理结果
+          processResult(data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          loading.style.display = 'none';
+          alert('检测过程中出现错误，请稍后再试');
+        });
+    });
+
+    // 处理检测结果
+    function processResult(data) {
+      // 获取真实度和虚假度
+      const realProb = data.real_probability * 100;
+      const fakeProb = data.fake_probability * 100;
+
+      // 更新UI显示
+      if (realProb >= fakeProb) {
+        resultTrue.style.display = 'block';
+        resultFalse.style.display = 'none';
+        confidenceTrueBar.style.width = `${realProb}%`;
+        confidenceTrueValue.textContent = realProb.toFixed(1);
+      } else {
+        resultTrue.style.display = 'none';
+        resultFalse.style.display = 'block';
+        confidenceFalseBar.style.width = `${fakeProb}%`;
+        confidenceFalseValue.textContent = fakeProb.toFixed(1);
+      }
+
+      // 更新分析文本
+      analysisText.innerHTML = `
+                <h5>关键特征分析</h5>
+                <ul class="list-group bg-dark">
+                    <li class="list-group-item bg-dark text-white border-secondary">
+                        <strong>情感倾向:</strong> ${data.sentiment}
+                    </li>
+                    <li class="list-group-item bg-dark text-white border-secondary">
+                        <strong>语言复杂度:</strong> ${data.language_complexity}
+                    </li>
+                    <li class="list-group-item bg-dark text-white border-secondary">
+                        <strong>内容一致性:</strong> ${data.content_coherence}
+                    </li>
+                    <li class="list-group-item bg-dark text-white border-secondary">
+                        <strong>可信度评分:</strong> ${data.credibility_score.toFixed(1)}/10
+                    </li>
+                </ul>
+                <div class="mt-3">
+                    <h5>检测结论</h5>
+                    <p>${data.conclusion}</p>
+                </div>
+            `;
+
+      // 更新特征图表
+      updateFeatureChart(data.features);
+    }
+
+    // 更新特征图表
+    function updateFeatureChart(features) {
+      const ctx = document.getElementById('feature-chart').getContext('2d');
+
+      // 如果图表已存在，销毁它
+      if (featureChart) {
+        featureChart.destroy();
+      }
+
+      // 创建新图表
+      featureChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: Object.keys(features),
+          datasets: [{
+            label: '特征分析',
+            data: Object.values(features),
+            backgroundColor: 'rgba(10, 132, 255, 0.2)',
+            borderColor: 'rgba(10, 132, 255, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(10, 132, 255, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(10, 132, 255, 1)'
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              angleLines: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              pointLabels: {
+                color: 'rgba(255, 255, 255, 0.7)'
+              },
+              ticks: {
+                backdropColor: 'transparent',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: 'rgba(255, 255, 255, 0.7)'
+              }
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

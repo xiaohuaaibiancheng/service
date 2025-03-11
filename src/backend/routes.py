@@ -672,19 +672,25 @@ def export_data():
     data = read_evidence()
     
     # 写入临时文件（UTF-8 with BOM）
-    temp_file = 'temp_evidence.csv'
+    temp_file = 'src/temp_evidence.csv'
     with open(temp_file, 'w', newline='', encoding='utf-8-sig') as f:  # 使用 utf-8-sig
         writer = csv.DictWriter(f, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(data)
     
-    # 发送文件
-    return send_file(
-        temp_file,
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name='evidence_export.csv'
-    )
+    try:
+        # 发送文件
+        return send_file(
+            temp_file,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='evidence_export.csv'
+        )
+    finally:
+        # 清理临时文件
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
 @backend_bp.route('/report_leaderboard')
 def report_leaderboard():
     return render_template('leaderboard.html') 
@@ -1099,7 +1105,9 @@ def show_province(province_name):
                               current_page=page,
                               per_page=per_page,
                               total_pages=total_pages,
-                              province_name=province_name)
+                              province_name=province_name,
+                              max=max,
+                              min=min)  # 添加min函数到模板上下文
     else:
         return render_template('province_data.html', 
                               data=None, 
@@ -1107,7 +1115,9 @@ def show_province(province_name):
                               current_page=1,
                               per_page=per_page,
                               total_pages=0,
-                              province_name=province_name)
+                              province_name=province_name,
+                              max=max,
+                              min=min)  # 添加min函数到模板上下文
 @backend_bp.route('/proxy-image')
 def proxy_image():
     url = request.args.get('url')

@@ -215,9 +215,9 @@
 
 <body>
   <div class="container">
-    <h1><i class="fas fa-search"></i> 新闻事实核查工具</h1>
+    <h1><i class="fas fa-search"></i> 多智搜证</h1>
     <p class="intro">
-      本工具基于强大的搜索引擎和大型语言模型（LLM）技术，旨在帮助用户核查新闻的真实性和可信度。通过分析新闻标题、URL及发布日期，工具将提供一系列的数据分析结果和最终的事实判定，助您快速识别新闻是否为真实信息。
+      本工具基于创新的多Agent框架，整合了多种外部工具，包括强大的搜索引擎和大型语言模型（LLM）技术，旨在为用户提供全面、精准的新闻真实性核查服务。通过协同工作，多个Agent分别负责新闻标题、URL、发布日期等关键信息的提取、分析和验证，结合外部数据源和智能算法，工具将生成多维度的数据分析结果，并最终给出权威的事实判定。无论是快速识别虚假新闻，还是深入挖掘信息背后的真相，本工具都能为您提供高效、可靠的支持。
     </p>
     <form id="checkForm" class="fade-in">
       <div class="form-group fade-in">
@@ -227,6 +227,10 @@
       <div class="form-group fade-in">
         <label for="url"><i class="fas fa-link"></i> URL：</label>
         <input type="url" id="url" name="url" required>
+      </div>
+      <div class="form-group fade-in">
+        <label for="content"><i class="fas fa-file-alt"></i> 内容：</label>
+        <input type="text" id="content" name="content" required>
       </div>
       <div class="form-group fade-in">
         <label for="date"><i class="fas fa-calendar-alt"></i> 发布日期：</label>
@@ -261,7 +265,7 @@
   `;
 
       try {
-        const response = await fetch('/agent', {
+        const response = await fetch('/frontend/agent', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',

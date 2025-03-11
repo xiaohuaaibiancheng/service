@@ -31,7 +31,7 @@ model_fullnames = {  'gpt2': 'gpt2',
                      'opt-13b': 'facebook/opt-13b',
                      'ChatLM-mini-Chinese': 'charent/ChatLM-mini-Chinese',
                      "gpt2-chinese-cluecorpussmall":"uer/gpt2-chinese-cluecorpussmall",
-                     "gpt2-distil-chinese":"uer/gpt2-distil-chinese-cluecorpussmall"
+                     "gpt2-distil-chinese":"model/models--uer--gpt2-distil-chinese-cluecorpussmall/snapshots/c98ef629a1ece266e9d9183add4cbe5d4b99c7d5"
                      }
 float16_models = ['gpt-j-6B', 'gpt-neox-20b', 'llama-13b', 'llama2-13b', 'bloom-7b1', 'opt-13b']
 float16_models.append('chatglm-6b')

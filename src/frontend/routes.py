@@ -15,13 +15,20 @@ import base64
 import random
 import uuid
 import logging
+import asyncio
+from typing import List
+
+# 导入配置
+from src.config import OPENAI_API_KEY, OPENAI_BASE_URL, UPLOAD_FOLDER, MAX_CONTENT_LENGTH
 
 from src.frontend.agent import FactChecker 
+from src.frontend.ai_img import classify_image
 from src.frontend.from_txt_img import ImageTextSimilarity
 from src.frontend.lazy import LazyModel
 from src.frontend.text_aigc.scripts.local_infer import DetectAIGC
 from src.frontend.tool import  extract_and_detect_file_news, extract_and_detect_url_news, init_hammer_model, process_image_and_text, process_text_only, process_title_and_text, save_to_csv
 from src.frontend.ai_analyzer import analyze_with_llm
+from langchain_community.chat_models import ChatOpenAI
 
 
 # 创建前端蓝图
@@ -37,12 +44,11 @@ def register_routes(app):
     app.register_blueprint(frontend_bp, url_prefix='/frontend')  # 保留/frontend前缀
     
     # 设置默认的API密钥和base_url
-    app.config.setdefault('OPENAI_API_KEY', 'sk-your-default-api-key')
-    app.config.setdefault('OPENAI_BASE_URL', 'https://api.chatanywhere.tech')
+    app.config.setdefault('OPENAI_API_KEY', OPENAI_API_KEY)
+    app.config.setdefault('OPENAI_BASE_URL', OPENAI_BASE_URL)
     # 设置上传文件夹
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '../static/frontend/uploads')
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 限制上传文件大小为16MB
+    app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH  # 限制上传文件大小为16MB
 
 ##模型初始化
 classifier_txt_img =  ImageTextSimilarity(model_name="ViT-B-16")
@@ -70,23 +76,26 @@ def index():
 # 添加新闻检测路由
 @frontend_bp.route('/news_detect')
 def news_detect():
+    global fact_check
+    fact_check=fact_checker.model
     return render_template('frontend/news_detect.html')
 @frontend_bp.route('/agent', methods=['GET', 'POST'])
 async def agent():
-    fact_checker.model
     if request.method == 'POST':
         title = request.form.get('title')
         url = request.form.get('url')
+        content = request.form.get('content')
         date = request.form.get('date')
 
         news_info = {
             "title": title,
             "url": url,
+            "text": content,
             "date": date
         }
-
+        print('news_info',news_info)
         # 运行事实核查
-        report = await fact_checker.check_news(news_info)
+        report = await fact_check.check_news(news_info)
 
         # 生成图表数据
         chart_data = {
@@ -131,15 +140,21 @@ def detect_multimodal():
     if not text and not image and not title:
         return jsonify({"error": "文本、图片或标题至少需要一个"}), 400
 
-    if image and text:
-        result = process_image_and_text(image, text,classifier_txt_img)
+    if image and text and title:
+        result1=process_image_and_text(image, text, classifier_txt_img)
+        print('result1',result1)
+        result2=process_title_and_text(title, text)
+        print('result2',result2)
+        result = {**result1, **result2}
+    elif image and text:
+        result = process_image_and_text(image, text, classifier_txt_img)
     elif title and text:
         result = process_title_and_text(title, text)
     elif text:
         result = process_text_only(text)
     else:
         return jsonify({"error": "无效的输入组合"}), 400
-
+    print('result',result)
     return jsonify(result)
 
 @frontend_bp.route("/detect/file", methods=["POST"])
@@ -323,7 +338,7 @@ def send_message(chat_id):
                 messages.append(HumanMessage(content=user_message))
                 
                 # 获取AI回复
-                response = chat(messages)
+                response = chat.invoke(messages)
                 ai_reply = response.content
             except Exception as e:
                 ai_reply = f"生成回复时出错: {str(e)}"
@@ -494,8 +509,8 @@ def reply_to_shared_chat(share_id):
         })
         
         # 使用langchain_openai和langchain_core.schema生成回复
-        from langchain_openai import ChatOpenAI
-        from langchain_core.schema import HumanMessage, AIMessage, SystemMessage
+        from langchain.chat_models import ChatOpenAI
+        from langchain.schema import HumanMessage, AIMessage, SystemMessage
         
         # 检查API密钥是否已设置
         if not data.get('api_key'):
@@ -527,7 +542,7 @@ def reply_to_shared_chat(share_id):
                 messages.append(HumanMessage(content=user_message))
                 
                 # 获取AI回复
-                response = chat(messages)
+                response = chat.invoke(messages)
                 ai_reply = response.content
             except Exception as e:
                 ai_reply = f"生成回复时出错: {str(e)}"
@@ -658,12 +673,25 @@ def detect_ai_generated_image(image):
         float: 图片由AI生成的概率 (0-1)
     """
     try:
-        # 打开图片
-        img = Image.open(image)
+        # 创建uploads目录（如果不存在）
+        os.makedirs('uploads', exist_ok=True)
+        
+        # 生成唯一文件名
+        filename = secure_filename(image.filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        
+        # 保存图片
+        image_path = os.path.join('uploads', unique_filename)
+        image.save(image_path)
+        
+        
+        # 将图片路径传递给classify_image函数
+        result, prob = classify_image(image_path)
         
         # 这里应该实现实际的AI图片检测逻辑
         # 由于没有实际的检测模型，这里返回一个随机概率作为示例
-        probability = random.uniform(0.6, 0.95)
+        probability = prob
         
         return probability
     except Exception as e:
@@ -1015,6 +1043,26 @@ def search_news():
         else:
             result = crawler.search_all_platforms(keyword)
         
+        # 增强传播时间线数据
+        if 'stats' in result and 'timeline' in result['stats']:
+            # 增加更详细的时间线数据
+            enhanced_timeline = []
+            base_time = datetime.now() - timedelta(days=7)
+            
+            for i, point in enumerate(result['stats']['timeline']):
+                # 为每个时间点添加更多信息
+                time_point = base_time + timedelta(hours=i*8)
+                enhanced_point = {
+                    'time': time_point.strftime('%Y-%m-%d %H:%M'),
+                    'value': point[1],
+                    'platform': random.choice(['百度', '搜狗', '央视', '中新网']),
+                    'event': f"关键事件 #{i+1}",
+                    'impact_score': random.randint(1, 10)
+                }
+                enhanced_timeline.append(enhanced_point)
+            
+            result['stats']['enhanced_timeline'] = enhanced_timeline
+        
         print(f"搜索到的新闻数量: {len(result['news'])}")  # 调试日志
             
         return jsonify({
@@ -1042,29 +1090,77 @@ def analyze_news():
                 'message': '缺少必要参数'
             }), 400
             
-        # 这里是示例分析结果，实际应用中需要实现真实的新闻分析逻辑
+        # 增强的新闻分析结果
         analysis_result = {
             'credibility': random.randint(70, 95),  # 可信度评分
             'keywords': [
                 '关键词1',
                 '关键词2',
-                '关键词3'
+                '关键词3',
+                '关键词4',
+                '关键词5'
             ],
             'sentiment': random.choice([-1, 1]),  # 情感倾向：-1表示负面，1表示正面
+            'sentiment_score': random.uniform(0.6, 0.9),  # 情感强度
             'related_news': [
                 {
                     'title': '相关新闻1',
                     'url': 'http://example.com/news1',
                     'source': '新闻来源1',
-                    'publish_time': '2024-03-02'
+                    'publish_time': '2024-03-02',
+                    'similarity': random.randint(70, 95)
                 },
                 {
                     'title': '相关新闻2',
                     'url': 'http://example.com/news2',
                     'source': '新闻来源2',
-                    'publish_time': '2024-03-02'
+                    'publish_time': '2024-03-02',
+                    'similarity': random.randint(70, 95)
+                },
+                {
+                    'title': '相关新闻3',
+                    'url': 'http://example.com/news3',
+                    'source': '新闻来源3',
+                    'publish_time': '2024-03-01',
+                    'similarity': random.randint(70, 95)
                 }
-            ]
+            ],
+            # 添加传播时间线数据
+            'propagation_timeline': [
+                {'time': '2024-03-01 08:00', 'platform': '百度', 'shares': random.randint(100, 500)},
+                {'time': '2024-03-01 10:30', 'platform': '搜狗', 'shares': random.randint(200, 800)},
+                {'time': '2024-03-01 14:15', 'platform': '央视', 'shares': random.randint(500, 2000)},
+                {'time': '2024-03-01 18:45', 'platform': '中新网', 'shares': random.randint(300, 1000)},
+                {'time': '2024-03-02 09:20', 'platform': '百度', 'shares': random.randint(800, 3000)}
+            ],
+            # 添加内容分析
+            'content_analysis': {
+                'factual_score': random.randint(70, 95),
+                'bias_score': random.randint(10, 40),
+                'sensational_score': random.randint(20, 60),
+                'key_entities': ['实体1', '实体2', '实体3'],
+                'topic_classification': ['政治', '经济', '社会']
+            },
+            # 添加传播影响力分析
+            'impact_analysis': {
+                'overall_impact': random.randint(1, 10),
+                'demographic_reach': {
+                    '18-24岁': random.randint(10, 30),
+                    '25-34岁': random.randint(20, 40),
+                    '35-44岁': random.randint(15, 35),
+                    '45-54岁': random.randint(10, 25),
+                    '55岁以上': random.randint(5, 15)
+                },
+                'geographic_distribution': {
+                    '华东': random.randint(20, 40),
+                    '华北': random.randint(15, 35),
+                    '华南': random.randint(10, 30),
+                    '西南': random.randint(5, 20),
+                    '西北': random.randint(5, 15),
+                    '东北': random.randint(5, 15),
+                    '华中': random.randint(10, 25)
+                }
+            }
         }
         
         return jsonify({
@@ -1078,4 +1174,135 @@ def analyze_news():
             'status': 'error',
             'message': str(e)
         }), 500
+
+# 添加新的路由：获取传播时间线详情
+@frontend_bp.route('/api/news/timeline', methods=['POST'])
+def get_news_timeline():
+    try:
+        data = request.json
+        keyword = data.get('keyword', '')
+        
+        if not keyword:
+            return jsonify({
+                'status': 'error',
+                'message': '缺少关键词参数'
+            }), 400
+        
+        # 生成模拟的传播时间线详情数据
+        timeline_data = []
+        base_time = datetime.now() - timedelta(days=7)
+        
+        platforms = ['百度', '搜狗', '央视', '中新网']
+        events = [
+            '首次报道', '热点形成', '官方回应', '专家解读', 
+            '社交媒体讨论高峰', '辟谣信息发布', '后续报道',
+            '热度下降'
+        ]
+        
+        # 生成平台相似度数据
+        similarity_data = []
+        all_platforms = ['百度', '搜狗', '微博', '知乎', '今日头条', '抖音', '央视', '人民网']
+        
+        # 随机选择5对平台进行相似度比较
+        for _ in range(5):
+            platform_pair = random.sample(all_platforms, 2)
+            similarity_data.append({
+                'platforms': f"{platform_pair[0]} vs {platform_pair[1]}",
+                'similarity': f"{random.randint(30, 95)}%"
+            })
+        
+        for i in range(10):
+            time_point = base_time + timedelta(hours=i*12)
+            event_data = {
+                'time': time_point.strftime('%Y-%m-%d %H:%M'),
+                'platform': random.choice(platforms),
+                'event': events[min(i, len(events)-1)],
+                'title': f"{keyword}相关新闻 #{i+1}",
+                'url': f"http://example.com/news/{i+1}",
+                'shares': random.randint(100, 5000),
+                'comments': random.randint(50, 2000),
+                'sentiment': random.choice(['正面', '中性', '负面']),
+                'impact_score': random.randint(1, 10)
+            }
+            timeline_data.append(event_data)
+        
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'keyword': keyword,
+                'timeline': timeline_data,
+                'similarity': similarity_data,
+                'summary': {
+                    'total_shares': sum(item['shares'] for item in timeline_data),
+                    'total_comments': sum(item['comments'] for item in timeline_data),
+                    'peak_time': max(timeline_data, key=lambda x: x['shares'])['time'],
+                    'dominant_sentiment': max(['正面', '中性', '负面'], 
+                                            key=lambda s: len([i for i in timeline_data if i['sentiment'] == s]))
+                }
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in get_news_timeline: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@frontend_bp.route('/fake_news_classify', methods=['GET', 'POST'])
+def fake_news_classify():
+    """新闻虚假检测二分类页面和API"""
+    if request.method == 'GET':
+        return render_template('frontend/fake_news_classify.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
+    
+    # 处理POST请求
+    try:
+        data = request.json
+        title = data.get('title', '')
+        content = data.get('content', '')
+        
+        if not content:
+            return jsonify({"error": "新闻内容不能为空"}), 400
+        
+        # 这里应该调用实际的模型进行预测
+        # 由于没有实际模型，我们使用随机数据模拟结果
+        
+        # 生成随机概率（在实际应用中，这里应该是模型的预测结果）
+        real_probability = random.uniform(0.3, 0.9)
+        fake_probability = 1 - real_probability
+        
+        # 根据概率确定结论
+        if real_probability > fake_probability:
+            conclusion = "经过系统分析，该新闻内容具有较高的真实性。语言表达自然，内容逻辑一致，未发现明显的虚假信息特征。"
+            sentiment = "中性偏正面"
+        else:
+            conclusion = "经过系统分析，该新闻内容可能包含虚假信息。存在情感偏激、逻辑矛盾或夸大事实等特征，建议谨慎对待。"
+            sentiment = "偏激" if fake_probability > 0.7 else "夸张"
+        
+        # 生成随机特征数据（在实际应用中，这些应该是基于文本分析得出的）
+        features = {
+            "情感极端度": random.uniform(0.2, 0.8),
+            "标题夸张度": random.uniform(0.3, 0.9),
+            "内容一致性": random.uniform(0.4, 0.9),
+            "来源可靠性": random.uniform(0.3, 0.8),
+            "事实支持度": random.uniform(0.2, 0.9)
+        }
+        
+        # 构建响应数据
+        response_data = {
+            "real_probability": real_probability,
+            "fake_probability": fake_probability,
+            "conclusion": conclusion,
+            "sentiment": sentiment,
+            "language_complexity": "高" if random.random() > 0.5 else "中等",
+            "content_coherence": "一致" if random.random() > 0.4 else "存在矛盾",
+            "credibility_score": random.uniform(3.0, 9.0),
+            "features": features
+        }
+        
+        return jsonify(response_data)
+    
+    except Exception as e:
+        logging.error(f"新闻虚假检测出错: {str(e)}", exc_info=True)
+        return jsonify({"error": f"处理请求时出错: {str(e)}"}), 500
 

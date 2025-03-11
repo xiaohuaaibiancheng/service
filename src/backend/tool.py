@@ -14,12 +14,13 @@ import openai
 from openai import OpenAI
 from flask import current_app
 import networkx as nx
+from src.config import OPENAI_API_KEY, OPENAI_BASE_URL
 
 INDEX_PERSIST_DIR=Path("src/static/backend/storage") 
 llm = ChatOpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
+    api_key=OPENAI_API_KEY,
     model_name="gpt-4o-mini",
-    base_url='https://api.chatanywhere.tech',
+    base_url=OPENAI_BASE_URL,
     temperature=0.7
 )
 
@@ -175,7 +176,7 @@ def save_conversation(session_id: str, user_input: str, response: str) -> None:
 # 会话存储结构（在文件顶部定义）
 
 async def init_openai_client():
-    return openai.AsyncClient(api_key=os.environ.get('OPENAI_API_KEY'), base_url='https://api.chatanywhere.tech')
+    return openai.AsyncClient(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
 async def generate_refutation(rumor: str) -> str:
     client = await init_openai_client()

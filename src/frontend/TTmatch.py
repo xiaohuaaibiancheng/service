@@ -2,7 +2,7 @@ from text2vec import SentenceModel
 import numpy as np
 
 # 加载模型
-model = SentenceModel("shibing624/text2vec-base-chinese")
+model = SentenceModel(r"model\models--shibing624--text2vec-base-chinese\snapshots\183bb99aa7af74355fb58d16edf8c13ae7c5433e")
 
 def detect(title,content,threshold=0.55):
     text_embedding = model.encode(content)

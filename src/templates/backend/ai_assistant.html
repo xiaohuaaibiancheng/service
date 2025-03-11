@@ -317,7 +317,7 @@
 </head>
 
 <body>
-  <h1>AI助手</h1>
+  <h1>本地知音</h1>
   <div class="chat-container">
     <div class="error-tip" id="error-tip">发送失败，请稍后再试。</div>
     <div class="button-container">
@@ -346,7 +346,7 @@
 
       // 如果没有历史记录，显示欢迎消息
       if (chatMessages.length === 0) {
-        appendMessage("您好！请随时询问我任何关于新闻的疑问，我会尽力为您提供准确的信息。", 'ai');
+        appendMessage("您好！请随时询问我任何关于新闻的疑问，我会基于本地新闻库，为您提供准确的信息。", 'ai');
         // 保存欢迎消息到缓存已经在appendMessage中完成，这里不需要重复调用
       }
 

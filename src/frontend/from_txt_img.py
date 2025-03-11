@@ -29,7 +29,7 @@ class ImageTextSimilarity:
         image = self.preprocess(Image.open(image_path)).unsqueeze(0).to(self.device)
 
         # 对文本进行 tokenize
-        text_tokens = clip.tokenize([text]).to(self.device)
+        text_tokens = clip.tokenize(text).to(self.device)
 
         # 提取图像和文本特征
         with torch.no_grad():
@@ -40,15 +40,19 @@ class ImageTextSimilarity:
             image_features /= image_features.norm(dim=-1, keepdim=True) 
             text_features /= text_features.norm(dim=-1, keepdim=True)    
 
+            logits_per_image, logits_per_text = self.model.get_similarity(image, text_tokens)
+            similarity_prob = logits_per_image.softmax(dim=-1).cpu().numpy()
             # 计算相似度
-            logits_per_image = (image_features @ text_features.T).softmax(dim=-1)
-            similarity_prob = logits_per_image.cpu().numpy()[0][0]
+            print(similarity_prob)
+            # logits_per_image = (image_features @ text_features.T).softmax(dim=-1)
+            # print(logits_per_image)
+            # similarity_prob = logits_per_image.cpu().numpy()[0][0]
 
         # 返回 JSON 结果
         result = {
-            "text": text,  # 直接使用原始文本，而不是张量
+            "text": text[0],  # 直接使用原始文本，而不是张量
             "image_path": image_path,
-            "text_pic_similarity_probability": float(similarity_prob)
+            "text_pic_similarity_probability": float(similarity_prob[0][0])
         }
         return result
     
@@ -57,9 +61,12 @@ if __name__=='__main__':
   classifier = ImageTextSimilarity(model_name="ViT-B-16")
 
   # 计算相似度
-  image_path = "D:\Desktop\OIP.jpg"
-  text = "这是一张可爱的皮卡丘图片"
+  image_path = r"D:\Desktop\OIP.jpg"
+  text = ["这是一张皮卡丘图片",'1','2','3']
+  
   result = classifier.calculate_similarity(image_path, text)
 
   # 打印结果
   print(result)
+
+  

@@ -18,6 +18,8 @@ import ssl
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+# 导入配置
+from src.config import OPENAI_API_KEY, OPENAI_BASE_URL, SERPAPI_API_KEY, OPENAI_MODEL
 
 
 # 配置日志
@@ -27,16 +29,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 设置API密钥
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")
-
+# 检查API密钥
 if not OPENAI_API_KEY or not SERPAPI_API_KEY:
     logger.error("缺少必要的API密钥，无法继续运行。")
     exit(1)
 
 # 初始化OpenAI客户端并应用instructor补丁
-client = OpenAI(api_key=OPENAI_API_KEY, base_url='https://api.chatanywhere.tech')
+client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 instructor.patch(client=client)
 
 # 定义基础响应模型
@@ -309,7 +308,7 @@ def main_agent_instructions(context_vars):
 # 创建各个Agent
 main_agent = Agent(
     name="main_agent",
-    model="gpt-4o-mini",
+    model=OPENAI_MODEL,
     instructions=main_agent_instructions,
     functions=[],
     response_model=FactCheckReport
@@ -338,6 +337,9 @@ class FactChecker:
         
         # 提取新闻内容
         article_data = await self._extract_content(news_info.get("url"))
+        content={'text':news_info['text']}
+        if not article_data['text']:
+            article_data.update(content)
         context = {**news_info, **article_data}
 
         # 提取关键词
@@ -447,61 +449,16 @@ class FactChecker:
 
 # 示例使用
 if __name__ == "__main__":
-    import asyncio
-    
     async def main():
         checker = FactChecker()
         news = {
-            "title": "中方回应巴拿马退出“一带一路”协议",
+            "title": "中方回应巴拿马退出一带一路协议",
             "url": "https://news.ifeng.com/c/8gmSvGxMIiV",
             "date": "2024-02-06"
         }
         
-        print("=== 调试输出开始 ===")
-        print(f"输入新闻信息: {news}")
-        
-        # 内容提取调试
-        article_data = await checker._extract_content(news.get("url"))
-        print("\n[内容提取结果]")
-        print(f"标题: {article_data.get('title', '无')}")
-        print(f"正文片段: {article_data.get('text', '无')[:100]}...")
-        print(f"作者: {article_data.get('authors', [])}")
-        print(f"发布日期: {article_data.get('publish_date', '无')}")
-        
-        # 提取关键词调试
-        keywords = checker.extract_keywords(article_data.get("text", ""))
-        print("\n[关键词提取结果]")
-        print(f"提取到的关键词: {keywords}")
-        
-        # 工具检测调试
-        context = {**news, **article_data}
-        tool_results = []
-        for tool_name, tool_func in checker.tools.items():
-            print(f"\n[执行工具检测] {tool_name}")
-            if tool_name == "search":
-                input_data = keywords
-            else:
-                input_data = context.get("text", "") if tool_name != "url" else news.get("url")
-            print(f"输入数据: {input_data[:50]}...")
-            result = tool_func(input_data)
-            tool_results.append(result)
-            print(f"检测结果: {result}")
-        
-        # 最终报告生成调试
-        suspicious_count = sum(1 for r in tool_results if r.result == "可疑")
-        confidence_scores = [r.confidence for r in tool_results if r.result != "错误"]
-        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.0
-        
-        print(f"\n[统计结果] 可疑数量: {suspicious_count}")
-        print(f"置信度评分：{[r.confidence for r in tool_results]}")
-        print(f"平均置信度：{avg_confidence:.2f}")
-        
-        report = checker._generate_final_report(context, tool_results)
-        print("\n=== 事实核查报告 ===")
-        print(f"最终判定: {report.final_verdict} (置信度: {report.confidence:.0%})")
-        print("\n详细结果:")
-        for result in report.tool_results:
-            print(f"[{result.tool_type}] {result.result}: {result.reason} (置信度: {result.confidence:.0%})")
+        # 执行事实核查
+        report = await checker.check_news(news)
+        print(report)
 
-    
     asyncio.run(main())

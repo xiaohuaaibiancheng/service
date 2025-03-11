@@ -6,14 +6,20 @@ import numpy as np
 import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from model import load_tokenizer, load_model  # 使用你的本地模型加载代码
+import sys
+
+# 添加项目根目录到系统路径，以便导入src.config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../')))
+from src.config import OPENAI_API_KEY, OPENAI_BASE_URL, LOCAL_MODEL_NAME, LOCAL_MODEL_REF_PATH, LOCAL_MODEL_CACHE_DIR, USE_OPENAI_API
 
 # 选择使用本地模型还是 OpenAI API
-USE_OPENAI_API = True  # 设置为 True 以使用 OpenAI API，否则使用本地模型
+# USE_OPENAI_API = True  # 设置为 True 以使用 OpenAI API，否则使用本地模型
+# 使用配置中的设置
 
 if USE_OPENAI_API:
     import openai
-    openai.api_key = os.environ.get('OPENAI_API_KEY')
-    openai.base_url = 'https://api.chatanywhere.tech'
+    openai.api_key = OPENAI_API_KEY
+    openai.base_url = OPENAI_BASE_URL
 
 
 class ProbEstimator:
@@ -61,7 +67,9 @@ def get_sampling_discrepancy_analytic(logits_ref, logits_score, labels):
 
 
 class DetectAIGC:
-    def __init__(self, model_name="gpt-neo-2.7B", ref_path="text_aigc/local_infer_ref", device="cuda", cache_dir="../cache"):
+    """AI生成内容检测器"""
+    def __init__(self, model_name=LOCAL_MODEL_NAME, ref_path=LOCAL_MODEL_REF_PATH, device="cuda", cache_dir=LOCAL_MODEL_CACHE_DIR):
+        self.model_name = model_name
         self.ref_path = ref_path
         self.device = device
         self.cache_dir = cache_dir
@@ -69,8 +77,8 @@ class DetectAIGC:
 
         if not self.use_openai_api:
             # 加载本地模型和 tokenizer
-            self.tokenizer = load_tokenizer(model_name, "xsum", cache_dir)
-            self.model = load_model(model_name, device, cache_dir)
+            self.tokenizer, self.model = load_tokenizer(model_name, cache_dir), load_model(model_name, cache_dir)
+            self.model.to(device)
             self.model.eval()
 
         # 初始化概率估计器

@@ -519,6 +519,63 @@
                 right: 5%;
             }
         }
+
+        /* 导航容器 */
+        .nav-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* 下拉菜单容器 */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        /* 下拉菜单触发按钮 */
+        .dropdown-toggle {
+            cursor: pointer;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-toggle i.fa-caret-down {
+            margin-left: 5px;
+        }
+
+        /* 下拉内容 */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        /* 下拉菜单项 */
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        /* 鼠标悬停效果 */
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* 显示下拉菜单 */
+        .nav-dropdown:hover .dropdown-content {
+            display: block;
+        }
     </style>
 </head>
 
@@ -526,22 +583,46 @@
     <header class="header">
         <img src="../../static/backend/head.jpg" alt="平台LOGO" class="logo">
 
-        <div class="nav-items">
-            <a href="/" class="nav-item">
-                <i class="fas fa-home"></i> 前台
-            </a>
-            <a href="/rumor" class="nav-item">
-                <i class="fas fa-robot"></i> AI辟谣工坊
-            </a>
-            <a href="/edu" class="nav-item">
-                <i class="fas fa-shield-alt"></i> 虚假新闻判断教育中心
-            </a>
-            <a href="/tp" class="nav-item">
-                <i class="fas fa-concierge-bell"></i> 第三方服务
-            </a>
-            <a href="/logout" class="nav-item">
-                <i class="fas fa-user-times"></i> 退出
-            </a>
+        <div class="nav-container">
+            <!-- 返回前端 -->
+            <div class="nav-item">
+                <a href="/" class="nav-item">
+                    <i class="fas fa-home"></i> 返回前端
+                </a>
+            </div>
+
+            <!-- 教育区 -->
+            <div class="nav-dropdown">
+                <a href="#" class="nav-item dropdown-toggle">
+                    <i class="fas fa-graduation-cap"></i> 教育区 <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="/edu"><i class="fas fa-shield-alt"></i> 新闻真相教育学院</a>
+                    <a href="/rumor"><i class="fas fa-robot"></i> 真相实验室</a>
+                </div>
+            </div>
+
+            <!-- 数据查询区 -->
+            <div class="nav-dropdown">
+                <a href="#" class="nav-item dropdown-toggle">
+                    <i class="fas fa-database"></i> 数据查询区 <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="#" id="history-link"><i class="fas fa-history"></i> 检测历史库</a>
+                    <a href="#" id="ai-link"><i class="fas fa-robot"></i> 本地知音</a>
+                </div>
+            </div>
+
+            <!-- 协作服务区 -->
+            <div class="nav-dropdown">
+                <a href="#" class="nav-item dropdown-toggle">
+                    <i class="fas fa-handshake"></i> 协作服务区 <i class="fas fa-caret-down"></i>
+                </a>
+                <div class="dropdown-content">
+                    <a href="#" id="report-link"><i class="fas fa-flag"></i> 用户协作平台</a>
+                    <a href="/tp"><i class="fas fa-concierge-bell"></i> 第三方服务</a>
+                </div>
+            </div>
         </div>
 
         <div class="search-bar">
@@ -612,7 +693,7 @@
             <i class="fas fa-flag"></i> 用户协作平台
         </button>
         <button class="floating-btn" id="ai-btn">
-            <i class="fas fa-robot"></i> AI助手
+            <i class="fas fa-robot"></i> 本地知音
         </button>
     </div>
 
@@ -946,6 +1027,21 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', init);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 为导航栏中的链接添加点击事件
+            document.getElementById('history-link').addEventListener('click', function () {
+                document.getElementById('history-btn').click();
+            });
+
+            document.getElementById('ai-link').addEventListener('click', function () {
+                document.getElementById('ai-btn').click();
+            });
+
+            document.getElementById('report-link').addEventListener('click', function () {
+                document.getElementById('report-btn').click();
+            });
+        });
     </script>
 </body>
 

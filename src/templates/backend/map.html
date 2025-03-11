@@ -18,18 +18,60 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+            background-color: #f8f9fa;
         }
 
         #china-map {
             width: 100%;
             height: 100%;
             margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
         }
 
+        .map-title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
 
+        .map-subtitle {
+            position: absolute;
+            top: 55px;
+            left: 20px;
+            z-index: 100;
+            font-size: 14px;
+            color: #666;
+        }
 
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
 
-
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1976D2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
         @keyframes spin {
             0% {
@@ -40,12 +82,31 @@
                 transform: rotate(360deg);
             }
         }
+
+        .legend-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            color: #555;
+            z-index: 100;
+        }
     </style>
 </head>
 
 <body>
-
+    <div class="map-title">中国事件热点地图</div>
+    <div class="map-subtitle">点击省份查看详情</div>
     <div id="china-map"></div>
+    <div class="legend-info">数据更新时间: <span id="update-time"></span></div>
+
+    <div id="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+    </div>
 
     <script type="text/javascript">
         // 性能优化：使用requestIdleCallback在浏览器空闲时初始化
@@ -67,14 +128,7 @@
                 useDirtyRect: true // 使用脏矩形渲染提高性能
             });
 
-            // 显示加载动画
-            myChart.showLoading({
-                text: '地图数据加载中...',
-                color: '#1976D2',
-                textColor: '#000',
-                maskColor: 'rgba(255, 255, 255, 0.8)',
-                zlevel: 0
-            });
+
 
             // 定义标准省份列表（与ECharts地图匹配）
             const allProvinces = [
@@ -107,6 +161,7 @@
             // 如果有缓存且未过期，直接使用缓存数据
             if (cachedMapData) {
                 renderMap(cachedMapData.chinaGeoJson, cachedMapData.newsData);
+                updateTimestamp(cachedTimestamp);
                 hideLoading();
             } else {
                 // 否则重新获取数据
@@ -116,19 +171,21 @@
                     fetch('/get_map_data').then(r => r.json())
                 ]).then(([chinaGeoJson, newsData]) => {
                     // 缓存数据
+                    const currentTime = Date.now();
                     if (supportsLocalStorage) {
                         try {
                             localStorage.setItem(cacheKey, JSON.stringify({
                                 chinaGeoJson,
                                 newsData
                             }));
-                            localStorage.setItem(cacheTimeKey, Date.now().toString());
+                            localStorage.setItem(cacheTimeKey, currentTime.toString());
                         } catch (e) {
                             console.warn('无法缓存数据', e);
                         }
                     }
 
                     renderMap(chinaGeoJson, newsData);
+                    updateTimestamp(currentTime);
                     hideLoading();
                 }).catch(err => {
                     console.error('获取地图数据失败', err);
@@ -137,6 +194,13 @@
                         '<div style="text-align:center;padding:20px;color:#f44336;">地图数据加载失败，请刷新页面重试</div>';
                     hideLoading();
                 });
+            }
+
+            // 更新时间戳显示
+            function updateTimestamp(timestamp) {
+                const date = new Date(parseInt(timestamp));
+                document.getElementById('update-time').textContent =
+                    `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
             }
 
             // 渲染地图的函数
@@ -210,14 +274,22 @@
             function setMapOption(provinceStats, mapData) {
                 // 配置地图选项
                 const option = {
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#f8f9fa',
                     tooltip: {
                         trigger: 'item',
                         formatter: params => {
                             const count = params.data?.value || 0;
-                            return `${params.name}<br/>事件数量：${count}`;
+                            return `<div style="font-weight:bold;margin-bottom:5px;">${params.name}</div>事件数量：<span style="color:#e74c3c;font-weight:bold">${count}</span>`;
                         },
-                        confine: true // 限制提示框在图表区域内
+                        confine: true, // 限制提示框在图表区域内
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        padding: 10,
+                        textStyle: {
+                            color: '#333'
+                        },
+                        extraCssText: 'box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);'
                     },
                     visualMap: {
                         min: 0,
@@ -226,41 +298,54 @@
                         realtime: false,
                         calculable: true,
                         inRange: {
-                            color: ['#e0f2f1', '#004d40']
+                            color: ['#e8f5e9', '#2e7d32']
                         },
-                        itemWidth: 10,
-                        itemHeight: 80,
-                        right: 10,
-                        bottom: 20,
+                        itemWidth: 15,
+                        itemHeight: 120,
+                        right: 20,
+                        bottom: 30,
                         textStyle: {
                             color: '#333'
+                        },
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        padding: 10,
+                        borderRadius: 5
+                    },
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        zoom: 1.2,
+                        scaleLimit: {
+                            min: 1,
+                            max: 5
+                        },
+                        itemStyle: {
+                            areaColor: '#f5f5f5',
+                            borderColor: '#ddd',
+                            borderWidth: 0.5
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                areaColor: '#3498db',
+                                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                                shadowBlur: 10
+                            },
+                            label: {
+                                show: true,
+                                color: '#fff',
+                                fontSize: 14,
+                                fontWeight: 'bold'
+                            }
+                        },
+                        label: {
+                            show: false
                         }
                     },
                     series: [{
                         type: 'map',
                         map: 'china',
+                        geoIndex: 0,
                         data: mapData,
-                        roam: true,
-                        zoom: 1.2,
-                        scaleLimit: {
-                            min: 1,
-                            max: 3
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                color: '#333',
-                                fontSize: 12
-                            },
-                            itemStyle: {
-                                areaColor: '#1976D2'
-                            }
-                        },
-                        itemStyle: {
-                            areaColor: '#f5f5f5',
-                            borderColor: '#ccc',
-                            borderWidth: 0.5
-                        },
                         // 启用渐进渲染，提高性能
                         progressive: 100,
                         progressiveThreshold: 500
@@ -275,7 +360,49 @@
             myChart.on('click', function (params) {
                 var provinceName = params.name;
                 var url = '/province/' + provinceName;
-                window.parent.location.href = url;
+
+                // 添加点击反馈效果
+                const clickEffect = document.createElement('div');
+                clickEffect.style.cssText = `
+                    position: fixed;
+                    top: ${event.clientY}px;
+                    left: ${event.clientX}px;
+                    width: 10px;
+                    height: 10px;
+                    background-color: rgba(52, 152, 219, 0.5);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: clickRipple 0.6s ease-out;
+                `;
+                document.body.appendChild(clickEffect);
+
+                setTimeout(() => {
+                    document.body.removeChild(clickEffect);
+                    window.parent.location.href = url;
+                }, 300);
+
+                // 添加点击波纹动画样式
+                if (!document.getElementById('rippleStyle')) {
+                    const style = document.createElement('style');
+                    style.id = 'rippleStyle';
+                    style.textContent = `
+                        @keyframes clickRipple {
+                            0% {
+                                width: 10px;
+                                height: 10px;
+                                opacity: 1;
+                            }
+                            100% {
+                                width: 80px;
+                                height: 80px;
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
             });
 
             // 添加窗口大小变化的响应式处理

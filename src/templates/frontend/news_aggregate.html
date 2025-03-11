@@ -430,6 +430,134 @@
     .spinner-border {
         animation: spinner-border 0.75s linear infinite, pulse 2s ease infinite;
     }
+
+    /* 时间线样式 */
+    .timeline-container {
+        position: relative;
+        margin: 20px 0;
+        padding: 20px 0;
+    }
+
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2px;
+        background-color: #e9ecef;
+        transform: translateX(-50%);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        width: 50%;
+        padding: 0 20px;
+    }
+
+    .timeline-item.left {
+        left: 0;
+    }
+
+    .timeline-item.right {
+        left: 50%;
+    }
+
+    .timeline-badge {
+        position: absolute;
+        top: 0;
+        right: -12px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 24px;
+        color: white;
+        background-color: #6c757d;
+    }
+
+    .timeline-item.right .timeline-badge {
+        right: auto;
+        left: -12px;
+    }
+
+    .timeline-panel {
+        padding: 15px;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-title {
+        margin-top: 0;
+        font-weight: bold;
+    }
+
+    .timeline-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+
+    /* 情感颜色 */
+    .sentiment-正面 {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .sentiment-中性 {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .sentiment-负面 {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* 摘要样式 */
+    .timeline-summary {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .summary-label {
+        font-size: 0.8em;
+        color: #6c757d;
+    }
+
+    .summary-value {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+    /* 平台相似度样式 */
+    .platform-similarity {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .similarity-container {
+        margin-top: 10px;
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+    }
 </style>
 {% endblock %}
 
@@ -445,7 +573,7 @@
 <section class="hero-section">
     <div class="container">
         <div class="hero-content">
-            <h1 class="hero-title">新闻聚合分析</h1>
+            <h1 class="hero-title">新闻深度分析</h1>
             <p class="hero-subtitle">多平台新闻聚合分析系统，实时追踪热点话题，深度解析新闻传播</p>
 
             <!-- 功能切换按钮 -->
@@ -525,6 +653,22 @@
                 <div class="analysis-card">
                     <h5><i class="fas fa-clock me-2"></i>传播时间线</h5>
                     <div class="chart-container" id="timelineChart"></div>
+                    <!-- 添加平台相似度部分 -->
+                    <div class="platform-similarity mt-3">
+                        <h6><i class="fas fa-exchange-alt me-2"></i>平台报道相似度</h6>
+                        <div id="similarityContainer" class="similarity-container">
+                            <!-- 相似度数据将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                    <!-- 添加时间线详情容器 -->
+                    <div class="timeline-details mt-3" id="timelineDetails">
+                        <div class="timeline-loading text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                        </div>
+                        <div class="timeline-content"></div>
+                    </div>
                 </div>
 
                 <!-- 来源分布 -->
@@ -533,20 +677,7 @@
                     <div class="chart-container" id="sourceChart"></div>
                 </div>
 
-                <!-- 内容相似度 -->
-                <div class="analysis-card">
-                    <h5><i class="fas fa-project-diagram me-2"></i>内容相似度</h5>
-                    <div class="similarity-container">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>搜狗 vs 百度</span>
-                            <span>85%</span>
-                        </div>
-                        <div class="progress mb-3">
-                            <div class="progress-bar" style="width: 85%"></div>
-                        </div>
-                        <!-- 更多相似度对比 -->
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>
@@ -1674,6 +1805,74 @@
             'AI': 'AI生成概率'
         };
         return nameMap[key] || key;
+    }
+
+    // 渲染平台相似度
+    function renderSimilarity(data) {
+        const similarityContainer = document.getElementById('similarityContainer');
+        const similarityData = data.similarity;
+
+        let similarityHtml = '';
+
+        similarityData.forEach(item => {
+            const similarityValue = parseInt(item.similarity);
+            const progressClass = similarityValue > 80 ? 'bg-success' :
+                similarityValue > 60 ? 'bg-info' :
+                    similarityValue > 40 ? 'bg-warning' : 'bg-danger';
+
+            similarityHtml += `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${item.platforms}</span>
+                        <span>${item.similarity}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar ${progressClass}" role="progressbar" 
+                             style="width: ${item.similarity};" 
+                             aria-valuenow="${similarityValue}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        similarityContainer.innerHTML = similarityHtml;
+    }
+
+    // 修改fetchNewsTimeline函数，添加相似度渲染
+    function fetchNewsTimeline(keyword) {
+        const timelineDetails = document.getElementById('timelineDetails');
+        const loadingElement = timelineDetails.querySelector('.timeline-loading');
+        const contentElement = timelineDetails.querySelector('.timeline-content');
+
+        // 显示加载状态
+        loadingElement.classList.remove('d-none');
+        contentElement.innerHTML = '';
+
+        // 发送请求获取时间线数据
+        fetch('/api/news/timeline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ keyword: keyword })
+        })
+            .then(response => response.json())
+            .then(data => {
+                // 隐藏加载状态
+                loadingElement.classList.add('d-none');
+
+                if (data.status === 'success') {
+                    renderTimeline(data.data, contentElement);
+                    renderTimelineChart(data.data);
+                    renderSimilarity(data.data); // 添加渲染相似度
+                } else {
+                    contentElement.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                loadingElement.classList.add('d-none');
+                contentElement.innerHTML = `<div class="alert alert-danger">获取时间线数据失败: ${error.message}</div>`;
+            });
     }
 
     // 修改初始化代码

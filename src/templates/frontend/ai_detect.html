@@ -415,6 +415,16 @@
                     </form>
                 </div>
             </div>
+            <div class="result-container">
+                <div class="chart-wrapper">
+                    <canvas id="imageProbabilityChart"></canvas>
+                </div>
+                <div id="imageProbabilityText" class="probability-text"></div>
+                <div id="detectedImage" class="mt-4" style="display: none;">
+                    <h4>检测的图片</h4>
+                    <img id="uploadedImage" class="img-fluid rounded" style="max-height: 300px;" alt="上传的图片">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -427,7 +437,7 @@
                         <i class="fas fa-brain"></i>
                     </div>
                     <h3>深度学习模型</h3>
-                    <p>采用最新的深度学习技术，包括BERT语言模型和CNN视觉识别</p>
+                    <p>采用最新的深度学习技术，包括BERT语言模型和VIT视觉识别</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -436,7 +446,7 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <h3>高准确率</h3>
-                    <p>文本检测准确率96%，视频检测准确率94%，持续优化提升</p>
+                    <p>文本检测准确率96%，图片检测准确率94%，持续优化提升</p>
                 </div>
             </div>
             <div class="col-md-4">
@@ -465,8 +475,8 @@
             </div>
             <div class="col-md-6">
                 <div class="detection-card">
-                    <h3>深度伪造视频案例</h3>
-                    <p>某网红视频被识别为AI换脸，置信度98%</p>
+                    <h3>深度伪造图片案例</h3>
+                    <p>某网红图片被识别为AI换脸，置信度98%</p>
                     <div class="mt-3">
                         <small class="text-muted">检测时间：2024-02-19</small>
                     </div>
@@ -485,11 +495,11 @@
             </div>
             <div class="mb-4">
                 <h5>检测需要多长时间？</h5>
-                <p>文本检测通常在30秒内完成，视频检测根据长度可能需要1-3分钟。</p>
+                <p>文本检测通常在2秒内完成，图片检测根据长度可能需要15秒。</p>
             </div>
             <div>
                 <h5>检测准确率如何？</h5>
-                <p>文本检测准确率96%以上，视频检测准确率94%以上，并持续优化更新。</p>
+                <p>文本检测准确率96%以上，图片检测准确率94%以上，并持续优化更新。</p>
             </div>
         </div>
     </div>
@@ -589,7 +599,12 @@
                 const result = await response.json();
                 if (result.status === 'success') {
                     const probability = result.probability;
-                    updateProbabilityDisplay(probability);
+                    updateImageProbabilityDisplay(probability);
+
+                    // 显示上传的图片
+                    const uploadedImage = document.getElementById('uploadedImage');
+                    uploadedImage.src = URL.createObjectURL(file);
+                    document.getElementById('detectedImage').style.display = 'block';
                 } else {
                     alert(`错误: ${result.message}`);
                 }
@@ -600,7 +615,8 @@
         });
     });
 
-    let chartInstance = null; // 用于存储图表实例
+    let chartInstance = null; // 用于存储文本检测图表实例
+    let imageChartInstance = null; // 用于存储图片检测图表实例
 
     function updateProbabilityDisplay(probability) {
         // 更新文字输出
@@ -637,6 +653,47 @@
                     title: {
                         display: true,
                         text: 'AI生成概率'
+                    }
+                }
+            }
+        });
+    }
+
+    function updateImageProbabilityDisplay(probability) {
+        // 更新文字输出
+        const probabilityText = document.getElementById('imageProbabilityText');
+        probabilityText.textContent = `AI生成的概率: ${(probability * 100).toFixed(2)}%`;
+
+        // 获取Canvas上下文
+        const ctx = document.getElementById('imageProbabilityChart').getContext('2d');
+
+        // 如果已有图表实例，先销毁它
+        if (imageChartInstance) {
+            imageChartInstance.destroy();
+        }
+
+        // 创建新的图表实例
+        imageChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['AI生成', '非AI生成'],
+                datasets: [{
+                    data: [probability, 1 - probability],
+                    backgroundColor: ['#0A84FF', '#ccc'],
+                    borderColor: ['#0A84FF', '#ccc'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'AI生成图片概率'
                     }
                 }
             }

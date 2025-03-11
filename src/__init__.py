@@ -3,7 +3,10 @@ from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 from flask_cors import CORS
 import datetime
-import os
+from datetime import timedelta
+
+# 导入配置
+from src.config import SECRET_KEY, DEBUG, IMG_FOLDER, ALLOWED_EXTENSIONS
 
 # 创建扩展实例
 bcrypt = Bcrypt()
@@ -16,11 +19,11 @@ def create_app():
     
     # 基础配置
     app.config.update(
-        PERMANENT_SESSION_LIFETIME=datetime.timedelta(days=30),
-        SECRET_KEY=os.getenv('SECRET_KEY', 'dev-secret-key'),
-        IMG_FOLDER='static/frontend/img',
-        ALLOWED_EXTENSIONS={'png', 'jpg', 'jpeg', 'gif'},
-        DEBUG=True  # 开发环境下启用调试模式
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        SECRET_KEY=SECRET_KEY,
+        IMG_FOLDER=IMG_FOLDER,
+        ALLOWED_EXTENSIONS=ALLOWED_EXTENSIONS,
+        DEBUG=DEBUG  # 开发环境下启用调试模式
     )
     
     # 初始化扩展

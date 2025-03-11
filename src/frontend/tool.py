@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+import json
 import sys
 from bs4 import BeautifulSoup
 import logging
@@ -16,17 +17,19 @@ from transformers import BertTokenizerFast
 from torchvision import transforms
 from PIL import Image
 from newspaper import Article, ArticleException
+
+# 导入配置
+from src.config import OPENAI_API_KEY, IMAGE_API_KEY
+
+from src.frontend.get_img_info import describe_image
 os.environ["DISABLE_CUSTOM_KERNELS"] = "1"
 def detect_fake_news(content):
     """模拟检测新闻真伪"""
-    # 设置 OpenAI API 密钥（建议从环境变量中读取）
-    api_key = os.getenv("OPENAI_API_KEY", "your-api-key")
+    # 从配置中获取API密钥
+    api_key = OPENAI_API_KEY
 
     # 提取信息
     result = extract_news_info(content, api_key)
-
-
-
 
     if result:
         # 打印结果
@@ -179,11 +182,14 @@ def extract_and_detect_file_news(file_path_or_url):
 def process_image_and_text(image, text, model):
     # 处理图片和文本的逻辑
     # 这里可以保存图片、处理图片和文本的关系等
-    
+    print(11111)
     # 判断图片是文件上传、本地路径还是URL
     if hasattr(image, 'filename'):  # 文件上传
         image_filename = secure_filename(image.filename)
+        image_filename='upload.'+image_filename
+        print('image_filename',image_filename)
         image_path = os.path.join('uploads', image_filename)
+        print('image_path',image_path)
         image.save(image_path)
     elif isinstance(image[0], str) and image[0].startswith(('http://', 'https://')):  # URL
         response = requests.get(image[0])
@@ -198,9 +204,24 @@ def process_image_and_text(image, text, model):
             image_path = image
         else:
             raise FileNotFoundError(f"Image file not found at {image}")
+
+    # # 保存图片
+    # image_path = image
     
+    # 使用配置中的API密钥
+    api_key = IMAGE_API_KEY
+    description_json_str = describe_image(image_path, api_key, text)
+
+    description_json = json.loads(description_json_str)
     # 计算图片和文本的相似度
-    result = model.calculate_similarity(image_path, text)
+    # result = model.calculate_similarity(image_path, text)
+    # result['text_pic_similarity_probability']=description_json['confidence']
+    confidence = description_json.get("confidence")
+    result = {
+    "text": text,  # 直接使用原始文本，而不是张量
+    "image_path": image_path,
+    "text_pic_similarity_probability": confidence
+}
     return result
 
 def process_title_and_text(title, text):
