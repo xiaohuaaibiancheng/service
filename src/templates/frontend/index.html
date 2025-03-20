@@ -1,6 +1,6 @@
 {% extends "frontend/base.html" %}
 
-{% block title %}FakeNews - 智能新闻真伪检测系统{% endblock %}
+{% block title %}CredenceAI - 知真新闻真伪检测系统{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -98,6 +98,7 @@
         font-weight: 700;
         margin-bottom: 1.5rem;
         animation: fadeInUp 1s ease-out;
+        white-space: nowrap;
     }
 
     .hero-subtitle {
@@ -324,42 +325,122 @@
     /* 新闻流样式 */
     .news-flow {
         position: absolute;
-        right: -300px;
+        right: 10%;
         top: 50%;
         transform: translateY(-50%);
-        width: 600px;
-        height: 800px;
-        perspective: 1000px;
+        width: 300px;
+        height: auto;
+        max-height: 80vh;
+        overflow: hidden;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
 
     .news-card {
-        position: absolute;
-        width: 300px;
-        height: 200px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        padding: 20px;
-        transform-style: preserve-3d;
-        animation: floatNews 20s linear infinite;
+        position: relative;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        transform: translateX(100%);
+        animation: slideInNews 0.5s forwards;
     }
 
-    @keyframes floatNews {
-        0% {
-            transform: translateZ(0) translateX(0);
+    .news-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .news-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #00ff7f, #2ecc71);
+    }
+
+    .news-card h5 {
+        color: #fff;
+        font-size: 15px;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .news-card .news-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 12px;
+    }
+
+    .news-card .news-source {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 10px;
+        margin-top: 8px;
+        display: inline-block;
+    }
+
+    .news-card .news-verification {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .news-card .verification-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        margin-right: 8px;
+    }
+
+    .news-card .verification-status {
+        font-size: 12px;
+    }
+
+    .verification-pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+
+    .verification-true {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+
+    .verification-false {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    @keyframes slideInNews {
+        from {
             opacity: 0;
+            transform: translateX(100%);
         }
 
-        10% {
+        to {
             opacity: 1;
-        }
-
-        90% {
-            opacity: 1;
-        }
-
-        100% {
-            transform: translateZ(-1000px) translateX(-500px);
-            opacity: 0;
+            transform: translateX(0);
         }
     }
 
@@ -995,28 +1076,32 @@
 <section class="hero-section">
     <div class="star-field"></div>
     <canvas id="earth-canvas"></canvas>
+    <canvas id="networkCanvas"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></canvas>
+    <div class="news-flow"></div>
     <div class="container">
         <div class="hero-content">
-            <div class="badge bg-danger mb-3 animate-badge">智能检测系统</div>
-            <h1 class="hero-title">智能新闻真伪检测</h1>
-            <p class="hero-subtitle">运用先进AI技术，为您提供专业的新闻真实性分析服务</p>
+            <div class="badge bg-danger mb-3 animate-badge">CredenceAI 知真系统</div>
+            <h1 class="hero-title">知真 - 新闻真伪检测系统</h1>
+            <p class="hero-subtitle">运用先进AI技术，为您提供高精准度的新闻真实性智能分析服务</p>
             <div class="hero-features">
                 <div class="feature-item">
                     <i class="fas fa-check-circle"></i>
-                    <span>多维度分析，准确率95%以上</span>
+                    <span>多维度AI分析，准确率高达90%以上</span>
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-check-circle"></i>
-                    <span>支持文本、URL、文档多种输入</span>
+                    <span>支持文本、URL、图片和文档多种输入方式</span>
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-check-circle"></i>
-                    <span>实时AI对话，深度解析真伪</span>
+                    <span>智能AI问答，深度解析信息真伪</span>
                 </div>
             </div>
             <div class="hero-buttons">
                 <a href="#features" class="btn btn-primary btn-lg">开始使用</a>
-                <a href="#about" class="btn btn-outline-light btn-lg ms-3">了解更多</a>
+                <a href="javascript:void(0);" class="btn btn-outline-light btn-lg ms-3" data-bs-toggle="modal"
+                    data-bs-target="#learnMoreModal">了解更多</a>
             </div>
         </div>
     </div>
@@ -1025,12 +1110,12 @@
 <!-- 核心功能区域 -->
 <section class="core-features py-5">
     <div class="container">
-        <h2 class="text-center mb-5">核心功能</h2>
+        <h2 class="text-center mb-5">CredenceAI 知真 - 核心功能</h2>
         <div class="row g-4">
             <!-- 快速检测 -->
             <!-- 深度分析 -->
             <div class="col-lg-3 col-md-6">
-                <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.news_aggregate') }}';">
+                <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.fake_news_classify') }}';">
                     <div class="feature-bg"
                         style="background-image: url('{{ url_for('static', filename='frontend/images/features/news-aggregate.png') }}')">
                     </div>
@@ -1103,7 +1188,7 @@
 <!-- 深度分析板块 -->
 <section class="deep-analysis py-5">
     <div class="container">
-        <h2 class="text-center mb-5">深度分析</h2>
+        <h2 class="text-center mb-5">知真系统 - 深度分析能力</h2>
         <div class="row g-4">
             <!-- 聚合分析 -->
             <div class="col-md-6">
@@ -1118,11 +1203,11 @@
                         <h4>聚合分析</h4>
                         <p>快速整合数据，提供深度洞察。</p>
                         <ul class="analysis-features">
-                            <li><i class="fas fa-check"></i> 多源数据整合</li>
-                            <li><i class="fas fa-check"></i> 实时分析报告</li>
-                            <li><i class="fas fa-check"></i> 可视化展示</li>
+                            <li><i class="fas fa-network-wired"></i> 多源数据整合</li>
+                            <li><i class="fas fa-chart-line"></i> 实时分析报告</li>
+                            <li><i class="fas fa-chart-pie"></i> 可视化展示</li>
                         </ul>
-                        <a href="#" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">了解更多</a>
                     </div>
                 </div>
             </div>
@@ -1140,11 +1225,54 @@
                         <h4>聚合搜索</h4>
                         <p>一站式搜索，快速获取精准结果</p>
                         <ul class="analysis-features">
-                            <li><i class="fas fa-check"></i> 多平台整合</li>
-                            <li><i class="fas fa-check"></i> 智能过滤</li>
-                            <li><i class="fas fa-check"></i> 高效排序</li>
+                            <li><i class="fas fa-cubes"></i> 多平台整合</li>
+                            <li><i class="fas fa-filter"></i> 智能过滤</li>
+                            <li><i class="fas fa-sort-amount-up"></i> 高效排序</li>
                         </ul>
-                        <a href="#" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">了解更多</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 层级分析 -->
+            <div class="col-md-6">
+                <div class="analysis-box">
+                    <div class="analysis-bg"
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/Multi-intelligence.png') }}')">
+                    </div>
+                    <div class="analysis-content">
+                        <div class="analysis-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h4>多智搜证</h4>
+                        <p>高效智能的搜索工具，助您快速获取精准信息。</p>
+                        <ul class="analysis-features">
+                            <li><i class="fas fa-robot"></i> 多智能体</li>
+                            <li><i class="fas fa-database"></i> 多源整合</li>
+                            <li><i class="fas fa-thumbs-up"></i> 简洁易用</li>
+                        </ul>
+                        <a href="/frontend/agent" class="btn btn-outline-light mt-3">了解更多</a>
+                    </div>
+                </div>
+            </div>
+            <!-- 层级分析 -->
+            <div class="col-md-6">
+                <div class="analysis-box">
+                    <div class="analysis-bg"
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/hierarchical-analysis.png') }}')">
+                    </div>
+                    <div class="analysis-content">
+                        <div class="analysis-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h4>层级分析</h4>
+                        <p>多层次剖析数据，挖掘深层价值</p>
+                        <ul class="analysis-features">
+                            <li><i class="fas fa-layer-group"></i> 层级数据分解</li>
+                            <li><i class="fas fa-link"></i> 关联性分析</li>
+                            <li><i class="fas fa-chart-bar"></i> 多维度展示</li>
+                        </ul>
+                        <a href="/frontend/news_segment_detect" class="btn btn-outline-light mt-3">了解更多</a>
                     </div>
                 </div>
             </div>
@@ -1155,7 +1283,7 @@
 <!-- 专业工具区域 -->
 <section class="pro-tools py-5">
     <div class="container">
-        <h2 class="text-center mb-5">专业工具</h2>
+        <h2 class="text-center mb-5">知真系统 - 专业工具</h2>
         <div class="row g-4">
             <!-- 趋势分析 -->
             <div class="col-md-4">
@@ -1226,50 +1354,116 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">100万+</div>
+                    <div class="stat-number">150万+</div>
                     <div class="stat-label">累计检测</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">95%</div>
+                    <div class="stat-number">90%+</div>
                     <div class="stat-label">准确率</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">50+</div>
+                    <div class="stat-number">100+</div>
                     <div class="stat-label">媒体来源</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">3秒</div>
-                    <div class="stat-label">平均响应</div>
+                    <div class="stat-number">2秒</div>
+                    <div class="stat-label">平均响应时间</div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+<!-- 在页面底部添加模态弹窗 -->
+{% include 'frontend/modal.html' %}
+
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
     // 生成动态新闻卡片
     function createNewsCards() {
         const newsFlow = document.querySelector('.news-flow');
+        if (!newsFlow) {
+            console.log('新闻流容器不存在，跳过新闻卡片创建');
+            return; // 如果元素不存在，提前退出函数
+        }
+
+        // 更丰富的新闻数据结构
         const newsItems = [
-            '突发新闻：...',
-            '最新报道：...',
-            '热点关注：...',
-            // 添加更多新闻标题
+            {
+                title: '研究证实：新型疫苗对变异毒株有效性达95%，多国临床试验验证',
+                date: '2023-12-15',
+                source: '健康时报',
+                status: 'true',  // true, false, pending
+                statusText: '可信'
+            },
+            {
+                title: '突发！知名企业CEO宣布辞职，内部信息称因重大财务造假被调查',
+                date: '2023-12-13',
+                source: '经济观察家',
+                status: 'false',
+                statusText: '虚假'
+            },
+            {
+                title: '最新报道：某国或将推出全球首个量子计算商用芯片',
+                date: '2023-12-12',
+                source: '科技前沿',
+                status: 'pending',
+                statusText: '待验证'
+            },
+            {
+                title: '气候变化报告：全球变暖致极端天气事件增加30%',
+                date: '2023-12-10',
+                source: '环球科学',
+                status: 'true',
+                statusText: '可信'
+            }
         ];
 
+        // 为每个新闻项创建卡片，设置递增的动画延迟
         newsItems.forEach((news, index) => {
             const card = document.createElement('div');
             card.className = 'news-card';
-            card.style.animationDelay = `${index * 2}s`;
-            card.innerHTML = `<h5>${news}</h5>`;
+            card.style.animationDelay = `${index * 0.2}s`;
+
+            // 获取状态图标
+            let statusIcon = '';
+            if (news.status === 'true') {
+                statusIcon = '<i class="fas fa-check"></i>';
+            } else if (news.status === 'false') {
+                statusIcon = '<i class="fas fa-times"></i>';
+            } else {
+                statusIcon = '<i class="fas fa-question"></i>';
+            }
+
+            // 设置卡片内容，使用更丰富的HTML结构
+            card.innerHTML = `
+                <h5>${news.title}</h5>
+                <div class="news-meta">
+                    <span class="news-date"><i class="far fa-calendar-alt"></i> ${news.date}</span>
+                </div>
+                <div class="news-source">${news.source}</div>
+                <div class="news-verification">
+                    <div class="verification-icon verification-${news.status}">${statusIcon}</div>
+                    <div class="verification-status">${news.statusText}</div>
+                </div>
+            `;
+
+            // 添加点击效果
+            card.addEventListener('click', () => {
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 100);
+            });
+
             newsFlow.appendChild(card);
         });
     }
@@ -1294,6 +1488,11 @@
     // 网络动画
     function initNetworkAnimation() {
         const canvas = document.getElementById('networkCanvas');
+        if (!canvas) {
+            console.log('网络动画画布不存在，跳过网络动画初始化');
+            return; // 如果元素不存在，提前退出函数
+        }
+
         const ctx = canvas.getContext('2d');
 
         // 设置画布大小
@@ -1363,9 +1562,9 @@
 
     // 初始化
     document.addEventListener('DOMContentLoaded', () => {
-        createNewsCards();
-        initScrollAnimation();
-        initNetworkAnimation();
+        if (typeof createNewsCards === 'function') createNewsCards();
+        if (typeof initScrollAnimation === 'function') initScrollAnimation();
+        if (typeof initNetworkAnimation === 'function') initNetworkAnimation();
 
         // 添加特点列表动画延迟
         document.querySelectorAll('.feature-item').forEach((item, index) => {
@@ -1546,8 +1745,8 @@
 
     // 初始化
     document.addEventListener('DOMContentLoaded', () => {
-        createStarField();
-        initEarth();
+        if (typeof createStarField === 'function') createStarField();
+        if (typeof initEarth === 'function' && typeof THREE !== 'undefined') initEarth();
     });
 </script>
 {% endblock %}

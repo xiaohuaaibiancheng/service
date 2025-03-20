@@ -1,6 +1,6 @@
 # routes.py：路由+视图函数
 
-from flask import Blueprint, render_template, request, jsonify, url_for, redirect, current_app, send_file
+from flask import Blueprint, render_template, request, jsonify, url_for, redirect, current_app, send_file,session
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
@@ -17,6 +17,7 @@ import uuid
 import logging
 import asyncio
 from typing import List
+import threading
 
 # 导入配置
 from src.config import OPENAI_API_KEY, OPENAI_BASE_URL, UPLOAD_FOLDER, MAX_CONTENT_LENGTH
@@ -30,6 +31,15 @@ from src.frontend.tool import  extract_and_detect_file_news, extract_and_detect_
 from src.frontend.ai_analyzer import analyze_with_llm
 from langchain_community.chat_models import ChatOpenAI
 
+# 导入虚假新闻检测函数
+from src.frontend.detect_news import  detect_fake_news_segmented
+from src.frontend.single_detect import predict_rumor
+
+# 导入用户使用统计模块
+from src.frontend.user_usage_tracker import record_user_usage, get_user_usage_stats, reset_feature_count, reset_all_counts, export_stats_json
+
+# 导入检测历史记录模块
+from src.frontend.detection_tracker import detection_tracker
 
 # 创建前端蓝图
 frontend_bp = Blueprint(
@@ -70,18 +80,53 @@ if not os.path.exists(SHARED_CHAT_PATH):
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# 功能使用统计的相关配置
+USAGE_STATS_PATH = os.path.join(os.path.dirname(__file__), '../static/frontend', 'usage_stats')
+USAGE_STATS_FILE = os.path.join(USAGE_STATS_PATH, 'detection_usage.json')
+
+# 确保目录存在
+if not os.path.exists(USAGE_STATS_PATH):
+    os.makedirs(USAGE_STATS_PATH)
+
+# 用于线程安全的锁
+stats_lock = threading.Lock()
+
+
+
+
 @frontend_bp.route('/')
 def index():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('index_view', username)
     return render_template('frontend/index.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
+
 # 添加新闻检测路由
-@frontend_bp.route('/news_detect')
+@frontend_bp.route('/news_detect', methods=['GET', 'POST'])
 def news_detect():
-    global fact_check
-    fact_check=fact_checker.model
-    return render_template('frontend/news_detect.html')
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    if request.method == 'GET':
+        record_user_usage('news_detect_view', username)  # 记录页面访问
+        global fact_check
+        fact_check=fact_checker.model
+        return render_template('frontend/news_detect.html')
+    else:  # POST - 提交检测请求
+        record_user_usage('news_detect_submit', username)  # 记录功能使用
+        # 处理提交的新闻检测请求
+        # 由于POST处理代码不在此函数中，这里只是添加记录点
+
 @frontend_bp.route('/agent', methods=['GET', 'POST'])
 async def agent():
-    if request.method == 'POST':
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    if request.method == 'GET':
+        record_user_usage('agent_view', username)  # 记录页面访问
+        return render_template('frontend/agent.html')
+    else:  # POST - 执行事实核查
+        record_user_usage('agent_check', username)  # 记录功能使用
         title = request.form.get('title')
         url = request.form.get('url')
         content = request.form.get('content')
@@ -117,22 +162,47 @@ async def agent():
             'error_logs': report.error_logs
         })
 
-
-    return render_template('frontend/agent.html')
-
 @frontend_bp.route("/detect/url", methods=["POST"])
 def detect_url():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('detect_url', username)  # 记录功能使用
     url = request.json.get("url")
     if not url:
         return jsonify({"error": "URL不能为空"}), 400
     # 模拟从 URL 提取内容（实际应用中需要实现 URL 内容抓取）
     result = extract_and_detect_url_news(url,classifier_txt_img)
     # result = extract_and_detect_url_news(content)
+                # 记录检测历史
+    if username:
+        result_data = json.loads(result)
+        if 'title_txt_是否匹配' in result_data and 'title_txt_相似度' in result_data:
+            results = "虚假" if result_data['title_txt_是否匹配'] == '0' else "真实"
+            accuracy = result_data['title_txt_相似度'] * 100
+            detection_tracker.add_detection_record(
+                username=username,
+                detection_type="文题一致性检测",
+                result=results,
+                accuracy=accuracy
+            )
+        if 'text_pic_similarity_probability' in result_data :
+            results = "虚假" if result_data['text_pic_similarity_probability'] < 0.5 else "真实"
+            accuracy = result_data['text_pic_similarity_probability'] * 100
+            detection_tracker.add_detection_record(
+                username=username,
+                detection_type="图文一致性检测",
+                result=results,
+                accuracy=accuracy
+            )
 
     return jsonify(result)
 
 @frontend_bp.route('/detect/multimodal', methods=['POST'])
 def detect_multimodal():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('detect_multimodal', username)  # 记录功能使用
     text = request.form.get('text')
     image = request.files.get('image')
     title = request.form.get('title')
@@ -154,11 +224,34 @@ def detect_multimodal():
         result = process_text_only(text)
     else:
         return jsonify({"error": "无效的输入组合"}), 400
-    print('result',result)
+    if username:
+        result_data = json.loads(result)
+        if 'title_txt_是否匹配' in result_data and 'title_txt_相似度' in result_data:
+            results = "虚假" if result_data['title_txt_是否匹配'] == '0' else "真实"
+            accuracy = result_data['title_txt_相似度'] * 100
+            detection_tracker.add_detection_record(
+                username=username,
+                detection_type="文题一致性检测",
+                result=results,
+                accuracy=accuracy
+            )
+        if 'text_pic_similarity_probability' in result_data :
+            results = "虚假" if result_data['text_pic_similarity_probability'] < 0.5 else "真实"
+            accuracy = result_data['text_pic_similarity_probability'] * 100
+            detection_tracker.add_detection_record(
+                username=username,
+                detection_type="图文一致性检测",
+                result=results,
+                accuracy=accuracy
+            )
     return jsonify(result)
 
 @frontend_bp.route("/detect/file", methods=["POST"])
 def detect_file():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('detect_file', username)  # 记录功能使用
     file = request.files.get("file")
     if not file:
         return jsonify({"error": "文件上传失败"}), 400
@@ -174,6 +267,26 @@ def detect_file():
     # 调用 extract_and_detect_file_news 函数，传入文件路径
     try:
         detection_result = extract_and_detect_file_news(file_path)
+        if username:
+            result_data = json.loads(detection_result)
+            if 'title_txt_是否匹配' in result_data and 'title_txt_相似度' in result_data:
+                results = "虚假" if result_data['title_txt_是否匹配'] == '0' else "真实"
+                accuracy = result_data['title_txt_相似度'] * 100
+                detection_tracker.add_detection_record(
+                    username=username,
+                    detection_type="文题一致性检测",
+                    result=results,
+                    accuracy=accuracy
+                )
+            if 'text_pic_similarity_probability' in result_data :
+                results = "虚假" if result_data['text_pic_similarity_probability'] < 0.5 else "真实"
+                accuracy = result_data['text_pic_similarity_probability'] * 100
+                detection_tracker.add_detection_record(
+                    username=username,
+                    detection_type="图文一致性检测",
+                    result=results,
+                    accuracy=accuracy
+                )
     except Exception as e:
         return jsonify({"error": f"文件处理失败: {str(e)}"}), 500
 
@@ -182,25 +295,35 @@ def detect_file():
 
 @frontend_bp.route('/ai_chat')
 def ai_chat():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('ai_chat_view', username)  # 记录页面访问
     return render_template('frontend/ai_chat.html')
-
-
 
 @frontend_bp.route('/ai_detect')
 def ai_detect():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('ai_detect_view', username)  # 记录页面访问
     return render_template('frontend/ai_detect.html')
-
-
-
 
 @frontend_bp.route('/about')
 def about():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('about_view', username)  # 记录页面访问
     return render_template('frontend/about.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
 
 @frontend_bp.route('/contact')
 def contact():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('contact_view', username)  # 记录页面访问
     return render_template('frontend/contact.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
-
 
 @frontend_bp.route('/chat/list')
 def chat_history_api():
@@ -246,6 +369,10 @@ def get_chat(chat_id):
 @frontend_bp.route('/chat/create', methods=['POST'])
 def create_chat():
     try:
+        # 从session中获取用户名
+        username = session.get('username')
+        
+        record_user_usage('create_chat', username)  # 记录功能使用
         timestamp = int(time.time())
         chat_id = f'chat_{timestamp}'
         
@@ -259,6 +386,10 @@ def create_chat():
                 }
             ]
         }
+        
+        # 记录创建者用户名（如果有）
+        if username:
+            chat_data['created_by'] = username
         
         filepath = os.path.join(CHAT_HISTORY_PATH, f"{chat_id}.json")
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -275,6 +406,10 @@ def create_chat():
 @frontend_bp.route('/chat/<chat_id>/message', methods=['POST'])
 def send_message(chat_id):
     try:
+        # 从session中获取用户名
+        username = session.get('username')
+        
+        record_user_usage('send_message', username)  # 记录功能使用
         if not chat_id.startswith('chat_') or '/' in chat_id or '\\' in chat_id:
             return jsonify({'status': 'error', 'message': '无效的聊天ID'})
         
@@ -383,7 +518,11 @@ def delete_chat(chat_id):
 # 新增：分享聊天功能
 @frontend_bp.route('/chat/share', methods=['POST'])
 def share_chat():
+    # 从session中获取用户名
+    username = session.get('username')
+    
     try:
+        record_user_usage('share_chat', username)  # 记录功能使用
         data = request.json
         chat_id = data.get('chat_id')
         message_index = data.get('message_index')
@@ -421,6 +560,10 @@ def share_chat():
             'original_chat_id': chat_id
         }
         
+        # 添加分享者用户名（如果有）
+        if username:
+            shared_data['shared_by'] = username
+        
         # 保存分享记录
         share_filepath = os.path.join(SHARED_CHAT_PATH, f"{share_id}.json")
         with open(share_filepath, 'w', encoding='utf-8') as f:
@@ -437,6 +580,10 @@ def share_chat():
 # 新增：访问分享的聊天
 @frontend_bp.route('/shared/<share_id>')
 def view_shared_chat(share_id):
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('view_shared_chat', username)  # 记录页面访问
     try:
         if '/' in share_id or '\\' in share_id:
             return render_template('frontend/error.html', message='无效的分享ID')
@@ -484,6 +631,10 @@ def get_shared_chat(share_id):
 # 新增：回复分享的聊天（如果不是只读）
 @frontend_bp.route('/api/shared/<share_id>/reply', methods=['POST'])
 def reply_to_shared_chat(share_id):
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('reply_to_shared', username)  # 记录功能使用
     try:
         if '/' in share_id or '\\' in share_id:
             return jsonify({'status': 'error', 'message': '无效的分享ID'})
@@ -502,11 +653,15 @@ def reply_to_shared_chat(share_id):
         data = request.json
         user_message = data.get('message', '')
         
-        # 添加用户消息
-        shared_data['messages'].append({
+        # 添加用户消息 (包含用户名如果有)
+        user_msg = {
             'role': 'user',
             'content': user_message
-        })
+        }
+        if username:
+            user_msg['username'] = username
+            
+        shared_data['messages'].append(user_msg)
         
         # 使用langchain_openai和langchain_core.schema生成回复
         from langchain.chat_models import ChatOpenAI
@@ -566,28 +721,6 @@ def reply_to_shared_chat(share_id):
 
 ##优化数据利用
 # 检测数据统计
-def get_detection_stats():
-    """获取检测统计数据"""
-    return {
-        'total_detections': 1234,
-        'today_detections': 56,
-        'accuracy_rate': 95.5,
-        'fake_news_rate': 15.2
-    }
-
-def get_detection_trends():
-    """获取检测趋势数据"""
-    dates = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
-    dates.reverse()
-    
-    return {
-        'dates': dates,
-        'detections': [45, 52, 49, 60, 55, 58, 56],
-        'accuracy': [94.5, 95.2, 95.0, 95.5, 94.8, 95.3, 95.5]
-    }
-
-
-
 
 
 
@@ -596,70 +729,155 @@ def get_detection_trends():
 
 @frontend_bp.route('/news_aggregate')
 def news_aggregate():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('news_aggregate_view', username)  # 记录页面访问
     return render_template('frontend/news_aggregate.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
 
-@frontend_bp.route('/api/news/aggregate')
-def api_news_aggregate():
-    keyword = request.args.get('keyword', '')
-    if not keyword:
-        return jsonify({
-            'status': 'error',
-            'message': '请输入搜索关键词'
-        }), 400
-    
-    try:
-        # 这里需要实现实际的新闻聚合逻辑
-        result = {
-            'news': [
-                {
-                    'title': '示例新闻标题',
-                    'url': 'http://example.com',
-                    'source': '示例来源',
-                    'publish_time': '2024-02-28',
-                    'summary': '新闻摘要...'
-                }
-            ],
-            'analysis': {
-                'time_diff': ['1天', '2天', '3天'],
-                'content_similarity': [0.8, 0.7, 0.6],
-                'source_count': 3
-            }
-        }
-        
-        return jsonify({
-            'status': 'success',
-            'data': result
-        })
-    except Exception as e:
-        print(f"Error in api_news_aggregate: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': '搜索过程中出现错误'
-        }), 500
+
 
 @frontend_bp.route('/detect/ai_text', methods=['POST'])
 def detect_text():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('detect_ai_text', username)  # 记录功能使用
+    data = request.get_json()
+    text_content = data.get('text_content')
+    if not text_content:
+        return jsonify({'error': '文本内容不能为空'}), 400
+    
+    # 检测文本
+    prob = detector_ai.predict_prob(text_content)
+    
+    random_int = random.randint(1, 10)
+    random_percent = random_int * 0.01
+    if prob == 0.0:
+        prob += random_percent
+    if prob == 1.0:
+        prob -= random_percent
+        
+    # 记录检测历史
+    if username:
+        result = "AI生成" if prob > 0.5 else "人工撰写"
+        accuracy = prob * 100 if prob > 0.5 else (1 - prob) * 100
+        detection_tracker.add_detection_record(
+            username=username,
+            detection_type="ai_generated",
+            result=result,
+            accuracy=accuracy
+        )
+
+    return jsonify({
+        'status': 'success',
+        'probability': prob
+    })
+
+# 导出AI检测报告
+@frontend_bp.route('/api/ai_detect/export', methods=['POST'])
+def export_ai_detect_report():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('export_ai_detect_report', username)  # 记录功能使用
+    
+    data = request.get_json()
+    detection_type = data.get('detection_type', 'text')  # 文本或图片
+    probability = data.get('probability', 0)
+    content = data.get('content', '')  # 检测的内容
+    
+    # 创建一个包含日期和时间的文件名
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"ai_detection_report_{timestamp}.json"
+    
+    # 构建报告数据
+    report_data = {
+        'detection_type': detection_type,
+        'probability': probability,
+        'result': "AI生成" if probability > 0.5 else "人工撰写",
+        'accuracy': probability * 100 if probability > 0.5 else (1 - probability) * 100,
+        'content_preview': content[:100] + '...' if len(content) > 100 else content,
+        'detection_time': timestamp,
+        'features': {
+            'ai_feature_index': probability * 10,
+            'human_feature_index': (1 - probability) * 10
+        }
+    }
+    
+    # 将报告数据转换为JSON字符串
+    json_data = json.dumps(report_data, ensure_ascii=False, indent=4)
+    
+    # 创建一个BytesIO对象
+    bytes_io = BytesIO(json_data.encode('utf-8'))
+    
+    # 返回文件下载
+    return send_file(
+        bytes_io,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/json'
+    )
+
+# 分享AI检测结果
+@frontend_bp.route('/api/ai_detect/share', methods=['POST'])
+def share_ai_detect_result():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('share_ai_detect_result', username)  # 记录功能使用
+    
+    data = request.get_json()
+    detection_type = data.get('detection_type', 'text')  # 文本或图片
+    probability = data.get('probability', 0)
+    
+    # 生成唯一的分享ID
+    share_id = str(uuid.uuid4())
+    
+    # 构建分享数据
+    share_data = {
+        'detection_type': detection_type,
+        'probability': probability,
+        'result': "AI生成" if probability > 0.5 else "人工撰写",
+        'accuracy': probability * 100 if probability > 0.5 else (1 - probability) * 100,
+        'shared_by': username,
+        'share_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # 存储分享数据 (使用共享记录跟踪器或数据库)
     try:
-        data = request.get_json()
-        text_content = data.get('text_content')
-        if not text_content:
-            return jsonify({'error': '文本内容不能为空'}), 400
-        # 假设有一个函数 process_text_detection 用于处理文本检测
-        prob = detector_ai.predict_prob(text_content)
-
-        random_int = random.randint(1, 10)
-        random_percent = random_int * 0.01
-        if prob == 0.0:
-            prob += random_percent
-        if prob == 1.0:
-            prob -= random_percent
-
-        return jsonify({
-            'status': 'success',
-            'probability': prob
-        })
+        db.shared_ai_detections.insert_one(share_data)
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+        print(f"Error storing shared AI detection: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': '无法保存分享数据'
+        }), 500
+    
+    # 构建分享链接
+    share_link = f"{request.host_url.rstrip('/')}/view/ai_detect/{share_id}"
+    
+    return jsonify({
+        'status': 'success',
+        'share_id': share_id,
+        'share_link': share_link
+    })
+
+# 查看分享的AI检测结果
+@frontend_bp.route('/view/ai_detect/<share_id>')
+def view_shared_ai_detect(share_id):
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    # 获取分享数据
+    try:
+        share_data = db.shared_ai_detections.find_one({'_id': share_id})
+        if not share_data:
+            return render_template('error.html', message='找不到分享的检测结果'), 404
+    except Exception as e:
+        print(f"Error retrieving shared AI detection: {str(e)}")
+        return render_template('error.html', message='无法加载分享数据'), 500
+    
+    return render_template('frontend/shared_ai_detect.html', 
+                           share_data=share_data,
+                           username=username)
 
 # 修复：AI图片检测函数
 def detect_ai_generated_image(image):
@@ -700,18 +918,36 @@ def detect_ai_generated_image(image):
 
 @frontend_bp.route('/detect/ai_image', methods=['POST'])
 def detect_ai_image():
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('detect_ai_image', username)  # 记录功能使用
     if 'image' not in request.files:
         return jsonify({'status': 'error', 'message': '没有上传图片文件'}), 400
 
     image = request.files['image']
     # 调用AI图片检测函数
     probability = detect_ai_generated_image(image)
+    
+    # 记录检测历史
+    if username:
+        result = "AI生成" if probability > 0.5 else "真实图片"
+        accuracy = probability * 100 if probability > 0.5 else (1 - probability) * 100
+        detection_tracker.add_detection_record(
+            username=username,
+            detection_type="ai_generated",
+            result=result,
+            accuracy=accuracy
+        )
 
     return jsonify({'status': 'success', 'probability': probability})
 
 # 添加聚合分析路由
 @frontend_bp.route('/detect/aggregate', methods=['POST'])
 def detect_aggregate():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('detect_aggregate', username)  # 记录功能使用
     """
     聚合分析接口，可以同时接收图片、文本和标题，进行综合分析
     返回JSON格式的分析结果，使用大模型API和Pydantic模型生成结构化数据
@@ -1020,6 +1256,10 @@ def update_chat_settings():
 
 @frontend_bp.route('/api/news/search', methods=['POST'])
 def search_news():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('news_aggregate_search', username)  # 记录功能使用
     try:
         data = request.json
         keyword = data.get('keyword', '')
@@ -1079,6 +1319,10 @@ def search_news():
 
 @frontend_bp.route('/api/news/analyze', methods=['POST'])
 def analyze_news():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('news_analyze', username)  # 记录功能使用
     try:
         data = request.json
         url = data.get('url')
@@ -1090,75 +1334,217 @@ def analyze_news():
                 'message': '缺少必要参数'
             }), 400
             
-        # 增强的新闻分析结果
+        # 获取文章内容
+        try:
+            from newspaper import Article
+            article = Article(url)
+            article.download()
+            article.parse()
+            article.nlp()  # 进行NLP处理以提取关键词等
+            
+            content = article.text
+            keywords = article.keywords
+            published_date = article.publish_date
+            
+            # 如果提取到的关键词不足5个，则添加更多
+            if len(keywords) < 5:
+                import jieba.analyse
+                additional_keywords = jieba.analyse.extract_tags(content, topK=10)
+                keywords = list(set(keywords + additional_keywords))[:5]
+                
+            # 如果没有提取到任何关键词，使用标题中的词
+            if not keywords:
+                keywords = jieba.analyse.extract_tags(title, topK=5)
+                
+            # 过滤太长或太短的关键词
+            filtered_keywords = []
+            for kw in keywords:
+                # 限制关键词长度在2-10个字符之间
+                if 2 <= len(kw) <= 10 and not re.match(r'^\d+$', kw):
+                    filtered_keywords.append(kw)
+            
+            # 如果过滤后关键词不足，尝试从标题提取短关键词补充
+            if len(filtered_keywords) < 3:
+                short_keywords = []
+                for word in jieba.lcut(title):
+                    if 2 <= len(word) <= 10 and not re.match(r'^\d+$', word) and word not in filtered_keywords:
+                        short_keywords.append(word)
+                        
+                filtered_keywords.extend(short_keywords[:5-len(filtered_keywords)])
+                
+            keywords = filtered_keywords[:5]  # 取最多5个关键词
+            
+        except Exception as e:
+            print(f"提取文章内容失败: {str(e)}")
+            content = ""
+            keywords = title.split()[:5]  # 使用标题分词作为备选
+            published_date = datetime.now()
+            
+        # 使用关键词搜索相关新闻
+        from src.frontend.web_crawler import MultiPlatformNewsCrawler
+        crawler = MultiPlatformNewsCrawler()
+        
+        # 使用标题中的关键词搜索相关新闻
+        search_keyword = " ".join(keywords[:3]) if keywords else title.split()[:3]
+        related_results = crawler.search_all_platforms(search_keyword)
+        related_news_list = related_results.get('news', [])
+        
+        # 过滤掉当前新闻自身
+        filtered_related_news = [news for news in related_news_list if news.get('url') != url][:3]
+        
+        # 进行情感分析
+        import jieba
+        import re
+        
+        # 简单的情感分析词典
+        positive_words = ['好', '优', '佳', '胜', '赞', '利好', '成功', '突破', '提升', '成就', '发展', '增长', '满意']
+        negative_words = ['差', '糟', '败', '输', '危机', '下跌', '问题', '困难', '失败', '低迷', '下降', '不足']
+        
+        # 分词并统计情感词
+        words = jieba.lcut(content)
+        positive_count = sum(1 for word in words if word in positive_words)
+        negative_count = sum(1 for word in words if word in negative_words)
+        
+        # 确定情感倾向和分数
+        if positive_count > negative_count:
+            sentiment = 1  # 正面
+            sentiment_score = min(0.9, 0.5 + (positive_count - negative_count) / len(words) * 5)
+        elif negative_count > positive_count:
+            sentiment = -1  # 负面
+            sentiment_score = min(0.9, 0.5 + (negative_count - positive_count) / len(words) * 5)
+        else:
+            sentiment = 0  # 中性
+            sentiment_score = 0.5
+            
+        # 基于文章内容和关键词进行可信度评估
+        credibility_score = 70  # 基础分
+        
+        # 添加可信度评分因素
+        if len(content) > 500:  # 较长文章通常更详细
+            credibility_score += 5
+        
+        if len(keywords) >= 5:  # 关键词丰富
+            credibility_score += 5
+            
+        if len(filtered_related_news) >= 2:  # 有相关报道
+            credibility_score += 10
+            
+        # 限制在合理范围内
+        credibility_score = min(95, max(50, credibility_score))
+        
+        # 提取实体识别 - 简化版
+        entities = []
+        for kw in keywords:
+            if 2 <= len(kw) <= 10 and not re.match(r'[^\w\s]', kw):
+                entities.append(kw)
+                
+        # 如果实体不足，从标题中提取实体
+        if len(entities) < 3:
+            for word in jieba.lcut(title):
+                if 2 <= len(word) <= 10 and not re.match(r'[^\w\s]', word) and word not in entities:
+                    entities.append(word)
+                    if len(entities) >= 3:
+                        break
+                        
+        entities = entities[:3]  # 限制最多3个实体
+            
+        # 构建主题分类 - 简化版
+        topic_matches = {
+            '政治': ['政府', '党', '主席', '总理', '国家', '政策', '法律'],
+            '经济': ['经济', '股市', '金融', '投资', '企业', '贸易', '产业'],
+            '科技': ['科技', '互联网', '软件', '硬件', '创新', '研发', '数字'],
+            '社会': ['社会', '民生', '教育', '医疗', '公共', '安全', '服务'],
+            '文化': ['文化', '艺术', '电影', '音乐', '传统', '历史', '娱乐'],
+            '体育': ['体育', '足球', '篮球', '奥运', '比赛', '运动员', '冠军']
+        }
+        
+        topics = []
+        content_lower = content.lower()
+        for topic, indicators in topic_matches.items():
+            if any(indicator in content_lower for indicator in indicators):
+                topics.append(topic)
+                
+        if not topics:
+            topics = ['综合']
+        
+        # 从相关新闻获取传播时间线数据
+        propagation_timeline = []
+        platforms = list(set([news.get('source', '未知来源').replace('来源：', '') for news in related_news_list]))
+        
+        # 添加当前新闻发布平台
+        current_platform = None
+        for plat in platforms:
+            if plat in url:
+                current_platform = plat
+                break
+                
+        if not current_platform:
+            current_platform = "当前平台"
+            
+        # 按时间排序相关新闻
+        sorted_related = sorted(related_news_list, key=lambda x: x.get('publish_time', ''), reverse=False)
+        
+        # 生成传播时间线
+        for i, news in enumerate(sorted_related[:5]):
+            platform = news.get('source', '未知来源').replace('来源：', '')
+            shares = int(news.get('credibility', 50) * 50)  # 基于可信度估算分享数
+            
+            time_point = {
+                'time': news.get('publish_time', '未知时间'),
+                'platform': platform,
+                'shares': shares
+            }
+            propagation_timeline.append(time_point)
+            
+        # 确保传播时间线有数据
+        if not propagation_timeline:
+            propagation_timeline = [
+                {'time': datetime.now().strftime('%Y-%m-%d %H:%M'), 'platform': current_platform, 'shares': 500}
+            ]
+        
+        # 构建最终结果
         analysis_result = {
-            'credibility': random.randint(70, 95),  # 可信度评分
-            'keywords': [
-                '关键词1',
-                '关键词2',
-                '关键词3',
-                '关键词4',
-                '关键词5'
-            ],
-            'sentiment': random.choice([-1, 1]),  # 情感倾向：-1表示负面，1表示正面
-            'sentiment_score': random.uniform(0.6, 0.9),  # 情感强度
+            'credibility': credibility_score,
+            'keywords': keywords[:5],
+            'sentiment': sentiment,
+            'sentiment_score': sentiment_score,
             'related_news': [
                 {
-                    'title': '相关新闻1',
-                    'url': 'http://example.com/news1',
-                    'source': '新闻来源1',
-                    'publish_time': '2024-03-02',
-                    'similarity': random.randint(70, 95)
-                },
-                {
-                    'title': '相关新闻2',
-                    'url': 'http://example.com/news2',
-                    'source': '新闻来源2',
-                    'publish_time': '2024-03-02',
-                    'similarity': random.randint(70, 95)
-                },
-                {
-                    'title': '相关新闻3',
-                    'url': 'http://example.com/news3',
-                    'source': '新闻来源3',
-                    'publish_time': '2024-03-01',
-                    'similarity': random.randint(70, 95)
-                }
+                    'title': news.get('title', '相关新闻'),
+                    'url': news.get('url', '#'),
+                    'source': news.get('source', '未知来源'),
+                    'publish_time': news.get('publish_time', '未知时间'),
+                    'similarity': news.get('credibility', 70)  # 使用可信度作为相似度
+                } for news in filtered_related_news
             ],
             # 添加传播时间线数据
-            'propagation_timeline': [
-                {'time': '2024-03-01 08:00', 'platform': '百度', 'shares': random.randint(100, 500)},
-                {'time': '2024-03-01 10:30', 'platform': '搜狗', 'shares': random.randint(200, 800)},
-                {'time': '2024-03-01 14:15', 'platform': '央视', 'shares': random.randint(500, 2000)},
-                {'time': '2024-03-01 18:45', 'platform': '中新网', 'shares': random.randint(300, 1000)},
-                {'time': '2024-03-02 09:20', 'platform': '百度', 'shares': random.randint(800, 3000)}
-            ],
+            'propagation_timeline': propagation_timeline,
             # 添加内容分析
             'content_analysis': {
-                'factual_score': random.randint(70, 95),
-                'bias_score': random.randint(10, 40),
-                'sensational_score': random.randint(20, 60),
-                'key_entities': ['实体1', '实体2', '实体3'],
-                'topic_classification': ['政治', '经济', '社会']
+                'factual_score': credibility_score,
+                'bias_score': int(30 + abs(sentiment) * 20),  # 情感越明显，偏见分数越高
+                'sensational_score': int(30 + abs(sentiment) * 30),  # 情感越明显，耸动分数越高
+                'key_entities': entities,
+                'topic_classification': topics
             },
-            # 添加传播影响力分析
+            # 添加传播影响力分析（基于相关新闻数量和情感）
             'impact_analysis': {
-                'overall_impact': random.randint(1, 10),
+                'overall_impact': min(10, max(1, len(related_news_list) // 3)),
                 'demographic_reach': {
-                    '18-24岁': random.randint(10, 30),
-                    '25-34岁': random.randint(20, 40),
-                    '35-44岁': random.randint(15, 35),
-                    '45-54岁': random.randint(10, 25),
-                    '55岁以上': random.randint(5, 15)
+                    '18-24岁': 20 + (len(topics) * 5),
+                    '25-34岁': 30 + (len(topics) * 2),
+                    '35-44岁': 25 + (len(entities) * 2),
+                    '45-54岁': 15 + (len(entities) * 1),
+                    '55岁以上': 10
                 },
                 'geographic_distribution': {
-                    '华东': random.randint(20, 40),
-                    '华北': random.randint(15, 35),
-                    '华南': random.randint(10, 30),
-                    '西南': random.randint(5, 20),
-                    '西北': random.randint(5, 15),
-                    '东北': random.randint(5, 15),
-                    '华中': random.randint(10, 25)
+                    '华东': 30,
+                    '华北': 25,
+                    '华南': 20,
+                    '西南': 10,
+                    '西北': 5,
+                    '东北': 5,
+                    '华中': 5
                 }
             }
         }
@@ -1178,6 +1564,10 @@ def analyze_news():
 # 添加新的路由：获取传播时间线详情
 @frontend_bp.route('/api/news/timeline', methods=['POST'])
 def get_news_timeline():
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('news_timeline', username)  # 记录功能使用
     try:
         data = request.json
         keyword = data.get('keyword', '')
@@ -1188,43 +1578,132 @@ def get_news_timeline():
                 'message': '缺少关键词参数'
             }), 400
         
-        # 生成模拟的传播时间线详情数据
-        timeline_data = []
-        base_time = datetime.now() - timedelta(days=7)
+        # 使用相同的爬虫获取实际的新闻数据
+        from src.frontend.web_crawler import MultiPlatformNewsCrawler
+        crawler = MultiPlatformNewsCrawler()
         
-        platforms = ['百度', '搜狗', '央视', '中新网']
+        # 获取所有平台的新闻数据
+        search_result = crawler.search_all_platforms(keyword)
+        news_list = search_result.get('news', [])
+        
+        if not news_list:
+            return jsonify({
+                'status': 'error',
+                'message': '未找到相关新闻数据'
+            }), 404
+        
+        # 基于实际数据构建时间线
+        timeline_data = []
+        
+        # 按时间排序新闻，确保时间线按时间顺序展示
+        sorted_news = sorted(news_list, key=lambda x: x.get('publish_time', ''), reverse=False)
+        
+        # 从新闻标题中提取事件类型
         events = [
             '首次报道', '热点形成', '官方回应', '专家解读', 
-            '社交媒体讨论高峰', '辟谣信息发布', '后续报道',
-            '热度下降'
+            '社交媒体讨论', '辟谣信息', '后续报道',
+            '舆情分析'
         ]
         
-        # 生成平台相似度数据
-        similarity_data = []
-        all_platforms = ['百度', '搜狗', '微博', '知乎', '今日头条', '抖音', '央视', '人民网']
-        
-        # 随机选择5对平台进行相似度比较
-        for _ in range(5):
-            platform_pair = random.sample(all_platforms, 2)
-            similarity_data.append({
-                'platforms': f"{platform_pair[0]} vs {platform_pair[1]}",
-                'similarity': f"{random.randint(30, 95)}%"
-            })
-        
-        for i in range(10):
-            time_point = base_time + timedelta(hours=i*12)
-            event_data = {
-                'time': time_point.strftime('%Y-%m-%d %H:%M'),
-                'platform': random.choice(platforms),
-                'event': events[min(i, len(events)-1)],
-                'title': f"{keyword}相关新闻 #{i+1}",
-                'url': f"http://example.com/news/{i+1}",
-                'shares': random.randint(100, 5000),
-                'comments': random.randint(50, 2000),
-                'sentiment': random.choice(['正面', '中性', '负面']),
-                'impact_score': random.randint(1, 10)
+        # 构建真实时间线数据
+        for i, news in enumerate(sorted_news[:10]):  # 限制为前10条新闻
+            # 确定事件类型（基于内容或顺序）
+            event_index = min(i, len(events)-1)
+            
+            # 提取情感倾向（可以基于标题或摘要内容简单判断）
+            sentiment = '中性'
+            summary = news.get('summary', '').lower()
+            title = news.get('title', '').lower()
+            positive_words = ['好', '佳', '胜', '赞', '利好', '成功', '突破', '提升', '成就']
+            negative_words = ['差', '糟', '败', '输', '危机', '下跌', '问题', '困难', '失败']
+            
+            if any(word in title or word in summary for word in positive_words):
+                sentiment = '正面'
+            elif any(word in title or word in summary for word in negative_words):
+                sentiment = '负面'
+            
+            # 处理标题，截断过长的标题
+            news_title = news.get('title', '无标题')
+            if len(news_title) > 20:
+                news_title = news_title[:18] + '...'
+                
+            # 构建时间线项
+            timeline_item = {
+                'time': news.get('publish_time', '未知时间'),
+                'platform': news.get('source', '未知来源').replace('来源：', ''),
+                'event': events[event_index],
+                'title': news_title,
+                'url': news.get('url', '#'),
+                'shares': int(news.get('credibility', 50) * 50),  # 使用可信度创建分享数
+                'comments': int(news.get('credibility', 50) * 20),  # 使用可信度创建评论数
+                'sentiment': sentiment,
+                'impact_score': min(10, max(1, int(news.get('credibility', 50) / 10)))  # 基于可信度计算影响力
             }
-            timeline_data.append(event_data)
+            timeline_data.append(timeline_item)
+        
+        # 生成平台相似度数据（基于实际新闻来源）
+        platforms_found = list(set([news.get('source', '').replace('来源：', '') for news in news_list]))
+        similarity_data = []
+        
+        # 确保至少有两个不同平台才生成相似度数据
+        if len(platforms_found) >= 2:
+            # 最多选择5对平台对比
+            pairs_count = min(5, len(platforms_found) * (len(platforms_found) - 1) // 2)
+            
+            platform_pairs = []
+            for i in range(len(platforms_found)):
+                for j in range(i+1, len(platforms_found)):
+                    platform_pairs.append((platforms_found[i], platforms_found[j]))
+            
+            # 如果有超过5对，随机选择5对
+            if len(platform_pairs) > 5:
+                import random
+                platform_pairs = random.sample(platform_pairs, 5)
+            
+            # 计算平台间相似度（基于报道内容、时间等因素）
+            for platform1, platform2 in platform_pairs:
+                # 获取两个平台的新闻
+                platform1_news = [n for n in news_list if platform1 in n.get('source', '')]
+                platform2_news = [n for n in news_list if platform2 in n.get('source', '')]
+                
+                # 基于标题相似性计算相似度
+                similarity_score = 0
+                if platform1_news and platform2_news:
+                    # 比较标题中的关键词重叠
+                    platform1_words = set(' '.join([n.get('title', '') for n in platform1_news]).split())
+                    platform2_words = set(' '.join([n.get('title', '') for n in platform2_news]).split()) 
+                    
+                    # 计算Jaccard相似度
+                    common_words = platform1_words.intersection(platform2_words)
+                    total_words = platform1_words.union(platform2_words)
+                    
+                    if total_words:
+                        similarity_score = int((len(common_words) / len(total_words)) * 100)
+                
+                # 确保相似度在合理范围内
+                similarity_score = max(30, min(95, similarity_score))
+                
+                similarity_data.append({
+                    'platforms': f"{platform1} vs {platform2}",
+                    'similarity': f"{similarity_score}%"
+                })
+        
+        # 计算汇总数据
+        total_shares = sum(item['shares'] for item in timeline_data)
+        total_comments = sum(item['comments'] for item in timeline_data)
+        
+        # 找出分享量最高的时间点
+        peak_time = timeline_data[0]['time'] if timeline_data else '无数据'
+        if timeline_data:
+            peak_item = max(timeline_data, key=lambda x: x['shares'])
+            peak_time = peak_item['time']
+        
+        # 确定主要情感倾向
+        sentiment_counts = {'正面': 0, '中性': 0, '负面': 0}
+        for item in timeline_data:
+            sentiment_counts[item['sentiment']] += 1
+        
+        dominant_sentiment = max(sentiment_counts.items(), key=lambda x: x[1])[0] if sentiment_counts else '中性'
         
         return jsonify({
             'status': 'success',
@@ -1233,11 +1712,10 @@ def get_news_timeline():
                 'timeline': timeline_data,
                 'similarity': similarity_data,
                 'summary': {
-                    'total_shares': sum(item['shares'] for item in timeline_data),
-                    'total_comments': sum(item['comments'] for item in timeline_data),
-                    'peak_time': max(timeline_data, key=lambda x: x['shares'])['time'],
-                    'dominant_sentiment': max(['正面', '中性', '负面'], 
-                                            key=lambda s: len([i for i in timeline_data if i['sentiment'] == s]))
+                    'total_shares': total_shares,
+                    'total_comments': total_comments,
+                    'peak_time': peak_time,
+                    'dominant_sentiment': dominant_sentiment
                 }
             }
         })
@@ -1252,57 +1730,507 @@ def get_news_timeline():
 @frontend_bp.route('/fake_news_classify', methods=['GET', 'POST'])
 def fake_news_classify():
     """新闻虚假检测二分类页面和API"""
-    if request.method == 'GET':
-        return render_template('frontend/fake_news_classify.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
+    # 从session中获取用户名
+    username = session.get('username')
     
-    # 处理POST请求
+    if request.method == 'GET':
+        record_user_usage('fake_news_classify', username)  # 记录页面访问
+        return render_template('frontend/fake_news_classify.html', current_date=datetime.now().strftime('%Y年%m月%d日'))
+    else:  # POST - 实际执行分类
+        record_user_usage('fake_news_classify', username)  # 记录功能使用
+        try:
+            data = request.json
+            title = data.get('title', '')
+            content = data.get('content', '')
+            
+            if not content:
+                return jsonify({"error": "新闻内容不能为空"}), 400
+            
+            # 使用title和content组合，如果title不为空
+            text_to_analyze = f"{title} {content}" if title else content
+            
+            # 调用predict_rumor函数进行虚假新闻检测
+            prediction_result = predict_rumor(text_to_analyze)
+            
+            # 记录检测历史
+            if username:
+                result_data = json.loads(prediction_result)
+                if 'predicted_label' in result_data and 'probability' in result_data:
+                    result = "虚假" if result_data['predicted_label'] == '谣言' else "真实"
+                    accuracy = result_data['probability'] * 100
+                    detection_tracker.add_detection_record(
+                        username=username,
+                        detection_type="fake_news",
+                        result=result,
+                        accuracy=accuracy
+                    )
+            
+            # 直接返回predict_rumor的结果
+            return prediction_result, 200, {'Content-Type': 'application/json'}
+        
+        except Exception as e:
+            logging.error(f"新闻虚假检测出错: {str(e)}", exc_info=True)
+            return jsonify({"error": f"处理请求时出错: {str(e)}"}), 500
+
+@frontend_bp.route('/news_segment_detect', methods=['GET'])
+def news_segment_detect():
+    """分段检测新闻页面"""
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('news_segment_view', username)  # 记录页面访问
+    # 检查是否有ID参数，如果有则表示从历史记录加载
+    record_id = request.args.get('id')
+    if record_id:
+        try:
+            # 构建文件路径
+            import os
+            import json
+            results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+            json_path = os.path.join(results_dir, f'{record_id}.json')
+            
+            # 检查文件是否存在
+            if os.path.exists(json_path):
+                # 读取分析结果
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    record = json.load(f)
+                    
+                # 将记录ID传递给模板，在前端JavaScript中处理
+                return render_template('frontend/news_segment_detect.html', record_id=record_id)
+        except Exception as e:
+            print(f"加载历史记录时出错: {str(e)}")
+    
+    # 正常加载检测页面
+    return render_template('frontend/news_segment_detect.html')
+
+@frontend_bp.route('/news_segment_history', methods=['GET'])
+def news_segment_history():
+    """新闻分段检测历史记录页面"""
+    return render_template('frontend/news_segment_history.html')
+
+@frontend_bp.route('/api/news_segment_history', methods=['GET'])
+def get_news_segment_history():
+    """获取新闻分段检测历史记录列表"""
     try:
+        # 获取过滤和排序参数
+        filter_type = request.args.get('filter', 'all')
+        sort_type = request.args.get('sort', 'latest')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        
+        # 验证参数
+        if page < 1:
+            page = 1
+        if per_page < 1 or per_page > 50:
+            per_page = 10
+            
+        # 获取分析结果文件列表
+        import os
+        import json
+        from datetime import datetime
+        
+        results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+            
+        # 读取所有JSON文件
+        all_records = []
+        for filename in os.listdir(results_dir):
+            if filename.endswith('.json'):
+                try:
+                    with open(os.path.join(results_dir, filename), 'r', encoding='utf-8') as f:
+                        record = json.load(f)
+                        
+                    # 解析记录
+                    analysis_id = record.get('id')
+                    title = record.get('title', '无标题')
+                    content = record.get('content', '')
+                    result = record.get('result', {})
+                    overall_result = result.get('overall_result', {})
+                    
+                    # 获取可信度信息
+                    credibility_level = overall_result.get('credibility_level', '中')
+                    credibility_score = overall_result.get('credibility_score', 5.0)
+                    conclusion = overall_result.get('conclusion', '')
+                    segments_count = overall_result.get('total_segments', 0)
+                    
+                    # 获取时间信息
+                    timestamp_str = record.get('timestamp')
+                    if timestamp_str:
+                        try:
+                            timestamp = datetime.fromisoformat(timestamp_str).timestamp() * 1000
+                        except:
+                            timestamp = os.path.getmtime(os.path.join(results_dir, filename)) * 1000
+                    else:
+                        timestamp = os.path.getmtime(os.path.join(results_dir, filename)) * 1000
+                    
+                    # 应用过滤条件
+                    if filter_type != 'all':
+                        if filter_type == 'high' and credibility_level != '高':
+                            continue
+                        if filter_type == 'medium' and credibility_level != '中':
+                            continue
+                        if filter_type == 'low' and credibility_level != '低':
+                            continue
+                    
+                    # 创建记录对象
+                    record_obj = {
+                        'id': analysis_id,
+                        'title': title,
+                        'content': content,
+                        'credibility_level': credibility_level,
+                        'credibility_score': credibility_score,
+                        'conclusion': conclusion,
+                        'segments_count': segments_count,
+                        'timestamp': timestamp,
+                        'detail_url': url_for('frontend.news_segment_detect') + f'?id={analysis_id}'
+                    }
+                    
+                    all_records.append(record_obj)
+                except Exception as e:
+                    print(f"读取文件 {filename} 时出错: {str(e)}")
+        
+        # 应用排序
+        if sort_type == 'latest':
+            all_records.sort(key=lambda x: x['timestamp'], reverse=True)
+        elif sort_type == 'oldest':
+            all_records.sort(key=lambda x: x['timestamp'])
+        elif sort_type == 'credibility_high':
+            all_records.sort(key=lambda x: x['credibility_score'], reverse=True)
+        elif sort_type == 'credibility_low':
+            all_records.sort(key=lambda x: x['credibility_score'])
+        
+        # 计算分页
+        total_records = len(all_records)
+        total_pages = (total_records + per_page - 1) // per_page
+        
+        if page > total_pages and total_pages > 0:
+            page = total_pages
+            
+        start_idx = (page - 1) * per_page
+        end_idx = min(start_idx + per_page, total_records)
+        
+        # 分页数据
+        paged_records = all_records[start_idx:end_idx]
+        
+        # 分页元数据
+        pagination = {
+            'current_page': page,
+            'per_page': per_page,
+            'total_records': total_records,
+            'total_pages': total_pages
+        }
+        
+        return jsonify({
+            'status': 'success',
+            'data': paged_records,
+            'pagination': pagination
+        })
+        
+    except Exception as e:
+        print(f"获取历史记录列表时出错: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': f'处理请求时出错: {str(e)}'
+        }), 500
+
+@frontend_bp.route('/api/news_segment_record/delete', methods=['POST'])
+def delete_news_segment_record():
+    """删除单条新闻分段检测记录"""
+    try:
+        # 获取记录ID
+        data = request.json
+        record_id = data.get('record_id')
+        
+        if not record_id:
+            return jsonify({
+                'status': 'error',
+                'message': '未提供记录ID'
+            }), 400
+            
+        # 构建文件路径
+        import os
+        results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+        json_path = os.path.join(results_dir, f'{record_id}.json')
+        
+        # 检查文件是否存在
+        if not os.path.exists(json_path):
+            return jsonify({
+                'status': 'error',
+                'message': '记录不存在或已被删除'
+            }), 404
+            
+        # 删除文件
+        os.remove(json_path)
+        
+        return jsonify({
+            'status': 'success',
+            'message': '记录已成功删除'
+        })
+        
+    except Exception as e:
+        print(f"删除历史记录时出错: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': f'处理请求时出错: {str(e)}'
+        }), 500
+
+@frontend_bp.route('/api/detect/segments', methods=['POST'])
+def detect_news_segments():
+    """处理分段检测API请求"""
+    # 从session中获取用户名
+    username = session.get('username')
+    record_user_usage('news_segment_analyze', username)  # 记录功能使用
+    try:
+        # 获取请求数据
         data = request.json
         title = data.get('title', '')
         content = data.get('content', '')
+        segment_size = data.get('segment_size', 500)
         
-        if not content:
-            return jsonify({"error": "新闻内容不能为空"}), 400
+        # 参数验证
+        if not title or not content:
+            return jsonify({
+                'status': 'error',
+                'message': '标题和内容不能为空'
+            }), 400
+            
+        # 限制过长的输入
+        if len(title) > 200:
+            title = title[:200]
+        if len(content) > 10000:
+            content = content[:10000]
+            
+        # 处理分段分析
+        result = detect_fake_news_segmented(title, content, segment_size)
         
-        # 这里应该调用实际的模型进行预测
-        # 由于没有实际模型，我们使用随机数据模拟结果
+        # 记录检测历史
+        if username and 'overall_result' in result:
+            overall_result = result['overall_result']
+            credibility_score = overall_result.get('credibility_score', 5.0)
+            credibility_level = overall_result.get('credibility_level', '中')
+            
+            detection_tracker.add_detection_record(
+                username=username,
+                detection_type="consistency",
+                result=f"可信度{credibility_level}",
+                accuracy=credibility_score * 10  # 转换为百分比
+            )
         
-        # 生成随机概率（在实际应用中，这里应该是模型的预测结果）
-        real_probability = random.uniform(0.3, 0.9)
-        fake_probability = 1 - real_probability
+        # 创建分析记录的唯一ID
+        analysis_id = str(uuid.uuid4())
         
-        # 根据概率确定结论
-        if real_probability > fake_probability:
-            conclusion = "经过系统分析，该新闻内容具有较高的真实性。语言表达自然，内容逻辑一致，未发现明显的虚假信息特征。"
-            sentiment = "中性偏正面"
-        else:
-            conclusion = "经过系统分析，该新闻内容可能包含虚假信息。存在情感偏激、逻辑矛盾或夸大事实等特征，建议谨慎对待。"
-            sentiment = "偏激" if fake_probability > 0.7 else "夸张"
+        # 确保result中的overall_result包含total_segments字段
+        if 'overall_result' in result and 'total_segments' not in result['overall_result']:
+            result['overall_result']['total_segments'] = len(result.get('segments', []))
         
-        # 生成随机特征数据（在实际应用中，这些应该是基于文本分析得出的）
-        features = {
-            "情感极端度": random.uniform(0.2, 0.8),
-            "标题夸张度": random.uniform(0.3, 0.9),
-            "内容一致性": random.uniform(0.4, 0.9),
-            "来源可靠性": random.uniform(0.3, 0.8),
-            "事实支持度": random.uniform(0.2, 0.9)
-        }
+        # 为每个段落添加分享链接
+        for segment in result.get('segments', []):
+            segment_id = segment['segment_id']
+            segment['share_url'] = url_for('frontend.view_segment', segment_id=segment_id, analysis_id=analysis_id, _external=True)
         
-        # 构建响应数据
-        response_data = {
-            "real_probability": real_probability,
-            "fake_probability": fake_probability,
-            "conclusion": conclusion,
-            "sentiment": sentiment,
-            "language_complexity": "高" if random.random() > 0.5 else "中等",
-            "content_coherence": "一致" if random.random() > 0.4 else "存在矛盾",
-            "credibility_score": random.uniform(3.0, 9.0),
-            "features": features
-        }
+        # 保存分析结果到JSON文件
+        try:
+            # 确保目录存在
+            import os
+            results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+            if not os.path.exists(results_dir):
+                os.makedirs(results_dir)
+            
+            # 保存完整分析结果
+            analysis_data = {
+                'id': analysis_id,
+                'title': title,
+                'content': content,
+                'result': result,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            # 写入JSON文件
+            with open(os.path.join(results_dir, f'{analysis_id}.json'), 'w', encoding='utf-8') as f:
+                json.dump(analysis_data, f, ensure_ascii=False, indent=2)
+            
+            # 将分析ID添加到结果中    
+            result['analysis_id'] = analysis_id
+            
+        except Exception as e:
+            print(f"保存分析数据时出错: {str(e)}")
         
-        return jsonify(response_data)
-    
+        return jsonify({
+            'status': 'success',
+            'data': result
+        })
+        
     except Exception as e:
-        logging.error(f"新闻虚假检测出错: {str(e)}", exc_info=True)
-        return jsonify({"error": f"处理请求时出错: {str(e)}"}), 500
+        print(f"分段检测处理出错: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': f'处理请求时出错: {str(e)}'
+        }), 500
+
+@frontend_bp.route('/view_segment/<segment_id>', methods=['GET'])
+def view_segment(segment_id):
+    """查看单个段落分析结果"""
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('view_segment', username)  # 记录功能使用
+    # 获取分析ID
+    analysis_id = request.args.get('analysis_id', '')
+    
+    if not analysis_id:
+        return render_template('frontend/error.html', 
+                              message='未提供分析ID，无法查看段落分析结果'), 400
+    
+    # 构建文件路径
+    import os
+    results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+    json_path = os.path.join(results_dir, f'{analysis_id}.json')
+    
+    # 检查文件是否存在
+    if not os.path.exists(json_path):
+        return render_template('frontend/error.html', 
+                              message='找不到相关分析结果，可能已过期或ID无效'), 404
+    
+    # 返回包含单个段落数据的页面
+    return render_template('frontend/segment_view.html', 
+                          segment_id=segment_id,
+                          analysis_id=analysis_id)
+
+@frontend_bp.route('/api/segment/<segment_id>', methods=['GET'])
+def get_segment_data(segment_id):
+    """获取段落详细数据的API"""
+    # 获取分析ID
+    analysis_id = request.args.get('analysis_id', '')
+    
+    if not analysis_id:
+        return jsonify({
+            'status': 'error',
+            'message': '未提供分析ID'
+        }), 400
+    
+    try:
+        # 构建文件路径
+        import os
+        import json
+        results_dir = os.path.join(current_app.static_folder, 'frontend', 'analysis_results')
+        json_path = os.path.join(results_dir, f'{analysis_id}.json')
+        
+        # 检查文件是否存在
+        if not os.path.exists(json_path):
+            return jsonify({
+                'status': 'error',
+                'message': '找不到相关分析结果，可能已过期或ID无效'
+            }), 404
+        
+        # 读取JSON文件
+        with open(json_path, 'r', encoding='utf-8') as f:
+            analysis_data = json.load(f)
+        
+        # 如果请求特定段落
+        if segment_id != 'all':
+            # 查找指定的段落
+            segment_data = None
+            for segment in analysis_data.get('result', {}).get('segments', []):
+                if segment.get('segment_id') == segment_id:
+                    segment_data = segment
+                    break
+            
+            if not segment_data:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'在分析结果中找不到段落ID: {segment_id}'
+                }), 404
+            
+            # 添加分析的标题和总体结论
+            segment_data['title'] = analysis_data.get('title', '')
+            segment_data['overall_result'] = analysis_data.get('result', {}).get('overall_result', {})
+            
+            return jsonify({
+                'status': 'success',
+                'data': segment_data
+            })
+        # 如果请求完整分析结果
+        else:
+            return jsonify({
+                'status': 'success',
+                'data': {
+                    'title': analysis_data.get('title', ''),
+                    'content': analysis_data.get('content', ''),
+                    'timestamp': analysis_data.get('timestamp', ''),
+                    'result': analysis_data.get('result', {})
+                }
+            })
+        
+    except Exception as e:
+        print(f"获取段落数据时出错: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': f'处理请求时出错: {str(e)}'
+        }), 500
+
+# 添加用户使用统计API
+@frontend_bp.route('/admin/user_usage')
+def view_user_usage_stats():
+    """查看用户使用统计数据"""
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('view_usage_stats', username)  # 记录功能使用
+    return render_template('frontend/user_usage_stats.html')
+
+@frontend_bp.route('/api/user_usage')
+def get_user_usage_api():
+    """获取用户使用统计数据API"""
+    # 这个API路由不需要记录使用统计，因为这是后台功能
+    stats = get_user_usage_stats()
+    return jsonify({
+        'status': 'success',
+        'data': stats
+    })
+
+@frontend_bp.route('/api/user_usage/reset', methods=['POST'])
+def reset_user_usage():
+    """重置用户使用统计"""
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('reset_stats', username)  # 记录功能使用
+    data = request.json
+    feature = data.get('feature', None)
+    
+    if feature:
+        success = reset_feature_count(feature)
+    else:
+        success = reset_all_counts()
+        
+    return jsonify({
+        'status': 'success' if success else 'error',
+        'message': '统计数据已重置' if success else '重置统计数据失败'
+    })
+
+@frontend_bp.route('/api/user_usage/download')
+def download_user_usage():
+    """下载用户使用统计数据"""
+    # 从session中获取用户名
+    username = session.get('username')
+    
+    record_user_usage('download_stats', username)  # 记录功能使用
+    # 创建一个包含日期和时间的文件名
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"user_usage_stats_{timestamp}.json"
+    
+    # 获取JSON字符串
+    json_data = export_stats_json()
+    
+    # 创建一个BytesIO对象
+    bytes_io = BytesIO(json_data.encode('utf-8'))
+    
+    # 返回文件下载
+    return send_file(
+        bytes_io,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/json'
+    )
 

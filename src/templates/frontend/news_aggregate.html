@@ -412,6 +412,11 @@
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     }
 
+    /* 文字颜色辅助类 */
+    .text-light-muted {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
     /* 加载动画脉冲效果 */
     @keyframes pulse {
         0% {
@@ -445,7 +450,7 @@
         bottom: 0;
         left: 50%;
         width: 2px;
-        background-color: #e9ecef;
+        background-color: rgba(255, 255, 255, 0.2);
         transform: translateX(-50%);
     }
 
@@ -484,14 +489,17 @@
 
     .timeline-panel {
         padding: 15px;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 5px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        color: #fff;
     }
 
     .timeline-title {
         margin-top: 0;
         font-weight: bold;
+        color: #fff;
     }
 
     .timeline-stats {
@@ -499,6 +507,7 @@
         justify-content: space-between;
         margin-top: 10px;
         font-size: 0.9em;
+        color: rgba(255, 255, 255, 0.8);
     }
 
     /* 情感颜色 */
@@ -519,9 +528,11 @@
 
     /* 摘要样式 */
     .timeline-summary {
-        background-color: #f8f9fa;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 5px;
         padding: 15px;
+        color: #fff;
     }
 
     .summary-item {
@@ -533,20 +544,23 @@
 
     .summary-label {
         font-size: 0.8em;
-        color: #6c757d;
+        color: rgba(255, 255, 255, 0.7);
     }
 
     .summary-value {
         font-size: 1.2em;
         font-weight: bold;
+        color: #fff;
     }
 
     /* 平台相似度样式 */
     .platform-similarity {
-        background-color: #f8f9fa;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 5px;
         padding: 15px;
         margin-bottom: 20px;
+        color: #fff;
     }
 
     .similarity-container {
@@ -556,7 +570,17 @@
     .progress {
         height: 8px;
         border-radius: 4px;
-        background-color: #e9ecef;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* 关键词样式 */
+    .badge.text-truncate {
+        max-width: 200px;
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
     }
 </style>
 {% endblock %}
@@ -574,7 +598,7 @@
     <div class="container">
         <div class="hero-content">
             <h1 class="hero-title">新闻深度分析</h1>
-            <p class="hero-subtitle">多平台新闻聚合分析系统，实时追踪热点话题，深度解析新闻传播</p>
+            <p class="hero-subtitle">多平台新闻聚合分析搜索系统，实时追踪热点话题，深度解析新闻传播</p>
 
             <!-- 功能切换按钮 -->
             <div class="function-switch">
@@ -785,6 +809,9 @@
 
                 // 根据当前选中的平台过滤和显示
                 filterAndDisplayNews();
+
+                // 调用时间线获取函数
+                fetchNewsTimeline(keyword);
             } else {
                 console.error('搜索结果格式错误:', result);  // 调试日志
                 newsContainer.innerHTML = `<div class="alert alert-danger">${result.message || '搜索失败'}</div>`;
@@ -1070,9 +1097,11 @@
                     </div>
                     <div class="mb-4">
                         <h6>关键信息提取</h6>
-                        <ul class="list-unstyled">
-                            ${result.data.keywords.map(kw => `<li class="mb-2"><span class="badge bg-info">${kw}</span></li>`).join('')}
-                        </ul>
+                        <div class="d-flex flex-wrap">
+                            ${result.data.keywords.map(keyword => `
+                                <span class="badge bg-info text-truncate m-1" style="max-width: 150px;">${keyword}</span>
+                            `).join('')}
+                        </div>
                     </div>
                     <div class="mb-4">
                         <h6>情感倾向分析</h6>
@@ -1359,6 +1388,46 @@
                     </div>
                     <div class="card-body">
                         <div id="userProfileChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // 在分析结果页的关键词卡片中添加最大宽度和文本省略
+        if (result.keywords && result.keywords.length > 0) {
+            resultHtml += `
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark text-white">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-key me-2"></i>关键词</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap">
+                            ${result.keywords.map(keyword => `
+                                <span class="badge bg-info text-truncate m-1" style="max-width: 150px;">${keyword}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // 在实体提取结果卡片中也添加最大宽度和文本省略
+        if (result.entities && result.entities.length > 0) {
+            resultHtml += `
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark text-white">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-tag me-2"></i>实体提取</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap">
+                            ${result.entities.map(entity => `
+                                <span class="badge bg-secondary text-truncate m-1" style="max-width: 150px;">${entity}</span>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1849,7 +1918,7 @@
         contentElement.innerHTML = '';
 
         // 发送请求获取时间线数据
-        fetch('/api/news/timeline', {
+        fetch('/frontend/api/news/timeline', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1873,6 +1942,149 @@
                 loadingElement.classList.add('d-none');
                 contentElement.innerHTML = `<div class="alert alert-danger">获取时间线数据失败: ${error.message}</div>`;
             });
+    }
+
+    // 添加渲染时间线的函数
+    function renderTimeline(data, container) {
+        const timelineData = data.timeline;
+
+        if (!timelineData || timelineData.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">暂无传播时间线数据</div>';
+            return;
+        }
+
+        let timelineHtml = `
+            <h6 class="mb-3">传播时间线详情</h6>
+            <div class="timeline-summary mb-4">
+                <div class="row">
+                    <div class="col-6 col-md-3 summary-item">
+                        <div class="summary-label">总分享数</div>
+                        <div class="summary-value">${data.summary.total_shares}</div>
+                    </div>
+                    <div class="col-6 col-md-3 summary-item">
+                        <div class="summary-label">总评论数</div>
+                        <div class="summary-value">${data.summary.total_comments}</div>
+                    </div>
+                    <div class="col-6 col-md-3 summary-item">
+                        <div class="summary-label">高峰时段</div>
+                        <div class="summary-value">${data.summary.peak_time}</div>
+                    </div>
+                    <div class="col-6 col-md-3 summary-item">
+                        <div class="summary-label">主要情感</div>
+                        <div class="summary-value">${data.summary.dominant_sentiment}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-container">
+        `;
+
+        timelineData.forEach((item, index) => {
+            const isLeft = index % 2 === 0;
+            const sentimentClass = `sentiment-${item.sentiment}`;
+
+            timelineHtml += `
+                <div class="timeline-item ${isLeft ? 'left' : 'right'}">
+                    <div class="timeline-badge ${sentimentClass}">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div class="timeline-panel">
+                        <div class="timeline-heading">
+                            <h6 class="timeline-title">${item.event}</h6>
+                            <p><small class="text-light-muted"><i class="fas fa-clock me-1"></i>${item.time}</small></p>
+                            <p><small class="text-light-muted"><i class="fas fa-bullhorn me-1"></i>${item.platform}</small></p>
+                        </div>
+                        <div class="timeline-body">
+                            <p>${item.title}</p>
+                        </div>
+                        <div class="timeline-stats">
+                            <span><i class="fas fa-share-alt me-1"></i>${item.shares}</span>
+                            <span><i class="fas fa-comment me-1"></i>${item.comments}</span>
+                            <span><i class="fas fa-chart-line me-1"></i>影响力 ${item.impact_score}/10</span>
+                        </div>
+                        <div class="timeline-footer">
+                            <a href="${item.url}" target="_blank" class="btn btn-sm btn-info mt-2">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        timelineHtml += `</div>`;
+        container.innerHTML = timelineHtml;
+    }
+
+    // 添加渲染时间线图表的函数
+    function renderTimelineChart(data) {
+        const timelineData = data.timeline;
+        if (!timelineData || timelineData.length === 0) return;
+
+        const chart = echarts.getInstanceByDom(document.getElementById('timelineChart'));
+        if (!chart) return;
+
+        const xAxisData = timelineData.map(item => item.time);
+        const sharesData = timelineData.map(item => item.shares);
+        const commentsData = timelineData.map(item => item.comments);
+
+        chart.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['分享数', '评论数'],
+                textStyle: {
+                    color: '#fff'
+                }
+            },
+            xAxis: {
+                type: 'category',
+                data: xAxisData,
+                axisLabel: {
+                    rotate: 45,
+                    color: '#fff'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                axisLabel: {
+                    color: '#fff'
+                }
+            },
+            series: [
+                {
+                    name: '分享数',
+                    type: 'line',
+                    data: sharesData,
+                    smooth: true,
+                    itemStyle: {
+                        color: '#0A84FF'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(10, 132, 255, 0.5)' },
+                            { offset: 1, color: 'rgba(10, 132, 255, 0.1)' }
+                        ])
+                    }
+                },
+                {
+                    name: '评论数',
+                    type: 'line',
+                    data: commentsData,
+                    smooth: true,
+                    itemStyle: {
+                        color: '#34C759'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(52, 199, 89, 0.5)' },
+                            { offset: 1, color: 'rgba(52, 199, 89, 0.1)' }
+                        ])
+                    }
+                }
+            ]
+        });
     }
 
     // 修改初始化代码
@@ -1915,6 +2127,145 @@
             }
         `;
         document.head.appendChild(styleElement);
+
+        // 检查是否有从虚假新闻检测页面传递过来的数据
+        const newsTitle = localStorage.getItem('newsTitle');
+        const newsContent = localStorage.getItem('newsContent');
+        const newsAction = localStorage.getItem('newsAction');
+
+        if (newsContent) {
+            // 如果有传递过来的内容
+
+            // 根据操作类型切换到相应的功能选项卡
+            if (newsAction === 'search') {
+                // 切换到搜索功能
+                switchFunction('search');
+
+                // 填充搜索输入框
+                document.querySelector('.search-input').value = newsContent;
+
+                // 自动触发搜索按钮点击
+                setTimeout(() => {
+                    document.querySelector('.btn-search').click();
+                }, 300);
+            } else if (newsAction === 'analysis') {
+                // 切换到分析功能
+                switchFunction('analysis');
+
+                // 填充分析表单
+                document.getElementById('newsTitle').value = newsTitle || '';
+                document.getElementById('newsContent').value = newsContent || '';
+
+                // 自动触发分析按钮点击
+                setTimeout(() => {
+                    startAnalysis();
+                }, 500);
+            }
+
+            // 清除localStorage中的数据，防止刷新页面后再次触发
+            localStorage.removeItem('newsTitle');
+            localStorage.removeItem('newsContent');
+            localStorage.removeItem('newsAction');
+        }
     });
+
+    // 添加全局加载遮罩
+    function showLoading(message = '加载中...') {
+        // ... existing code ...
+    }
+
+    function hideLoading() {
+        // ... existing code ...
+    }
+
+    // 创建一个独立函数处理从localStorage传递的数据
+    function processTransferredData() {
+        // 检查是否有从虚假新闻检测页面传递过来的数据
+        const newsTitle = localStorage.getItem('newsTitle');
+        const newsContent = localStorage.getItem('newsContent');
+        const newsAction = localStorage.getItem('newsAction');
+
+        if (newsContent) {
+            // 如果有传递过来的内容
+            console.log('接收到从fake_news_classify传递的数据:', { newsTitle, newsContent, newsAction });
+
+            // 根据操作类型切换到相应的功能选项卡
+            if (newsAction === 'search') {
+                // 切换到搜索功能
+                switchFunction('search');
+
+                // 填充搜索输入框
+                document.querySelector('.search-input').value = newsContent;
+
+                // 自动触发搜索按钮点击
+                setTimeout(() => {
+                    document.querySelector('.btn-search').click();
+                }, 500);
+            } else if (newsAction === 'analysis') {
+                // 切换到分析功能
+                switchFunction('analysis');
+
+                // 填充分析表单
+                document.getElementById('newsTitle').value = newsTitle || '';
+                document.getElementById('newsContent').value = newsContent || '';
+
+                // 自动触发分析按钮点击
+                setTimeout(() => {
+                    startAnalysis();
+                }, 800);
+            }
+
+            // 清除localStorage中的数据，防止刷新页面后再次触发
+            localStorage.removeItem('newsTitle');
+            localStorage.removeItem('newsContent');
+            localStorage.removeItem('newsAction');
+        }
+    }
+
+    // 页面加载完成后立即处理传递数据
+    window.addEventListener('load', processTransferredData);
+
+    // 创建一个函数从URL获取参数并处理
+    function processURLParameters() {
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const title = urlParams.get('title');
+        const content = urlParams.get('content');
+        const action = urlParams.get('action');
+
+        // 检查是否有需要处理的参数
+        if (content) {
+            console.log('接收到从fake_news_classify传递的URL参数:', { title, content, action });
+
+            // 根据操作类型切换到相应的功能选项卡
+            if (action === 'search') {
+                // 切换到搜索功能
+                switchFunction('search');
+
+                // 填充搜索输入框
+                document.querySelector('.search-input').value = content;
+
+                // 自动触发搜索按钮点击
+                setTimeout(() => {
+                    document.querySelector('.btn-search').click();
+                }, 500);
+            } else if (action === 'analysis') {
+                // 切换到分析功能
+                switchFunction('analysis');
+
+                // 填充分析表单
+                document.getElementById('newsTitle').value = title || '';
+                document.getElementById('newsContent').value = content || '';
+
+                // 自动触发分析按钮点击
+                setTimeout(() => {
+                    startAnalysis();
+                }, 800);
+            }
+        }
+    }
+
+    // 页面加载完成后处理URL参数
+    window.addEventListener('load', processURLParameters);
 </script>
 {% endblock %}

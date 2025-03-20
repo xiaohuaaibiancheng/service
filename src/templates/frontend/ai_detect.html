@@ -225,7 +225,7 @@
 
     /* 检测表单样式 */
     .detection-form {
-        max-width: 800px;
+        max-width: 100%;
         margin: 20px auto;
         display: none;
     }
@@ -304,23 +304,122 @@
         margin: 0;
     }
 
+    /* 结果展示区域样式 */
     .result-container {
-        max-width: 600px;
-        margin: 20px auto;
+        width: 100%;
+        margin: 0 auto;
         text-align: center;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s ease;
+    }
+
+    .result-container.show {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .probability-text {
-        font-size: 1.5rem;
-        margin-top: 20px;
+        font-size: 1.8rem;
+        margin: 25px 0;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(10, 132, 255, 0.3);
+        font-weight: 600;
     }
 
     .chart-wrapper {
         position: relative;
         z-index: 1;
-        background: #202123;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .chart-wrapper:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .result-details {
+        margin-top: 30px;
         padding: 20px;
-        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .result-details h4 {
+        color: #fff;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+
+    .feature-tag {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 5px;
+        background: rgba(10, 132, 255, 0.1);
+        border: 1px solid rgba(10, 132, 255, 0.2);
+        border-radius: 20px;
+        color: #fff;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .feature-tag:hover {
+        background: rgba(10, 132, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .result-actions {
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .action-btn {
+        padding: 10px 20px;
+        border-radius: 30px;
+        border: none;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        color: #fff;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
+    }
+
+    .action-btn i {
+        font-size: 1.1rem;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .highlight-result {
+        animation: pulse 1s ease infinite;
     }
 </style>
 {% endblock %}
@@ -376,53 +475,65 @@
 
         <!-- 文本检测表单 -->
         <div id="text-form" class="detection-form">
-            <div class="card bg-dark">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">AI文本检测</h3>
-                    <form>
-                        <div class="mb-4">
-                            <label class="form-label">输入文本内容</label>
-                            <textarea class="form-control" rows="6" placeholder="请输入或粘贴需要检测的文本内容"></textarea>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-dark">
+                        <div class="card-body">
+                            <h3 class="card-title mb-4">AI文本检测</h3>
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label">输入文本内容</label>
+                                    <textarea class="form-control" rows="6" placeholder="请输入或粘贴需要检测的文本内容"></textarea>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary">开始检测</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">开始检测</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="result-container">
+                        <div class="chart-wrapper">
+                            <canvas id="probabilityChart"></canvas>
                         </div>
-                    </form>
+                        <div id="probabilityText" class="probability-text"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="result-container">
-                <div class="chart-wrapper">
-                    <canvas id="probabilityChart"></canvas>
-                </div>
-                <div id="probabilityText" class="probability-text"></div>
             </div>
         </div>
 
         <!-- 图片检测表单 -->
         <div id="image-form" class="detection-form">
-            <div class="card bg-dark">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">AI图片检测</h3>
-                    <form>
-                        <div class="mb-4">
-                            <label class="form-label">上传图片文件</label>
-                            <input type="file" class="form-control" accept="image/*">
-                            <small class="text-muted d-block mt-2">支持JPEG、PNG等主流图片格式，单个文件大小不超过10MB</small>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-dark">
+                        <div class="card-body">
+                            <h3 class="card-title mb-4">AI图片检测</h3>
+                            <form>
+                                <div class="mb-4">
+                                    <label class="form-label">上传图片文件</label>
+                                    <input type="file" class="form-control" accept="image/*">
+                                    <small class="text-muted d-block mt-2">支持JPEG、PNG等主流图片格式，单个文件大小不超过10MB</small>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary">开始检测</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">开始检测</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="result-container">
+                        <div class="chart-wrapper">
+                            <canvas id="imageProbabilityChart"></canvas>
                         </div>
-                    </form>
-                </div>
-            </div>
-            <div class="result-container">
-                <div class="chart-wrapper">
-                    <canvas id="imageProbabilityChart"></canvas>
-                </div>
-                <div id="imageProbabilityText" class="probability-text"></div>
-                <div id="detectedImage" class="mt-4" style="display: none;">
-                    <h4>检测的图片</h4>
-                    <img id="uploadedImage" class="img-fluid rounded" style="max-height: 300px;" alt="上传的图片">
+                        <div id="imageProbabilityText" class="probability-text"></div>
+                        <div id="detectedImage" class="mt-4" style="display: none;">
+                            <h4>检测的图片</h4>
+                            <img id="uploadedImage" class="img-fluid rounded" style="max-height: 300px;" alt="上传的图片">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -621,6 +732,15 @@
     function updateProbabilityDisplay(probability) {
         // 更新文字输出
         const probabilityText = document.getElementById('probabilityText');
+        const resultContainer = document.querySelector('.result-container');
+
+        // 清除之前的详情
+        const existingDetails = document.querySelector('.result-details');
+        if (existingDetails) {
+            existingDetails.remove();
+        }
+
+        // 设置概率文本
         probabilityText.textContent = `AI生成的概率: ${(probability * 100).toFixed(2)}%`;
 
         // 获取Canvas上下文
@@ -638,9 +758,15 @@
                 labels: ['AI生成', '非AI生成'],
                 datasets: [{
                     data: [probability, 1 - probability],
-                    backgroundColor: ['#0A84FF', '#ccc'],
-                    borderColor: ['#0A84FF', '#ccc'],
-                    borderWidth: 1
+                    backgroundColor: [
+                        'rgba(10, 132, 255, 0.8)',
+                        'rgba(255, 255, 255, 0.1)'
+                    ],
+                    borderColor: [
+                        'rgba(10, 132, 255, 1)',
+                        'rgba(255, 255, 255, 0.2)'
+                    ],
+                    borderWidth: 2
                 }]
             },
             options: {
@@ -649,19 +775,87 @@
                 plugins: {
                     legend: {
                         position: 'top',
+                        labels: {
+                            color: '#fff',
+                            font: {
+                                size: 14
+                            },
+                            padding: 20
+                        }
                     },
                     title: {
                         display: true,
-                        text: 'AI生成概率'
+                        text: 'AI生成概率分析',
+                        color: '#fff',
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            bottom: 30
+                        }
                     }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000,
+                    easing: 'easeOutQuart'
                 }
             }
         });
+
+        // 添加结果详情
+        const detailsHtml = `
+            <div class="result-details">
+                <h4>检测详情</h4>
+                <div class="feature-tags">
+                    <span class="feature-tag">
+                        <i class="fas fa-robot"></i>
+                        AI特征指数: ${(probability * 10).toFixed(1)}/10
+                    </span>
+                    <span class="feature-tag">
+                        <i class="fas fa-user"></i>
+                        人类特征指数: ${((1 - probability) * 10).toFixed(1)}/10
+                    </span>
+                </div>
+                <div class="result-actions">
+                    <button class="action-btn" onclick="exportResult('text', ${probability})">
+                        <i class="fas fa-download"></i>
+                        导出报告
+                    </button>
+                    <button class="action-btn" onclick="shareResult('text', ${probability})">
+                        <i class="fas fa-share-alt"></i>
+                        分享结果
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // 在图表容器后添加详情
+        const chartWrapper = document.querySelector('.chart-wrapper');
+        chartWrapper.insertAdjacentHTML('afterend', detailsHtml);
+
+        // 显示结果容器
+        resultContainer.classList.add('show');
+
+        // 如果概率超过阈值，添加高亮动画
+        if (probability > 0.8) {
+            probabilityText.classList.add('highlight-result');
+        }
     }
 
     function updateImageProbabilityDisplay(probability) {
         // 更新文字输出
         const probabilityText = document.getElementById('imageProbabilityText');
+        const resultContainer = document.querySelector('#image-form .result-container');
+
+        // 清除之前的详情
+        const existingDetails = document.querySelector('#image-form .result-details');
+        if (existingDetails) {
+            existingDetails.remove();
+        }
+
         probabilityText.textContent = `AI生成的概率: ${(probability * 100).toFixed(2)}%`;
 
         // 获取Canvas上下文
@@ -679,9 +873,15 @@
                 labels: ['AI生成', '非AI生成'],
                 datasets: [{
                     data: [probability, 1 - probability],
-                    backgroundColor: ['#0A84FF', '#ccc'],
-                    borderColor: ['#0A84FF', '#ccc'],
-                    borderWidth: 1
+                    backgroundColor: [
+                        'rgba(10, 132, 255, 0.8)',
+                        'rgba(255, 255, 255, 0.1)'
+                    ],
+                    borderColor: [
+                        'rgba(10, 132, 255, 1)',
+                        'rgba(255, 255, 255, 0.2)'
+                    ],
+                    borderWidth: 2
                 }]
             },
             options: {
@@ -690,14 +890,74 @@
                 plugins: {
                     legend: {
                         position: 'top',
+                        labels: {
+                            color: '#fff',
+                            font: {
+                                size: 14
+                            },
+                            padding: 20
+                        }
                     },
                     title: {
                         display: true,
-                        text: 'AI生成图片概率'
+                        text: 'AI生成图片概率分析',
+                        color: '#fff',
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            bottom: 30
+                        }
                     }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000,
+                    easing: 'easeOutQuart'
                 }
             }
         });
+
+        // 添加结果详情
+        const detailsHtml = `
+            <div class="result-details">
+                <h4>检测详情</h4>
+                <div class="feature-tags">
+                    <span class="feature-tag">
+                        <i class="fas fa-robot"></i>
+                        AI特征指数: ${(probability * 10).toFixed(1)}/10
+                    </span>
+                    <span class="feature-tag">
+                        <i class="fas fa-image"></i>
+                        人工制作可能性: ${((1 - probability) * 10).toFixed(1)}/10
+                    </span>
+                </div>
+                <div class="result-actions">
+                    <button class="action-btn" onclick="exportResult('image', ${probability})">
+                        <i class="fas fa-download"></i>
+                        导出报告
+                    </button>
+                    <button class="action-btn" onclick="shareResult('image', ${probability})">
+                        <i class="fas fa-share-alt"></i>
+                        分享结果
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // 在图表容器后添加详情
+        const imageProbabilityText = document.getElementById('imageProbabilityText');
+        imageProbabilityText.insertAdjacentHTML('afterend', detailsHtml);
+
+        // 显示结果容器
+        resultContainer.classList.add('show');
+
+        // 如果概率超过阈值，添加高亮动画
+        if (probability > 0.8) {
+            probabilityText.classList.add('highlight-result');
+        }
     }
 
     // 检测方式切换功能
@@ -717,6 +977,307 @@
 
         // 显示对应的表单
         document.getElementById(`${type}-form`).classList.add('active');
+    }
+
+    // 导出结果函数
+    async function exportResult(type, probability) {
+        try {
+            // 获取检测内容
+            let content = '';
+            if (type === 'text') {
+                const textArea = document.querySelector('#text-form textarea');
+                content = textArea ? textArea.value : '';
+            }
+
+            const response = await fetch('/api/ai_detect/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    detection_type: type,
+                    probability: probability,
+                    content: content
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('导出请求失败');
+            }
+
+            // 创建一个带有时间戳的文件名
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `ai_detection_report_${timestamp}.json`;
+
+            // 获取blob数据
+            const blob = await response.blob();
+
+            // 创建一个下载链接
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+
+            // 添加到文档中并点击
+            document.body.appendChild(a);
+            a.click();
+
+            // 清理
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // 显示成功消息
+            showToast('报告已成功导出');
+
+        } catch (error) {
+            console.error('导出报告失败:', error);
+            showToast('导出报告失败，请稍后重试', true);
+        }
+    }
+
+    // 分享结果函数
+    async function shareResult(type, probability) {
+        try {
+            const response = await fetch('/api/ai_detect/share', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    detection_type: type,
+                    probability: probability
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('分享请求失败');
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                // 创建分享对话框
+                const shareDialog = document.createElement('div');
+                shareDialog.className = 'share-dialog';
+                shareDialog.innerHTML = `
+                    <div class="share-dialog-content">
+                        <h4><i class="fas fa-share-alt me-2"></i>分享检测结果</h4>
+                        <p>复制下面的链接分享给他人：</p>
+                        <div class="share-link-container">
+                            <input type="text" class="form-control" value="${result.share_link}" readonly>
+                            <button class="copy-btn" onclick="copyShareLink()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="share-buttons mt-3">
+                            <button class="social-share-btn" onclick="shareToSocial('wechat', '${result.share_link}')">
+                                <i class="fab fa-weixin"></i> 微信
+                            </button>
+                            <button class="social-share-btn" onclick="shareToSocial('weibo', '${result.share_link}')">
+                                <i class="fab fa-weibo"></i> 微博
+                            </button>
+                            <button class="social-share-btn" onclick="shareToSocial('qq', '${result.share_link}')">
+                                <i class="fab fa-qq"></i> QQ
+                            </button>
+                        </div>
+                        <button class="close-btn mt-3" onclick="closeShareDialog()">关闭</button>
+                    </div>
+                `;
+
+                // 添加分享对话框样式
+                const style = document.createElement('style');
+                style.textContent = `
+                    .share-dialog {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.7);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 9999;
+                    }
+                    
+                    .share-dialog-content {
+                        background: #202123;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 20px;
+                        padding: 30px;
+                        width: 90%;
+                        max-width: 500px;
+                        text-align: center;
+                        color: #fff;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                    }
+                    
+                    .share-dialog h4 {
+                        margin-bottom: 20px;
+                        color: #fff;
+                    }
+                    
+                    .share-link-container {
+                        display: flex;
+                        margin: 20px 0;
+                    }
+                    
+                    .share-link-container input {
+                        flex-grow: 1;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        color: #fff;
+                        padding: 12px;
+                        border-radius: 5px 0 0 5px;
+                    }
+                    
+                    .copy-btn {
+                        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+                        border: none;
+                        color: #fff;
+                        padding: 12px 20px;
+                        border-radius: 0 5px 5px 0;
+                    }
+                    
+                    .social-share-btn {
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 30px;
+                        color: #fff;
+                        padding: 8px 15px;
+                        margin: 0 5px;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .social-share-btn:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                        transform: translateY(-2px);
+                    }
+                    
+                    .close-btn {
+                        background: rgba(255, 255, 255, 0.1);
+                        border: none;
+                        color: #fff;
+                        padding: 10px 20px;
+                        border-radius: 30px;
+                        margin-top: 20px;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .close-btn:hover {
+                        background: rgba(255, 255, 255, 0.2);
+                    }
+                `;
+
+                document.head.appendChild(style);
+                document.body.appendChild(shareDialog);
+
+                // 显示成功消息
+                showToast('结果已准备好分享');
+            } else {
+                showToast(result.message || '分享失败', true);
+            }
+        } catch (error) {
+            console.error('分享结果失败:', error);
+            showToast('分享失败，请稍后重试', true);
+        }
+    }
+
+    // 复制分享链接
+    function copyShareLink() {
+        const linkInput = document.querySelector('.share-link-container input');
+        linkInput.select();
+        document.execCommand('copy');
+        showToast('链接已复制到剪贴板');
+    }
+
+    // 关闭分享对话框
+    function closeShareDialog() {
+        const dialog = document.querySelector('.share-dialog');
+        if (dialog) {
+            document.body.removeChild(dialog);
+        }
+    }
+
+    // 分享到社交媒体
+    function shareToSocial(platform, link) {
+        let shareUrl = '';
+        const title = encodeURIComponent('AI生成内容检测结果');
+        const encodedLink = encodeURIComponent(link);
+
+        switch (platform) {
+            case 'wechat':
+                // 微信分享通常需要微信SDK，这里简化处理
+                showToast('请使用微信扫一扫分享');
+                break;
+            case 'weibo':
+                shareUrl = `http://service.weibo.com/share/share.php?url=${encodedLink}&title=${title}`;
+                window.open(shareUrl, '_blank');
+                break;
+            case 'qq':
+                shareUrl = `http://connect.qq.com/widget/shareqq/index.html?url=${encodedLink}&title=${title}`;
+                window.open(shareUrl, '_blank');
+                break;
+        }
+    }
+
+    // 显示提示消息
+    function showToast(message, isError = false) {
+        // 检查是否已有toast
+        let toast = document.querySelector('.toast-message');
+
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-message';
+            document.body.appendChild(toast);
+
+            // 添加样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .toast-message {
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.7);
+                    color: #fff;
+                    padding: 12px 25px;
+                    border-radius: 30px;
+                    z-index: 10000;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                    opacity: 0;
+                }
+                
+                .toast-message.show {
+                    opacity: 1;
+                }
+                
+                .toast-message.error {
+                    background: rgba(220, 53, 69, 0.9);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 设置消息内容
+        toast.textContent = message;
+
+        // 设置错误样式
+        if (isError) {
+            toast.classList.add('error');
+        } else {
+            toast.classList.remove('error');
+        }
+
+        // 显示toast
+        toast.classList.add('show');
+
+        // 3秒后隐藏
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     }
 </script>
 {% endblock %}

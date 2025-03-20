@@ -139,6 +139,13 @@
           <i class="fas fa-chart-line me-2"></i>检测历史
         </a>
       </li>
+      {% if username == 'felix' %}
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#admin-panel">
+          <i class="fas fa-shield-alt me-2"></i>管理面板
+        </a>
+      </li>
+      {% endif %}
     </ul>
 
     <!-- 内容面板 -->
@@ -318,15 +325,15 @@
             </div>
           </div>
 
-          <!-- 准确率卡片 -->
+          <!-- 概率卡片 -->
           <div class="col-md-6">
             <div class="card h-100">
               <div class="card-body">
                 <h5 class="card-title mb-3">
-                  <i class="fas fa-percent me-2 text-primary"></i>准确率
+                  <i class="fas fa-percent me-2 text-primary"></i>概率
                 </h5>
                 <h2 class="display-5 mb-3">{{ detection_history.accuracy }}%</h2>
-                <p class="text-muted mb-0">平均准确率</p>
+                <p class="text-muted mb-0">平均概率</p>
               </div>
             </div>
           </div>
@@ -342,7 +349,7 @@
                         <th><i class="fas fa-calendar-alt me-1"></i>日期</th>
                         <th><i class="fas fa-check-circle me-1"></i>检测结果</th>
                         <th><i class="fas fa-info-circle me-1"></i>状态</th>
-                        <th><i class="fas fa-percent me-1"></i>准确率</th>
+                        <th><i class="fas fa-percent me-1"></i>概率</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -378,6 +385,17 @@
           </div>
         </div>
       </div>
+
+      <!-- 管理面板 -->
+      {% if username == 'felix' %}
+      <div class="tab-pane fade" id="admin-panel">
+        <div class="card">
+          <div class="card-body p-0">
+            <iframe src="/frontend/admin/user_usage" style="width: 100%; height: 700px; border: none;"></iframe>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 

@@ -2,12 +2,6 @@
     "felix": {
         "favorites": [
             {
-                "title": "成本只要1毛钱的人造鸡蛋泛滥",
-                "description": "无",
-                "date": "2023/1/31",
-                "id": "news_plf01A00004"
-            },
-            {
                 "title": "【师生课堂口角升级互...",
                 "description": "【师生课堂口角升级互扇耳光后扭打】近日，有网友上传一段视频：在某校的一节课上，老师与学生发生矛盾。当被说是“奇葩”后，老师动手打了女生耳光，女生则予以反击，双方随后扭打在一起……老师打人不对，不过这学生的态度…师生课堂口。",
                 "date": "2017/4/15",
@@ -85,29 +79,29 @@
             ]
         },
         "detection_history": {
-            "total_detections": 42,
-            "accuracy": 85.7,
+            "total_detections": 3,
+            "accuracy": 95.7,
             "records": [
                 {
-                    "date": "2023-10-01",
+                    "date": "2025-03-13",
+                    "result": "AI生成",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 100.0
+                },
+                {
+                    "date": "2025-03-13",
+                    "result": "人工撰写",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 91.0
+                },
+                {
+                    "date": "2025-03-13",
                     "result": "真实",
                     "status": "成功",
                     "status_color": "success",
-                    "accuracy": 90
-                },
-                {
-                    "date": "2023-10-02",
-                    "result": "虚假",
-                    "status": "失败",
-                    "status_color": "danger",
-                    "accuracy": 80
-                },
-                {
-                    "date": "2023-10-03",
-                    "result": "真实",
-                    "status": "成功",
-                    "status_color": "success",
-                    "accuracy": 95
+                    "accuracy": 96.2
                 }
             ]
         }

@@ -1,0 +1,23 @@
+{
+    "stats": {
+        "news_detect": 0,
+        "agent": 0,
+        "detect_url": 0,
+        "detect_multimodal": 0,
+        "detect_file": 0,
+        "ai_detect": 0,
+        "detect_ai_text": 0,
+        "detect_ai_image": 0,
+        "detect_aggregate": 0,
+        "fake_news_classify": {
+            "total": 1,
+            "users": {
+                "felix": 1
+            }
+        },
+        "news_segment_detect": 0,
+        "api_detect_segments": 0
+    },
+    "last_updated": "2025-03-13T14:28:29.932314",
+    "last_user": "felix"
+}

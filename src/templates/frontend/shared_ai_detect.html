@@ -1,0 +1,583 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}分享的AI检测结果 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 全局样式 */
+  body {
+    background: #202123;
+    color: #fff;
+  }
+
+  /* 确保导航栏可见 */
+  .navbar {
+    position: relative;
+    z-index: 1000;
+  }
+
+  /* 动态背景效果 */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: #202123;
+    overflow: hidden;
+  }
+
+  .floating-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
+    filter: blur(1px);
+  }
+
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 15s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(50px);
+    }
+  }
+
+  /* 分享卡片样式 */
+  .share-container {
+    max-width: 800px;
+    margin: 50px auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .share-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .share-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  }
+
+  .share-header {
+    margin-bottom: 30px;
+  }
+
+  .share-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
+  }
+
+  .share-meta {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .share-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* 结果展示区域 */
+  .result-display {
+    margin: 30px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+  }
+
+  .result-label {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .result-value {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pulse 1.5s ease infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .chart-container {
+    width: 100%;
+    height: 300px;
+    margin: 30px auto;
+  }
+
+  /* 特征标签 */
+  .features-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 30px 0;
+  }
+
+  .feature-tag {
+    display: inline-block;
+    padding: 8px 15px;
+    background: rgba(10, 132, 255, 0.1);
+    border: 1px solid rgba(10, 132, 255, 0.2);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: calc(var(--i) * 0.1s);
+  }
+
+  .feature-tag:hover {
+    background: rgba(10, 132, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* 分享按钮 */
+  .share-actions {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .action-btn {
+    padding: 12px 25px;
+    border-radius: 30px;
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .verify-btn {
+    background: linear-gradient(45deg, #0A84FF, #00C6FB);
+  }
+
+  .verify-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
+  }
+
+  .share-again-btn {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .share-again-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 动态背景 -->
+<div class="animated-background">
+  <div class="floating-particles"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="container share-container">
+  <div class="share-card">
+    <div class="share-header">
+      <h1 class="share-title">AI检测结果分享</h1>
+      <div class="share-meta">
+        <div class="share-meta-item">
+          <i class="fas fa-calendar-alt"></i>
+          <span>{{ share_data.share_time }}</span>
+        </div>
+        <div class="share-meta-item">
+          <i class="fas fa-user-alt"></i>
+          <span>{{ share_data.shared_by if share_data.shared_by else '匿名用户' }}</span>
+        </div>
+        <div class="share-meta-item">
+          <i class="fas {{ 'fa-file-alt' if share_data.detection_type == 'text' else 'fa-image' }}"></i>
+          <span>{{ '文本检测' if share_data.detection_type == 'text' else '图片检测' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-display">
+      <div class="result-label">检测结果</div>
+      <div class="result-value">{{ "AI生成" if share_data.probability > 0.5 else "人工撰写" }}</div>
+      <div class="probability-text">AI生成的概率: {{ (share_data.probability * 100)|round(2) }}%</div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="resultChart"></canvas>
+    </div>
+
+    <div class="features-container">
+      <div class="feature-tag" style="--i: 1">
+        <i class="fas fa-robot"></i>
+        AI特征指数: {{ (share_data.probability * 10)|round(1) }}/10
+      </div>
+      <div class="feature-tag" style="--i: 2">
+        <i class="fas {{ 'fa-user' if share_data.detection_type == 'text' else 'fa-image' }}"></i>
+        {{ "人类特征指数" if share_data.detection_type == 'text' else "人工制作可能性" }}:
+        {{ ((1 - share_data.probability) * 10)|round(1) }}/10
+      </div>
+    </div>
+
+    <div class="share-actions">
+      <button class="action-btn verify-btn" onclick="window.location.href='/ai_detect'">
+        <i class="fas fa-search"></i>
+        进行我的检测
+      </button>
+      <button class="action-btn share-again-btn" onclick="shareResult()">
+        <i class="fas fa-share-alt"></i>
+        分享此结果
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 初始化图表
+    const ctx = document.getElementById('resultChart').getContext('2d');
+
+    const probability = {{ share_data.probability }
+  };
+
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['AI生成', '非AI生成'],
+      datasets: [{
+        data: [probability, 1 - probability],
+        backgroundColor: [
+          'rgba(10, 132, 255, 0.8)',
+          'rgba(255, 255, 255, 0.1)'
+        ],
+        borderColor: [
+          'rgba(10, 132, 255, 1)',
+          'rgba(255, 255, 255, 0.2)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: '#fff',
+            font: {
+              size: 14
+            },
+            padding: 20
+          }
+        },
+        title: {
+          display: true,
+          text: 'AI生成概率分析',
+          color: '#fff',
+          font: {
+            size: 18,
+            weight: 'bold'
+          },
+          padding: {
+            bottom: 30
+          }
+        }
+      },
+      animation: {
+        animateScale: true,
+        animateRotate: true,
+        duration: 2000,
+        easing: 'easeOutQuart'
+      }
+    }
+  });
+    });
+
+  // 分享结果函数
+  function shareResult() {
+    // 获取当前URL
+    const shareLink = window.location.href;
+
+    // 创建分享对话框
+    const shareDialog = document.createElement('div');
+    shareDialog.className = 'share-dialog';
+    shareDialog.innerHTML = `
+            <div class="share-dialog-content">
+                <h4><i class="fas fa-share-alt me-2"></i>分享检测结果</h4>
+                <p>复制下面的链接分享给他人：</p>
+                <div class="share-link-container">
+                    <input type="text" class="form-control" value="${shareLink}" readonly>
+                    <button class="copy-btn" onclick="copyShareLink()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="share-buttons mt-3">
+                    <button class="social-share-btn" onclick="shareToSocial('wechat', '${shareLink}')">
+                        <i class="fab fa-weixin"></i> 微信
+                    </button>
+                    <button class="social-share-btn" onclick="shareToSocial('weibo', '${shareLink}')">
+                        <i class="fab fa-weibo"></i> 微博
+                    </button>
+                    <button class="social-share-btn" onclick="shareToSocial('qq', '${shareLink}')">
+                        <i class="fab fa-qq"></i> QQ
+                    </button>
+                </div>
+                <button class="close-btn mt-3" onclick="closeShareDialog()">关闭</button>
+            </div>
+        `;
+
+    // 添加分享对话框样式
+    const style = document.createElement('style');
+    style.textContent = `
+            .share-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+            
+            .share-dialog-content {
+                background: #202123;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 30px;
+                width: 90%;
+                max-width: 500px;
+                text-align: center;
+                color: #fff;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            }
+            
+            .share-dialog h4 {
+                margin-bottom: 20px;
+                color: #fff;
+            }
+            
+            .share-link-container {
+                display: flex;
+                margin: 20px 0;
+            }
+            
+            .share-link-container input {
+                flex-grow: 1;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: #fff;
+                padding: 12px;
+                border-radius: 5px 0 0 5px;
+            }
+            
+            .copy-btn {
+                background: linear-gradient(45deg, #0A84FF, #00C6FB);
+                border: none;
+                color: #fff;
+                padding: 12px 20px;
+                border-radius: 0 5px 5px 0;
+            }
+            
+            .social-share-btn {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 30px;
+                color: #fff;
+                padding: 8px 15px;
+                margin: 0 5px;
+                transition: all 0.3s ease;
+            }
+            
+            .social-share-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: translateY(-2px);
+            }
+            
+            .close-btn {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 30px;
+                margin-top: 20px;
+                transition: all 0.3s ease;
+            }
+            
+            .close-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(shareDialog);
+
+    // 显示成功消息
+    showToast('准备分享');
+  }
+
+  // 复制分享链接
+  function copyShareLink() {
+    const linkInput = document.querySelector('.share-link-container input');
+    linkInput.select();
+    document.execCommand('copy');
+    showToast('链接已复制到剪贴板');
+  }
+
+  // 关闭分享对话框
+  function closeShareDialog() {
+    const dialog = document.querySelector('.share-dialog');
+    if (dialog) {
+      document.body.removeChild(dialog);
+    }
+  }
+
+  // 分享到社交媒体
+  function shareToSocial(platform, link) {
+    let shareUrl = '';
+    const title = encodeURIComponent('AI生成内容检测结果');
+    const encodedLink = encodeURIComponent(link);
+
+    switch (platform) {
+      case 'wechat':
+        // 微信分享通常需要微信SDK，这里简化处理
+        showToast('请使用微信扫一扫分享');
+        break;
+      case 'weibo':
+        shareUrl = `http://service.weibo.com/share/share.php?url=${encodedLink}&title=${title}`;
+        window.open(shareUrl, '_blank');
+        break;
+      case 'qq':
+        shareUrl = `http://connect.qq.com/widget/shareqq/index.html?url=${encodedLink}&title=${title}`;
+        window.open(shareUrl, '_blank');
+        break;
+    }
+  }
+
+  // 显示提示消息
+  function showToast(message, isError = false) {
+    // 检查是否已有toast
+    let toast = document.querySelector('.toast-message');
+
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast-message';
+      document.body.appendChild(toast);
+
+      // 添加样式
+      const style = document.createElement('style');
+      style.textContent = `
+                .toast-message {
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.7);
+                    color: #fff;
+                    padding: 12px 25px;
+                    border-radius: 30px;
+                    z-index: 10000;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                    opacity: 0;
+                }
+                
+                .toast-message.show {
+                    opacity: 1;
+                }
+                
+                .toast-message.error {
+                    background: rgba(220, 53, 69, 0.9);
+                }
+            `;
+      document.head.appendChild(style);
+    }
+
+    // 设置消息内容
+    toast.textContent = message;
+
+    // 设置错误样式
+    if (isError) {
+      toast.classList.add('error');
+    } else {
+      toast.classList.remove('error');
+    }
+
+    // 显示toast
+    toast.classList.add('show');
+
+    // 3秒后隐藏
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+</script>
+{% endblock %}

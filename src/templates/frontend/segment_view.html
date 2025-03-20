@@ -1,0 +1,833 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}段落分析 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 全局样式 */
+  body {
+    background: linear-gradient(135deg, #1a1b1f 0%, #2d2e32 100%);
+    color: #f8f9fa;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  /* 主容器样式 */
+  .container-fluid {
+    padding-top: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h2,
+  h3,
+  h5 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    background: linear-gradient(90deg, #758bfd, #96c7ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.8rem;
+  }
+
+  /* 段落分析区域 */
+  .segment-container {
+    background: rgba(32, 33, 35, 0.85);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.6s ease, opacity 0.6s ease;
+  }
+
+  .segment-container.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .segment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .segment-content {
+    padding: 20px;
+    background: rgba(30, 30, 40, 0.6);
+    border-radius: 10px;
+    margin: 15px 0;
+    line-height: 1.8;
+    font-size: 16px;
+    border-left: 3px solid rgba(117, 139, 253, 0.5);
+  }
+
+  /* 信任度条样式 */
+  .credibility-bar {
+    height: 8px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .credibility-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 可信度标签样式 */
+  .credibility-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+  }
+
+  .credibility-label:before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 7px;
+  }
+
+  .credibility-high {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+  }
+
+  .credibility-high:before {
+    background-color: #2ecc71;
+  }
+
+  .credibility-medium {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.2);
+  }
+
+  .credibility-medium:before {
+    background-color: #f1c40f;
+  }
+
+  .credibility-low {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+  }
+
+  .credibility-low:before {
+    background-color: #e74c3c;
+  }
+
+  /* 分析详情区域 */
+  .analysis-details {
+    background: rgba(30, 30, 40, 0.7);
+    border-radius: 14px;
+    padding: 25px;
+    margin-top: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+  }
+
+  .analysis-details:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+  }
+
+  .analysis-details h5 {
+    color: #c8d3f5;
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  /* 特征标签样式 */
+  .feature-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    margin: 5px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: rgba(117, 139, 253, 0.15);
+    color: #c8d3f5;
+    border: 1px solid rgba(117, 139, 253, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .feature-tag:hover {
+    background: rgba(117, 139, 253, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 加载动画样式 */
+  .loading-container {
+    text-align: center;
+    padding: 60px;
+  }
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(117, 139, 253, 0.1);
+    border-radius: 50%;
+    border-top-color: #758bfd;
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    margin: 0 auto;
+    box-shadow: 0 0 15px rgba(117, 139, 253, 0.2);
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* 返回按钮 */
+  .back-btn {
+    margin-bottom: 25px;
+    background: rgba(70, 70, 90, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: #c8d3f5;
+  }
+
+  .back-btn:hover {
+    background: rgba(90, 90, 120, 0.4);
+    transform: translateX(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .back-btn i {
+    transition: transform 0.3s ease;
+  }
+
+  .back-btn:hover i {
+    transform: translateX(-5px);
+  }
+
+  /* 社交分享按钮 */
+  .share-btn {
+    padding: 8px 18px;
+    border-radius: 25px;
+    margin: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(60, 60, 80, 0.3);
+    transition: all 0.3s ease;
+    color: #c8d3f5;
+  }
+
+  .share-btn:hover {
+    background: rgba(80, 80, 100, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .share-btn i {
+    margin-right: 8px;
+    font-size: 14px;
+  }
+
+  /* 复制按钮样式 */
+  #copy-link-btn {
+    background: rgba(117, 139, 253, 0.2);
+  }
+
+  #copy-link-btn:hover {
+    background: rgba(117, 139, 253, 0.3);
+  }
+
+  /* 微信按钮样式 */
+  #share-wechat-btn {
+    background: rgba(46, 204, 113, 0.2);
+  }
+
+  #share-wechat-btn:hover {
+    background: rgba(46, 204, 113, 0.3);
+  }
+
+  /* 微博按钮样式 */
+  #share-weibo-btn {
+    background: rgba(231, 76, 60, 0.2);
+  }
+
+  #share-weibo-btn:hover {
+    background: rgba(231, 76, 60, 0.3);
+  }
+
+  /* 错误消息样式 */
+  .error-message {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 30px 0;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+  }
+
+  @keyframes shake {
+
+    10%,
+    90% {
+      transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+      transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+      transform: translate3d(-3px, 0, 0);
+    }
+
+    40%,
+    60% {
+      transform: translate3d(3px, 0, 0);
+    }
+  }
+
+  /* 自定义提示框 */
+  .custom-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    background: rgba(40, 42, 54, 0.95);
+    color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1050;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    border-left: 5px solid #758bfd;
+    display: none;
+  }
+
+  .custom-toast.error {
+    border-left-color: #e74c3c;
+  }
+
+  .custom-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 概率信息美化 */
+  .probability-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: rgba(25, 25, 30, 0.5);
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  .probability-info .real {
+    color: #2ecc71;
+  }
+
+  .probability-info .fake {
+    color: #e74c3c;
+  }
+
+  /* 微信二维码模态框样式 */
+  .wechat-modal {
+    display: none;
+    position: fixed;
+    z-index: 1100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .wechat-modal-content {
+    position: relative;
+    margin: 10% auto;
+    padding: 30px;
+    width: 320px;
+    background: rgba(32, 33, 35, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .wechat-modal-content.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .wechat-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #c8d3f5;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .wechat-modal-close:hover {
+    color: #fff;
+  }
+
+  .qrcode-container {
+    margin: 15px auto;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    display: inline-block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 15px;
+    }
+
+    .segment-container {
+      padding: 20px;
+    }
+
+    .segment-content {
+      padding: 15px;
+      font-size: 15px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-10 col-md-12 mx-auto">
+      <button class="btn back-btn" id="back-btn">
+        <i class="fas fa-arrow-left me-2"></i> 返回分析结果
+      </button>
+
+      <h2 class="mb-4">段落详细分析</h2>
+
+      <!-- 加载动画 -->
+      <div class="loading-container" id="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="mt-3">正在加载段落数据...</p>
+      </div>
+
+      <!-- 自定义提示框 -->
+      <div class="custom-toast" id="custom-toast">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-info-circle me-2"></i>
+          <span id="toast-message"></span>
+        </div>
+      </div>
+
+      <!-- 错误消息 -->
+      <div class="error-message" id="error-message" style="display: none;">
+        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+        <h4>无法加载数据</h4>
+        <p>可能该段落分析已过期或不存在。请返回重新分析。</p>
+      </div>
+
+      <!-- 段落内容和分析结果 -->
+      <div class="segment-container" id="segment-container" style="display: none;">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 id="segment-title">段落分析</h3>
+              <span class="credibility-label" id="credibility-level">可信度：未知</span>
+            </div>
+
+            <div class="segment-content" id="segment-content">
+              <!-- 段落内容将动态加载 -->
+            </div>
+
+            <div class="credibility-bar">
+              <div class="credibility-bar-fill" id="credibility-bar-fill"></div>
+            </div>
+
+            <div class="probability-info">
+              <span id="real-probability" class="real"><i class="fas fa-check-circle me-2"></i>真实概率: -</span>
+              <span id="fake-probability" class="fake"><i class="fas fa-times-circle me-2"></i>虚假概率: -</span>
+            </div>
+
+            <div class="analysis-details">
+              <h5><i class="fas fa-chart-bar me-2"></i>分析结论</h5>
+              <p id="analysis-conclusion">-</p>
+
+              <h5 class="mt-4"><i class="fas fa-tags me-2"></i>特征分析</h5>
+              <div id="features-container" class="mt-3">
+                <!-- 特征标签将动态加载 -->
+              </div>
+            </div>
+
+            <div class="mt-5">
+              <h5><i class="fas fa-share-alt me-2"></i>分享这个分析</h5>
+              <div class="d-flex flex-wrap mt-3">
+                <button class="btn share-btn" id="copy-link-btn">
+                  <i class="fas fa-link"></i> 复制链接
+                </button>
+                <button class="btn share-btn" id="share-wechat-btn">
+                  <i class="fab fa-weixin"></i> 微信
+                </button>
+                <button class="btn share-btn" id="share-weibo-btn">
+                  <i class="fab fa-weibo"></i> 微博
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 微信分享二维码模态框 -->
+<div id="wechat-modal" class="wechat-modal">
+  <div class="wechat-modal-content">
+    <span class="wechat-modal-close">&times;</span>
+    <h5><i class="fab fa-weixin me-2"></i>微信分享</h5>
+    <p>请使用微信"扫一扫"功能扫描下方二维码</p>
+    <div id="qrcode-container" class="qrcode-container">
+      <!-- 二维码将在这里生成 -->
+    </div>
+    <p class="mt-3 small text-muted">扫描后可分享给微信好友或朋友圈</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 引入QRCode.js库 -->
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<script>
+  $(document).ready(function () {
+    // 获取URL参数
+    const segmentId = '{{ segment_id }}';
+    const analysisId = '{{ analysis_id }}';
+
+    // 检查是否有分析ID
+    if (!analysisId) {
+      showError('缺少必要的分析ID参数');
+      return;
+    }
+
+    // 返回按钮点击事件
+    $('#back-btn').click(function () {
+      // 标记从段落视图返回
+      const savedResults = localStorage.getItem('newsSegmentResults');
+      if (savedResults) {
+        const data = JSON.parse(savedResults);
+        data.fromSegmentView = true;
+        localStorage.setItem('newsSegmentResults', JSON.stringify(data));
+      }
+
+      // 返回上一页
+      window.history.back();
+    });
+
+    // 加载段落数据
+    loadSegmentData();
+
+    // 显示自定义提示
+    function showToast(message, isError = false) {
+      const $toast = $('#custom-toast');
+      $('#toast-message').text(message);
+
+      if (isError) {
+        $toast.addClass('error');
+      } else {
+        $toast.removeClass('error');
+      }
+
+      $toast.css('display', 'block');
+
+      setTimeout(function () {
+        $toast.addClass('show');
+      }, 10);
+
+      // 5秒后自动隐藏
+      setTimeout(function () {
+        $toast.removeClass('show');
+        setTimeout(function () {
+          $toast.css('display', 'none');
+        }, 300);
+      }, 5000);
+    }
+
+    function loadSegmentData() {
+      // 显示加载动画
+      $('#loading-container').show();
+      $('#segment-container').hide();
+      $('#error-message').hide();
+
+      // 发送API请求获取段落数据
+      $.ajax({
+        url: '{{ url_for("frontend.get_segment_data", segment_id=segment_id) }}',
+        type: 'GET',
+        data: {
+          analysis_id: analysisId
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            displaySegmentData(response.data);
+            showToast('段落数据加载成功');
+          } else {
+            showError('加载失败: ' + (response.message || '未知错误'));
+          }
+        },
+        error: function () {
+          showError('服务器错误，无法加载段落数据');
+        },
+        complete: function () {
+          $('#loading-container').hide();
+        }
+      });
+    }
+
+    function displaySegmentData(data) {
+      if (!data) {
+        showError('找不到段落数据');
+        return;
+      }
+
+      // 段落标题
+      $('#segment-title').html(`<i class="fas fa-file-alt me-2"></i>段落 ${segmentId.split('_')[1]} 分析`);
+
+      // 段落内容
+      $('#segment-content').text(data.content || '无内容');
+
+      // 分析数据
+      const analysis = data.analysis || {};
+      const realProb = analysis.real_probability || 0.5;
+      const fakeProb = analysis.fake_probability || 0.5;
+
+      // 更新可信度标签和颜色
+      let levelClass = 'credibility-medium';
+      let levelText = '中';
+      let barColor = '#f1c40f';
+
+      if (realProb > 0.7) {
+        levelClass = 'credibility-high';
+        levelText = '高';
+        barColor = '#2ecc71';
+      } else if (realProb < 0.5) {
+        levelClass = 'credibility-low';
+        levelText = '低';
+        barColor = '#e74c3c';
+      }
+
+      $('#credibility-level')
+        .attr('class', 'credibility-label ' + levelClass)
+        .text('可信度：' + levelText);
+
+      // 更新可信度条 - 先设置颜色，稍后动画显示宽度
+      $('#credibility-bar-fill').css({
+        'background-color': barColor
+      });
+
+      // 更新概率
+      $('#real-probability').html(`<i class="fas fa-check-circle me-2"></i>真实概率: ${(realProb * 100).toFixed(1)}%`);
+      $('#fake-probability').html(`<i class="fas fa-times-circle me-2"></i>虚假概率: ${(fakeProb * 100).toFixed(1)}%`);
+
+      // 更新结论
+      $('#analysis-conclusion').text(analysis.conclusion || '无分析结论');
+
+      // 更新特征标签
+      const features = analysis.features || {};
+      const $featuresContainer = $('#features-container');
+      $featuresContainer.empty();
+
+      // 遍历特征并创建标签
+      for (const key in features) {
+        if (features.hasOwnProperty(key)) {
+          const value = features[key];
+          const $tag = $(`
+            <span class="feature-tag" title="${key}">
+              ${key}: ${typeof value === 'number' ? value.toFixed(2) : value}
+            </span>
+          `);
+          $featuresContainer.append($tag);
+        }
+      }
+
+      // 显示段落容器
+      $('#segment-container').fadeIn(function () {
+        // 添加可见类触发动画
+        $(this).addClass('visible');
+
+        // 动画显示可信度条
+        setTimeout(function () {
+          $('#credibility-bar-fill').css('width', (realProb * 100) + '%');
+        }, 300);
+
+        // 特征标签动画
+        $('.feature-tag').each(function (index) {
+          const $tag = $(this);
+          setTimeout(function () {
+            $tag.css('opacity', '1');
+          }, 100 * (index + 1));
+        });
+      });
+    }
+
+    function showError(message) {
+      $('#error-message').fadeIn();
+      $('#segment-container').hide();
+      showToast(message || '无法加载段落数据', true);
+    }
+
+    // 分享按钮功能
+    $('#copy-link-btn').click(function () {
+      const url = window.location.href;
+
+      // 使用Clipboard API复制链接
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+          .then(() => {
+            showToast('链接已复制到剪贴板');
+            $(this).addClass('copied');
+            setTimeout(() => $(this).removeClass('copied'), 1000);
+          })
+          .catch(() => showToast('复制失败，请手动复制链接', true));
+      } else {
+        // 回退方法
+        const $temp = $('<input>');
+        $('body').append($temp);
+        $temp.val(url).select();
+        document.execCommand('copy');
+        $temp.remove();
+        showToast('链接已复制到剪贴板');
+      }
+    });
+
+    // 微信分享
+    $('#share-wechat-btn').click(function () {
+      const url = window.location.href;
+      const $modal = $('#wechat-modal');
+      const $modalContent = $modal.find('.wechat-modal-content');
+
+      // 清空之前的二维码
+      $('#qrcode-container').empty();
+
+      // 打开模态框
+      $modal.css('display', 'block');
+
+      // 短暂延迟后添加显示类，触发动画
+      setTimeout(function () {
+        $modalContent.addClass('show');
+      }, 10);
+
+      // 生成二维码
+      new QRCode(document.getElementById('qrcode-container'), {
+        text: url,
+        width: 180,
+        height: 180,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      showToast('二维码已生成，请使用微信扫一扫功能进行分享');
+    });
+
+    // 关闭模态框
+    $('.wechat-modal-close').click(function () {
+      const $modal = $('#wechat-modal');
+      const $modalContent = $modal.find('.wechat-modal-content');
+
+      // 移除显示类，触发隐藏动画
+      $modalContent.removeClass('show');
+
+      // 动画完成后隐藏模态框
+      setTimeout(function () {
+        $modal.css('display', 'none');
+      }, 300);
+    });
+
+    // 点击模态框背景也关闭
+    $('#wechat-modal').click(function (e) {
+      if (e.target === this) {
+        $('.wechat-modal-close').click();
+      }
+    });
+
+    // 微博分享
+    $('#share-weibo-btn').click(function () {
+      const url = encodeURIComponent(window.location.href);
+      const title = encodeURIComponent(document.title);
+      window.open(`http://service.weibo.com/share/share.php?url=${url}&title=${title}`);
+    });
+
+    // 添加easing函数
+    $.easing.easeOutQuart = function (x, t, b, c, d) {
+      return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+    };
+  });
+</script>
+{% endblock %}

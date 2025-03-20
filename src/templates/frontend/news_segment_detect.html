@@ -1,0 +1,946 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}新闻分段检测 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 全局样式 */
+  body {
+    background: linear-gradient(135deg, #1a1b1f 0%, #2d2e32 100%);
+    color: #f8f9fa;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  /* 主容器样式 */
+  .container-fluid {
+    padding-top: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  h2,
+  h3,
+  h5 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    background: linear-gradient(90deg, #758bfd, #96c7ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.8rem;
+  }
+
+  /* 历史记录按钮 */
+  .history-btn {
+    background: rgba(30, 30, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #c8d3f5;
+    border-radius: 10px;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+  }
+
+  .history-btn:hover {
+    background: rgba(50, 50, 65, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+  }
+
+  /* 输入区域样式 */
+  .input-area {
+    background: rgba(32, 33, 35, 0.85);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .input-area:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* 结果区域样式 */
+  .result-area {
+    background: rgba(32, 33, 35, 0.85);
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .result-area.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 表单控件样式 */
+  .form-control,
+  .form-range {
+    background-color: rgba(40, 42, 54, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus {
+    background-color: rgba(50, 52, 64, 0.8);
+    border-color: rgba(117, 139, 253, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(117, 139, 253, 0.25);
+  }
+
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #c8d3f5;
+  }
+
+  /* 按钮样式 */
+  .btn-primary {
+    background: linear-gradient(135deg, #5662e9 0%, #758bfd 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(86, 98, 233, 0.4);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #4e59d4 0%, #6a7dea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(86, 98, 233, 0.5);
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  /* 段落分析区域 */
+  .segment-container {
+    margin-top: 25px;
+    padding: 25px;
+    border-radius: 14px;
+    background: rgba(45, 45, 60, 0.6);
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transform: translateY(0);
+  }
+
+  .segment-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .segment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .segment-content {
+    padding: 15px;
+    background: rgba(30, 30, 40, 0.6);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border-left: 3px solid rgba(117, 139, 253, 0.5);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* 信任度条样式 */
+  .credibility-bar {
+    height: 8px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 15px 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .credibility-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 可信度标签样式 */
+  .credibility-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+
+  .credibility-label:before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 7px;
+  }
+
+  .credibility-high {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+  }
+
+  .credibility-high:before {
+    background-color: #2ecc71;
+  }
+
+  .credibility-medium {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.2);
+  }
+
+  .credibility-medium:before {
+    background-color: #f1c40f;
+  }
+
+  .credibility-low {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+  }
+
+  .credibility-low:before {
+    background-color: #e74c3c;
+  }
+
+  /* 总结区域样式 */
+  .summary-area {
+    background: rgba(30, 30, 40, 0.7);
+    border-radius: 14px;
+    padding: 25px;
+    margin-top: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .summary-area h5 {
+    color: #c8d3f5;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  /* 加载动画样式 */
+  .loading-container {
+    display: none;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(117, 139, 253, 0.1);
+    border-radius: 50%;
+    border-top-color: #758bfd;
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    margin: 0 auto;
+    box-shadow: 0 0 15px rgba(117, 139, 253, 0.2);
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 特征标签样式 */
+  .feature-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    margin: 4px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: rgba(117, 139, 253, 0.15);
+    color: #c8d3f5;
+    border: 1px solid rgba(117, 139, 253, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .feature-tag:hover {
+    background: rgba(117, 139, 253, 0.25);
+    transform: translateY(-2px);
+  }
+
+  /* 段落链接按钮 */
+  .segment-link-btn {
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: rgba(117, 139, 253, 0.12);
+    color: #96c7ff;
+    border: 1px solid rgba(117, 139, 253, 0.2);
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .segment-link-btn:hover {
+    background: rgba(117, 139, 253, 0.25);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(117, 139, 253, 0.2);
+  }
+
+  /* 可疑段落列表样式 */
+  .list-group-item {
+    background: rgba(40, 40, 55, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 8px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  .list-group-item:hover {
+    background: rgba(50, 50, 65, 0.6);
+    transform: translateX(5px);
+  }
+
+  /* 美化滑块 */
+  .form-range {
+    height: 6px;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    background: #758bfd;
+    box-shadow: 0 0 10px rgba(117, 139, 253, 0.5);
+  }
+
+  /* 自定义提示框 */
+  .custom-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    background: rgba(40, 42, 54, 0.95);
+    color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1050;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    border-left: 5px solid #758bfd;
+  }
+
+  .custom-toast.error {
+    border-left-color: #e74c3c;
+  }
+
+  .custom-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .segment-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .segment-actions {
+      margin-top: 10px;
+    }
+
+    .container-fluid {
+      padding: 15px;
+    }
+
+    .input-area,
+    .result-area {
+      padding: 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">新闻分段检测分析</h2>
+        <a href="{{ url_for('frontend.news_segment_history') }}" class="history-btn">
+          <i class="fas fa-history me-2"></i>历史检测记录
+        </a>
+      </div>
+      <p class="mb-4">该工具可对长文本进行分段深层次分析，识别可能包含虚假信息的段落，并提供详细的分析结果。</p>
+
+      <!-- 输入区域 -->
+      <div class="input-area">
+        <div class="row">
+          <div class="col-lg-12 mb-4">
+            <label for="news-title" class="form-label">新闻标题</label>
+            <input type="text" class="form-control" id="news-title" placeholder="请输入新闻标题">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-12 mb-4">
+            <label for="news-content" class="form-label">新闻内容</label>
+            <textarea class="form-control" id="news-content" rows="8" placeholder="请输入新闻内容（支持长文本）"></textarea>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6 mb-3">
+            <label for="segment-size" class="form-label">段落大小 (字符数)</label>
+            <input type="range" class="form-range" id="segment-size" min="200" max="1000" step="100" value="500">
+            <div class="d-flex justify-content-between">
+              <span>200</span>
+              <span id="segment-size-value">500</span>
+              <span>1000</span>
+            </div>
+          </div>
+
+          <div class="col-lg-6 mb-3 d-flex align-items-end">
+            <div class="d-flex w-100">
+              <button class="btn btn-primary flex-grow-1 me-2" id="analyze-btn">
+                <i class="fas fa-search-plus me-2"></i>开始分析
+              </button>
+              <button class="btn btn-outline-danger" id="clear-records-btn" title="清除历史记录">
+                <i class="fas fa-trash-alt me-2"></i>清除记录
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 加载动画 -->
+      <div class="loading-container" id="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="mt-3">正在分析中，请稍候...</p>
+      </div>
+
+      <!-- 自定义提示框 -->
+      <div class="custom-toast" id="custom-toast" style="display: none;">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-info-circle me-2"></i>
+          <span id="toast-message"></span>
+        </div>
+      </div>
+
+      <!-- 结果区域 -->
+      <div class="result-area" id="result-area">
+        <!-- 整体结果摘要 -->
+        <div class="row">
+          <div class="col-lg-12">
+            <h3>整体分析结果</h3>
+            <div class="summary-area">
+              <div class="row">
+                <div class="col-lg-4 mb-4">
+                  <h5>可信度评分</h5>
+                  <div class="d-flex align-items-center">
+                    <span class="h2 mb-0" id="overall-score">-</span>
+                    <span class="ms-2">/10</span>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                  <h5>可信度级别</h5>
+                  <div id="credibility-level-container">
+                    <span class="credibility-label" id="credibility-level">-</span>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                  <h5>段落数量</h5>
+                  <div class="d-flex align-items-center">
+                    <span class="h3 mb-0" id="segment-count">-</span>
+                    <span class="ms-2">段</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-lg-12">
+                  <h5>分析结论</h5>
+                  <p id="analysis-conclusion">-</p>
+                </div>
+              </div>
+
+              <!-- 可疑段落列表 -->
+              <div class="row mt-4" id="suspicious-segments-container" style="display: none;">
+                <div class="col-lg-12">
+                  <h5><i class="fas fa-exclamation-triangle me-2" style="color: #e74c3c;"></i>可疑段落</h5>
+                  <div class="list-group" id="suspicious-segments-list">
+                    <!-- 动态生成 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 段落分析区域 -->
+        <div class="row mt-5">
+          <div class="col-lg-12">
+            <h3><i class="fas fa-align-left me-2"></i>段落详细分析</h3>
+            <div id="segments-container">
+              <!-- 动态生成 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    // 检查是否有历史记录ID
+    const recordId = '{{ record_id|default("") }}';
+    if (recordId) {
+      // 加载历史记录
+      loadRecordById(recordId);
+    } else {
+      // 检查是否有保存的分析结果
+      checkSavedResults();
+    }
+
+    // 从服务器加载历史记录
+    function loadRecordById(id) {
+      $('#loading-container').show();
+
+      // 发送请求获取历史记录数据
+      $.ajax({
+        url: '{{ url_for("frontend.get_segment_data", segment_id="placeholder") }}'.replace('placeholder', 'all'),
+        type: 'GET',
+        data: {
+          analysis_id: id
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            // 填充表单数据
+            $('#news-title').val(response.data.title || '');
+            $('#news-content').val(response.data.content || '');
+
+            // 显示分析结果
+            displayResults(response.data.result);
+
+            // 可选：滚动到结果区域
+            $('html, body').animate({
+              scrollTop: $('#result-area').offset().top - 20
+            }, 800, 'easeOutQuart');
+
+            // 显示成功消息
+            showToast('成功加载历史记录');
+          } else {
+            showToast('加载历史记录失败: ' + response.message, true);
+          }
+        },
+        error: function (xhr) {
+          let errorMsg = '服务器错误，请稍后再试';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMsg = response.message;
+            }
+          } catch (e) { }
+          showToast(errorMsg, true);
+        },
+        complete: function () {
+          $('#loading-container').hide();
+        }
+      });
+    }
+
+    // 段落大小滑块更新
+    $('#segment-size').on('input', function () {
+      $('#segment-size-value').text($(this).val());
+    });
+
+    // 检查是否有保存的分析结果
+    function checkSavedResults() {
+      const savedResults = localStorage.getItem('newsSegmentResults');
+      if (savedResults) {
+        try {
+          const data = JSON.parse(savedResults);
+          // 恢复表单数据
+          $('#news-title').val(data.title || '');
+          $('#news-content').val(data.content || '');
+          if (data.segment_size) {
+            $('#segment-size').val(data.segment_size);
+            $('#segment-size-value').text(data.segment_size);
+          }
+
+          // 显示分析结果
+          displayResults(data.results);
+
+          // 可选：滚动到结果区域
+          if (data.fromSegmentView) {
+            $('html, body').animate({
+              scrollTop: $('#result-area').offset().top - 20
+            }, 800, 'easeOutQuart');
+
+            // 移除返回标记以避免下次自动滚动
+            const updatedData = { ...data, fromSegmentView: false };
+            localStorage.setItem('newsSegmentResults', JSON.stringify(updatedData));
+          }
+        } catch (e) {
+          console.error('无法恢复保存的结果:', e);
+          localStorage.removeItem('newsSegmentResults');
+        }
+      }
+    }
+
+    // 显示自定义提示
+    function showToast(message, isError = false) {
+      const $toast = $('#custom-toast');
+      $('#toast-message').text(message);
+
+      if (isError) {
+        $toast.addClass('error');
+      } else {
+        $toast.removeClass('error');
+      }
+
+      $toast.css('display', 'block');
+
+      setTimeout(function () {
+        $toast.addClass('show');
+      }, 10);
+
+      // 5秒后自动隐藏
+      setTimeout(function () {
+        $toast.removeClass('show');
+        setTimeout(function () {
+          $toast.css('display', 'none');
+        }, 300);
+      }, 5000);
+    }
+
+    // 分析按钮点击事件
+    $('#analyze-btn').click(function () {
+      const title = $('#news-title').val().trim();
+      const content = $('#news-content').val().trim();
+      const segmentSize = parseInt($('#segment-size').val());
+
+      // 验证输入
+      if (!title) {
+        showToast('请输入新闻标题', true);
+        $('#news-title').focus();
+        return;
+      }
+
+      if (!content) {
+        showToast('请输入新闻内容', true);
+        $('#news-content').focus();
+        return;
+      }
+
+      // 显示加载动画
+      $('#loading-container').show();
+      $('#result-area').hide().removeClass('visible');
+
+      // 发送请求
+      $.ajax({
+        url: '{{ url_for("frontend.detect_news_segments") }}',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          title: title,
+          content: content,
+          segment_size: segmentSize
+        }),
+        success: function (response) {
+          if (response.status === 'success') {
+            // 保存结果到本地存储
+            const dataToSave = {
+              title: title,
+              content: content,
+              segment_size: segmentSize,
+              results: response.data,
+              timestamp: new Date().getTime(),
+              fromSegmentView: false
+            };
+            localStorage.setItem('newsSegmentResults', JSON.stringify(dataToSave));
+
+            displayResults(response.data);
+          } else {
+            showToast('分析出错: ' + response.message, true);
+          }
+        },
+        error: function (xhr) {
+          let errorMsg = '服务器错误，请稍后再试';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMsg = response.message;
+            }
+          } catch (e) { }
+          showToast(errorMsg, true);
+        },
+        complete: function () {
+          $('#loading-container').hide();
+        }
+      });
+    });
+
+    // 清除记录按钮点击事件
+    $('#clear-records-btn').click(function () {
+      // 显示确认对话框
+      if (confirm('确定要清除所有分析记录吗？此操作不可撤销。')) {
+        // 清除本地存储中的分析结果
+        localStorage.removeItem('newsSegmentResults');
+
+        // 清空表单
+        $('#news-title').val('');
+        $('#news-content').val('');
+        $('#segment-size').val(500);
+        $('#segment-size-value').text('500');
+
+        // 隐藏结果区域
+        $('#result-area').hide().removeClass('visible');
+
+        // 显示成功消息
+        showToast('分析记录已清除');
+      }
+    });
+
+    // 历史记录按钮点击事件
+    $('.history-btn').click(function (e) {
+      // 如果有当前分析结果，保存到localStorage
+      const title = $('#news-title').val().trim();
+      const content = $('#news-content').val().trim();
+
+      if (title && content && $('#result-area').is(':visible')) {
+        const currentData = localStorage.getItem('newsSegmentResults');
+        if (currentData) {
+          try {
+            const data = JSON.parse(currentData);
+            data.lastActive = new Date().getTime();
+            localStorage.setItem('newsSegmentResults', JSON.stringify(data));
+          } catch (e) {
+            console.error('保存当前分析状态时出错:', e);
+          }
+        }
+      }
+    });
+
+    // 显示结果
+    function displayResults(data) {
+      // 如果有错误信息
+      if (data.error) {
+        showToast('分析出错: ' + data.error, true);
+        return;
+      }
+
+      const overallResult = data.overall_result;
+      const segments = data.segments;
+
+      // 更新整体结果
+      $('#overall-score').text(overallResult.credibility_score.toFixed(1));
+      $('#segment-count').text(overallResult.total_segments);
+
+      // 更新可信度级别
+      const credibilityLevel = overallResult.credibility_level;
+      let levelClass = '';
+
+      switch (credibilityLevel) {
+        case '高':
+          levelClass = 'credibility-high';
+          break;
+        case '中':
+          levelClass = 'credibility-medium';
+          break;
+        case '低':
+          levelClass = 'credibility-low';
+          break;
+        default:
+          levelClass = 'credibility-medium';
+      }
+
+      $('#credibility-level').attr('class', 'credibility-label ' + levelClass).text(credibilityLevel);
+
+      // 更新分析结论
+      $('#analysis-conclusion').text(overallResult.conclusion);
+
+      // 更新可疑段落列表
+      const suspiciousSegments = overallResult.suspicious_segments || [];
+      const $suspiciousContainer = $('#suspicious-segments-container');
+      const $suspiciousList = $('#suspicious-segments-list');
+
+      $suspiciousList.empty();
+
+      if (suspiciousSegments.length > 0) {
+        suspiciousSegments.forEach(function (segment, index) {
+          const item = `
+            <a href="#${segment.segment_id}" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1"><i class="fas fa-exclamation-circle me-2" style="color: #e74c3c;"></i>可疑段落 ${index + 1}</h5>
+                <small><span class="badge bg-danger">虚假概率: ${(segment.fake_probability * 100).toFixed(1)}%</span></small>
+              </div>
+              <p class="mb-1">${segment.content.substring(0, 150)}${segment.content.length > 150 ? '...' : ''}</p>
+              <small class="text-end d-block mt-2"><i class="fas fa-arrow-right"></i> 点击查看详情</small>
+            </a>
+          `;
+          $suspiciousList.append(item);
+        });
+
+        $suspiciousContainer.show();
+      } else {
+        $suspiciousContainer.hide();
+      }
+
+      // 更新段落分析区域
+      const $segmentsContainer = $('#segments-container');
+      $segmentsContainer.empty();
+
+      segments.forEach(function (segment, index) {
+        const realProb = segment.analysis.adjusted_real_probability;
+        const fakeProb = segment.analysis.adjusted_fake_probability;
+        const features = segment.analysis.features || {};
+
+        // 决定颜色
+        let barColor = '#2ecc71'; // 绿色 - 高可信度
+        let levelClass = 'credibility-high';
+        let levelText = '高';
+
+        if (realProb < 0.5) {
+          barColor = '#e74c3c'; // 红色 - 低可信度
+          levelClass = 'credibility-low';
+          levelText = '低';
+        } else if (realProb < 0.7) {
+          barColor = '#f1c40f'; // 黄色 - 中等可信度
+          levelClass = 'credibility-medium';
+          levelText = '中';
+        }
+
+        // 创建特征标签
+        let featureTags = '';
+        const keyFeatures = [
+          '标题夸张度', '内容可信度', '情感_sentiment_volatility',
+          '语言_unique_word_ratio', '标题内容一致性'
+        ];
+
+        keyFeatures.forEach(key => {
+          if (features[key] !== undefined) {
+            featureTags += `
+              <span class="feature-tag" title="${key}">
+                ${key}: ${features[key].toFixed(2)}
+              </span>
+            `;
+          }
+        });
+
+        // 构建段落HTML
+        const segmentHtml = `
+          <div class="segment-container" id="${segment.segment_id}">
+            <div class="segment-header">
+              <h5><i class="fas fa-file-alt me-2"></i>段落 ${segment.segment_id.split('_')[1]} ${index === 0 ? '<span class="badge bg-primary ms-2">首段</span>' : ''}</h5>
+              <div class="segment-actions">
+                <span class="credibility-label ${levelClass}">可信度: ${levelText}</span>
+                <a href="${segment.share_url}" class="segment-link-btn" ">
+                  <i class="fas fa-link"></i> 分享链接
+                </a>
+              </div>
+            </div>
+            
+            <div class="segment-content">
+              ${segment.content}
+            </div>
+            
+            <div class="credibility-bar">
+              <div class="credibility-bar-fill" style="width: 0%; background-color: ${barColor};"></div>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+              <small>真实概率: ${(realProb * 100).toFixed(1)}%</small>
+              <small>虚假概率: ${(fakeProb * 100).toFixed(1)}%</small>
+            </div>
+            
+            <div class="features-container">
+              ${featureTags}
+            </div>
+          </div>
+        `;
+
+        $segmentsContainer.append(segmentHtml);
+      });
+
+      // 显示结果区域
+      $('#result-area').show();
+
+      // 添加动画展示效果
+      setTimeout(function () {
+        $('#result-area').addClass('visible');
+
+        // 为每个进度条添加动画
+        setTimeout(function () {
+          $('.credibility-bar-fill').each(function () {
+            const width = $(this).attr('style').split('width: ')[1].split('%;')[0];
+            $(this).css('width', width + '%');
+          });
+        }, 300);
+
+      }, 100);
+
+      // 滚动到结果区域
+      $('html, body').animate({
+        scrollTop: $('#result-area').offset().top - 20
+      }, 800, 'easeOutQuart');
+
+      // 显示成功消息
+      showToast('分析完成，共分析了' + overallResult.total_segments + '个段落');
+
+      // 查看段落详情前标记将要返回
+      $(document).on('click', '.list-group-item, .segment-link-btn', function () {
+        // 更新本地存储中的返回标记
+        const savedData = JSON.parse(localStorage.getItem('newsSegmentResults'));
+        if (savedData) {
+          savedData.fromSegmentView = true;
+          localStorage.setItem('newsSegmentResults', JSON.stringify(savedData));
+        }
+      });
+    }
+
+    // 添加easing函数
+    $.easing.easeOutQuart = function (x, t, b, c, d) {
+      return -c * ((t = t / d - 1) * t * t * t - 1) + b;
+    };
+  });
+</script>
+{% endblock %}

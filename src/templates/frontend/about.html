@@ -10,14 +10,18 @@
         color: #fff;
         min-height: 100vh;
         position: relative;
-    }
-    /* 确保导航栏可见 */
-    .navbar {
-    position: relative;
-    z-index: 1000;
+        font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     }
 
-    /* 动态背景效果 */
+    /* 确保导航栏可见 */
+    .navbar {
+        position: relative;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 增强动态背景效果 */
     .animated-background {
         position: fixed;
         top: 0;
@@ -33,8 +37,23 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        background: linear-gradient(to bottom, transparent, rgba(10,132,255,0.1));
-        filter: blur(1px);
+        background: radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.15), transparent 80%);
+        filter: blur(3px);
+        animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 0.5;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
     }
 
     .grid-overlay {
@@ -43,16 +62,77 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: 
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         background-size: 50px 50px;
         animation: gridMove 15s linear infinite;
     }
 
     @keyframes gridMove {
-        0% { transform: translateY(0); }
-        100% { transform: translateY(50px); }
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            transform: translateY(50px);
+        }
+    }
+
+    /* 添加浮动元素 */
+    .floating-shapes {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 0;
+    }
+
+    .shape {
+        position: absolute;
+        background: linear-gradient(45deg, rgba(10, 132, 255, 0.1), rgba(0, 198, 251, 0.1));
+        border-radius: 50%;
+        filter: blur(5px);
+        opacity: 0.2;
+        animation: float 15s infinite linear;
+    }
+
+    .shape:nth-child(1) {
+        width: 300px;
+        height: 300px;
+        top: 10%;
+        left: 5%;
+        animation-duration: 25s;
+    }
+
+    .shape:nth-child(2) {
+        width: 250px;
+        height: 250px;
+        top: 60%;
+        right: 10%;
+        animation-duration: 30s;
+    }
+
+    .shape:nth-child(3) {
+        width: 200px;
+        height: 200px;
+        bottom: 10%;
+        left: 15%;
+        animation-duration: 20s;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+
+        50% {
+            transform: translate(50px, 30px) rotate(180deg);
+        }
+
+        100% {
+            transform: translate(0, 0) rotate(360deg);
+        }
     }
 
     /* 内容容器 */
@@ -62,6 +142,19 @@
         max-width: 1200px;
         margin: 40px auto;
         padding: 20px;
+        animation: fadeIn 1s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* 标题样式 */
@@ -71,108 +164,220 @@
     }
 
     .about-title h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 700;
         background: linear-gradient(45deg, #0A84FF, #00C6FB);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(10,132,255,0.3);
+        text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
         margin-bottom: 20px;
+        letter-spacing: 1px;
+        animation: titleGlow 3s infinite alternate;
+    }
+
+    @keyframes titleGlow {
+        from {
+            text-shadow: 0 0 5px rgba(10, 132, 255, 0.3);
+        }
+
+        to {
+            text-shadow: 0 0 15px rgba(10, 132, 255, 0.6), 0 0 30px rgba(10, 132, 255, 0.3);
+        }
     }
 
     /* 内容卡片样式 */
     .content-card {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 15px;
-        padding: 30px;
-        margin-bottom: 30px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 40px;
         backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transform: translateY(0);
+        opacity: 0;
+        animation: cardFadeIn 0.8s forwards;
+        animation-delay: calc(var(--card-index) * 0.2s);
+    }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .content-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        background: rgba(255,255,255,0.08);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2), 0 0 15px rgba(10, 132, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(10, 132, 255, 0.2);
     }
 
     .content-card h2 {
         font-size: 1.8rem;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
         color: #0A84FF;
         display: flex;
         align-items: center;
+        font-weight: 600;
     }
 
     .content-card h2 i {
         margin-right: 15px;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         background: linear-gradient(45deg, #0A84FF, #00C6FB);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        transition: all 0.3s ease;
+    }
+
+    .content-card:hover h2 i {
+        transform: scale(1.1) rotate(5deg);
     }
 
     .content-card p {
         color: #ccc;
         line-height: 1.8;
         margin-bottom: 20px;
+        font-size: 1.05rem;
     }
 
     /* 核心功能卡片网格 */
     .features-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-top: 30px;
+        gap: 25px;
+        margin-top: 40px;
     }
 
     .feature-card {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 15px;
-        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 30px 20px;
         text-align: center;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform: translateY(0);
+        opacity: 0;
+        animation: featureFadeIn 0.6s forwards;
+        animation-delay: calc(var(--feature-index) * 0.15s + 0.6s);
+    }
+
+    @keyframes featureFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .feature-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255,255,255,0.08);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2), 0 0 15px rgba(10, 132, 255, 0.2);
+        border-color: rgba(10, 132, 255, 0.2);
     }
 
     .feature-card i {
-        font-size: 2.5rem;
-        margin-bottom: 15px;
+        font-size: 3rem;
+        margin-bottom: 20px;
         background: linear-gradient(45deg, #0A84FF, #00C6FB);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover i {
+        transform: scale(1.1);
     }
 
     .feature-card h3 {
-        font-size: 1.2rem;
-        margin-bottom: 10px;
+        font-size: 1.3rem;
+        margin-bottom: 15px;
         color: #fff;
+        font-weight: 600;
     }
 
     .feature-card p {
         color: #999;
-        font-size: 0.9rem;
+        font-size: 1rem;
     }
 
-    /* 响应式设计 */
+    /* 添加团队介绍部分 */
+    .team-section {
+        margin-top: 60px;
+    }
+
+    .team-title {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .team-title h2 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+
+    .team-title p {
+        color: #ccc;
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    /* 响应式设计增强 */
+    @media (max-width: 992px) {
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @media (max-width: 768px) {
         .features-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .about-container {
             padding: 15px;
+            margin: 20px auto;
         }
-        
+
         .content-card {
-            padding: 20px;
+            padding: 30px 20px;
+        }
+
+        .about-title h1 {
+            font-size: 2.2rem;
+        }
+
+        .content-card h2 {
+            font-size: 1.5rem;
+        }
+
+        .team-title h2 {
+            font-size: 1.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .feature-card {
+            padding: 25px 15px;
         }
     }
 </style>
@@ -183,6 +388,11 @@
 <div class="animated-background">
     <div class="floating-particles"></div>
     <div class="grid-overlay"></div>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
 </div>
 
 <div class="about-container">
@@ -191,37 +401,80 @@
     </div>
 
     <!-- 项目简介 -->
-    <div class="content-card">
+    <div class="content-card" style="--card-index: 1">
         <h2><i class="fas fa-info-circle"></i>项目简介</h2>
-        <p>虚假新闻检测系统是一个致力于打击虚假新闻传播的智能平台。我们利用先进的人工智能技术，帮助用户识别和验证新闻的真实性。</p>
+        <p>虚假新闻检测系统是一个致力于打击虚假新闻传播的智能平台。我们利用先进的人工智能技术，帮助用户识别和验证新闻的真实性，提供准确的事实核查服务。</p>
+        <p>在当今信息爆炸的时代，虚假信息传播速度快、影响范围广，我们希望通过技术手段为用户提供一个可靠的信息真实性验证工具。</p>
     </div>
 
     <!-- 我们的使命 -->
-    <div class="content-card">
+    <div class="content-card" style="--card-index: 2">
         <h2><i class="fas fa-bullseye"></i>我们的使命</h2>
-        <p>为用户提供优质、可靠的新闻真实性分析服务，促进信息传播的真实性和可信度。</p>
+        <p>为用户提供优质、可靠的新闻真实性分析服务，促进信息传播的真实性和可信度。我们致力于：</p>
+        <ul style="color: #ccc; line-height: 1.8; margin-bottom: 20px; padding-left: 20px;">
+            <li>打造专业的虚假新闻识别平台</li>
+            <li>提升公众的媒体素养和批判性思维</li>
+            <li>促进健康、真实的信息生态系统</li>
+            <li>利用技术手段对抗信息操纵和错误信息传播</li>
+        </ul>
     </div>
 
     <!-- 核心功能 -->
-    <div class="content-card">
+    <div class="content-card" style="--card-index: 3">
         <h2><i class="fas fa-star"></i>核心功能</h2>
+        <p>我们提供一系列智能工具，帮助用户识别虚假信息，获取真实可靠的内容：</p>
         <div class="features-grid">
-            <div class="feature-card">
+            <div class="feature-card" style="--feature-index: 1">
                 <i class="fas fa-newspaper"></i>
                 <h3>新闻检测</h3>
-                <p>智能分析新闻真实性</p>
+                <p>智能分析新闻真实性，快速识别可疑内容和虚假信息</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" style="--feature-index: 2">
                 <i class="fas fa-robot"></i>
                 <h3>AI对话</h3>
-                <p>智能问答服务</p>
+                <p>智能问答服务，解答关于新闻真实性的疑问</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" style="--feature-index: 3">
                 <i class="fas fa-shield-alt"></i>
                 <h3>AI生成检测</h3>
-                <p>识别AI生成内容</p>
+                <p>识别AI生成内容，区分人工创作与机器生成文本</p>
             </div>
         </div>
     </div>
+
+    <!-- 添加团队介绍 -->
+    <div class="content-card" style="--card-index: 4">
+        <h2><i class="fas fa-users"></i>我们的团队</h2>
+        <p>我们由一群对技术与真实信息充满热情的专业人士组成，包括数据科学家、人工智能工程师、新闻专业人士和用户体验设计师。团队成员拥有丰富的行业经验，致力于为用户提供最佳的信息验证体验。</p>
+    </div>
 </div>
-{% endblock %} 
+
+<!-- 添加页面加载动画脚本 -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 确保动画可以正常显示
+        const cards = document.querySelectorAll('.content-card');
+        const features = document.querySelectorAll('.feature-card');
+
+        // 检测元素进入视口
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.visibility = 'visible';
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        cards.forEach(card => {
+            observer.observe(card);
+        });
+
+        features.forEach(feature => {
+            observer.observe(feature);
+        });
+    });
+</script>
+{% endblock %}

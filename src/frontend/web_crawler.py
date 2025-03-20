@@ -395,9 +395,20 @@ class MultiPlatformNewsCrawler:
                     docArr_data = json.loads(docArr_json_text)
                     
                     for item in docArr_data[:10]:  # 限制为前10条结果
-                        title = item.get("title", "").replace("<em>", "").replace("</em>", "")
+                        title = item.get("title", "")
+                        if isinstance(title, str):
+                            title = title.replace("<em>", "").replace("</em>", "")
+                        elif isinstance(title, list):
+                            title = " ".join(str(t) for t in title) if title else ""
+                            
                         url = item.get("url", "")
-                        content = item.get("content_without_tag", "").replace("<em>", "").replace("</em>", "")
+                        
+                        content = item.get("content_without_tag", "")
+                        if isinstance(content, str):
+                            content = content.replace("<em>", "").replace("</em>", "")
+                        elif isinstance(content, list):
+                            content = " ".join(str(c) for c in content) if content else ""
+                            
                         pubtime = item.get("pubtime", "未知时间")
                         
                         news = {

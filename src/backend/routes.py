@@ -868,6 +868,7 @@ def profile():
     user_data = load_user_data(user_name)
     if not user_data:
         user_data={}
+    user_data['username'] = user_name  # 确保username被传递给模板
     return render_template("profile.html", **user_data)
 
 

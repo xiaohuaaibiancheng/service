@@ -1,0 +1,787 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}历史检测记录 - FakeNews{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 全局样式 */
+  body {
+    background: linear-gradient(135deg, #1a1b1f 0%, #2d2e32 100%);
+    color: #f8f9fa;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  /* 主容器样式 */
+  .container-fluid {
+    padding-top: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  h2,
+  h3,
+  h5 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    background: linear-gradient(90deg, #758bfd, #96c7ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 0.8rem;
+  }
+
+  /* 返回按钮 */
+  .back-btn {
+    background: rgba(30, 30, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #c8d3f5;
+    border-radius: 10px;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+  }
+
+  .back-btn:hover {
+    background: rgba(50, 50, 65, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+  }
+
+  /* 内容区域样式 */
+  .content-area {
+    background: rgba(32, 33, 35, 0.85);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .content-area:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* 历史记录卡片样式 */
+  .history-card {
+    background: rgba(45, 45, 60, 0.6);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .history-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(50, 50, 70, 0.7);
+  }
+
+  .history-card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+
+  .history-card-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* 标题样式 */
+  .history-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #f8f9fa;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 摘要内容样式 */
+  .history-content {
+    color: #c8d3f5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  /* 时间标签 */
+  .time-tag {
+    color: #96c7ff;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 可信度标签样式 */
+  .credibility-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+
+  .credibility-label:before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 7px;
+  }
+
+  .credibility-high {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+  }
+
+  .credibility-high:before {
+    background-color: #2ecc71;
+  }
+
+  .credibility-medium {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.2);
+  }
+
+  .credibility-medium:before {
+    background-color: #f1c40f;
+  }
+
+  .credibility-low {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+  }
+
+  .credibility-low:before {
+    background-color: #e74c3c;
+  }
+
+  /* 按钮样式 */
+  .view-btn {
+    background: linear-gradient(135deg, #5662e9 0%, #758bfd 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #fff;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(86, 98, 233, 0.3);
+  }
+
+  .view-btn:hover {
+    background: linear-gradient(135deg, #4e59d4 0%, #6a7dea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(86, 98, 233, 0.4);
+    color: #fff;
+  }
+
+  .delete-btn {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border-radius: 10px;
+    padding: 7px 15px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+  }
+
+  .delete-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.2);
+  }
+
+  /* 空状态样式 */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #96c7ff;
+  }
+
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.6;
+  }
+
+  .empty-state h4 {
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #c8d3f5;
+  }
+
+  /* 加载动画样式 */
+  .loading-container {
+    text-align: center;
+    padding: 40px;
+  }
+
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(117, 139, 253, 0.1);
+    border-radius: 50%;
+    border-top-color: #758bfd;
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    margin: 0 auto;
+    box-shadow: 0 0 15px rgba(117, 139, 253, 0.2);
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 分页样式 */
+  .pagination-container {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page-item {
+    margin: 0 3px;
+  }
+
+  .page-link {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(40, 40, 55, 0.6);
+    color: #c8d3f5;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+  }
+
+  .page-link:hover {
+    background: rgba(60, 60, 75, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    color: #fff;
+  }
+
+  .page-item.active .page-link {
+    background: linear-gradient(135deg, #5662e9 0%, #758bfd 100%);
+    color: #fff;
+    border-color: rgba(117, 139, 253, 0.5);
+    box-shadow: 0 5px 15px rgba(86, 98, 233, 0.3);
+  }
+
+  .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* 自定义提示框 */
+  .custom-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 300px;
+    background: rgba(40, 42, 54, 0.95);
+    color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1050;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    border-left: 5px solid #758bfd;
+  }
+
+  .custom-toast.error {
+    border-left-color: #e74c3c;
+  }
+
+  .custom-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .history-card-footer {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .history-card-actions {
+      margin-top: 10px;
+    }
+
+    .container-fluid {
+      padding: 15px;
+    }
+
+    .content-area {
+      padding: 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">历史检测记录</h2>
+        <a href="{{ url_for('frontend.news_segment_detect') }}" class="back-btn">
+          <i class="fas fa-arrow-left me-2"></i>返回检测页
+        </a>
+      </div>
+      <p class="mb-4">查看您之前的新闻分段检测分析记录。最近的分析结果排列在前面。</p>
+
+      <!-- 筛选和排序选项 -->
+      <div class="content-area mb-4">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-0">
+              <label for="filter" class="form-label">筛选条件</label>
+              <select class="form-select" id="filter">
+                <option value="all">所有记录</option>
+                <option value="high">高可信度</option>
+                <option value="medium">中等可信度</option>
+                <option value="low">低可信度</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-0">
+              <label for="sort" class="form-label">排序方式</label>
+              <select class="form-select" id="sort">
+                <option value="latest">最新记录优先</option>
+                <option value="oldest">最早记录优先</option>
+                <option value="credibility_high">可信度从高到低</option>
+                <option value="credibility_low">可信度从低到高</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 加载动画 -->
+      <div class="loading-container" id="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="mt-3">正在加载历史记录，请稍候...</p>
+      </div>
+
+      <!-- 自定义提示框 -->
+      <div class="custom-toast" id="custom-toast" style="display: none;">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-info-circle me-2"></i>
+          <span id="toast-message"></span>
+        </div>
+      </div>
+
+      <!-- 历史记录列表 -->
+      <div class="history-list" id="history-list">
+        <!-- 由JavaScript动态填充内容 -->
+      </div>
+
+      <!-- 空状态显示 -->
+      <div class="empty-state" id="empty-state" style="display: none;">
+        <i class="fas fa-history"></i>
+        <h4>暂无检测记录</h4>
+        <p>您还没有进行过新闻分段检测分析，或者所有记录已被删除。</p>
+        <a href="{{ url_for('frontend.news_segment_detect') }}" class="btn btn-primary mt-3">
+          <i class="fas fa-search-plus me-2"></i>开始新的分析
+        </a>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination-container" id="pagination-container" style="display: none;">
+        <ul class="pagination" id="pagination">
+          <!-- 由JavaScript动态填充内容 -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    // 初始化页面
+    loadHistoryRecords();
+
+    // 显示自定义提示
+    function showToast(message, isError = false) {
+      const $toast = $('#custom-toast');
+      $('#toast-message').text(message);
+
+      if (isError) {
+        $toast.addClass('error');
+      } else {
+        $toast.removeClass('error');
+      }
+
+      $toast.css('display', 'block');
+
+      setTimeout(function () {
+        $toast.addClass('show');
+      }, 10);
+
+      // 5秒后自动隐藏
+      setTimeout(function () {
+        $toast.removeClass('show');
+        setTimeout(function () {
+          $toast.css('display', 'none');
+        }, 300);
+      }, 5000);
+    }
+
+    // 格式化日期时间
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    // 获取历史记录并显示
+    function loadHistoryRecords() {
+      $('#loading-container').show();
+      $('#history-list').empty();
+      $('#pagination-container').hide();
+
+      // 获取筛选和排序条件
+      const filter = $('#filter').val();
+      const sort = $('#sort').val();
+
+      // 发送API请求
+      $.ajax({
+        url: '{{ url_for("frontend.get_news_segment_history") }}',
+        type: 'GET',
+        data: {
+          filter: filter,
+          sort: sort,
+          page: 1,
+          per_page: 10
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            displayHistoryRecords(response.data);
+
+            // 如果有分页信息，处理分页
+            if (response.pagination) {
+              displayPagination(response.pagination);
+            }
+          } else {
+            showToast('获取历史记录失败: ' + response.message, true);
+            $('#empty-state').show();
+          }
+        },
+        error: function (xhr) {
+          let errorMsg = '服务器错误，请稍后再试';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMsg = response.message;
+            }
+          } catch (e) { }
+          showToast(errorMsg, true);
+          $('#empty-state').show();
+        },
+        complete: function () {
+          $('#loading-container').hide();
+        }
+      });
+    }
+
+    // 显示历史记录
+    function displayHistoryRecords(records) {
+      const $historyList = $('#history-list');
+      $historyList.empty();
+
+      if (!records || records.length === 0) {
+        $('#empty-state').show();
+        return;
+      }
+
+      $('#empty-state').hide();
+
+      records.forEach(function (record) {
+        // 确定可信度等级的样式
+        let levelClass = 'credibility-medium';
+        const credibilityLevel = record.credibility_level || '中';
+
+        switch (credibilityLevel) {
+          case '高':
+            levelClass = 'credibility-high';
+            break;
+          case '中':
+            levelClass = 'credibility-medium';
+            break;
+          case '低':
+            levelClass = 'credibility-low';
+            break;
+        }
+
+        // 构建历史记录卡片
+        const cardHtml = `
+          <div class="history-card" data-id="${record.id}">
+            <div class="history-card-header">
+              <h3 class="history-title">${record.title}</h3>
+              <div class="time-tag">
+                <i class="far fa-clock me-2"></i>
+                ${formatDate(record.timestamp)}
+              </div>
+            </div>
+            <div class="history-card-body">
+              <div class="history-content">
+                ${record.content.substring(0, 200)}${record.content.length > 200 ? '...' : ''}
+              </div>
+              <div class="d-flex align-items-center mt-2">
+                <span class="credibility-label ${levelClass}">可信度: ${credibilityLevel}</span>
+                <span class="ms-3">评分: ${record.credibility_score.toFixed(1)}/10</span>
+                <span class="ms-3">段落数: ${record.segments_count}</span>
+              </div>
+            </div>
+            <div class="history-card-footer">
+              <div class="history-card-conclusion">
+                ${record.conclusion ? record.conclusion.substring(0, 100) + (record.conclusion.length > 100 ? '...' : '') : '无分析结论'}
+              </div>
+              <div class="history-card-actions">
+                <a href="${record.detail_url}" class="view-btn">
+                  <i class="fas fa-eye me-1"></i>查看详情
+                </a>
+                <button class="delete-btn" data-id="${record.id}">
+                  <i class="fas fa-trash-alt me-1"></i>删除
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        $historyList.append(cardHtml);
+      });
+
+      // 绑定删除按钮事件
+      $('.delete-btn').click(function () {
+        const recordId = $(this).data('id');
+        deleteHistoryRecord(recordId);
+      });
+    }
+
+    // 显示分页
+    function displayPagination(pagination) {
+      const $pagination = $('#pagination');
+      $pagination.empty();
+
+      const currentPage = pagination.current_page;
+      const totalPages = pagination.total_pages;
+
+      if (totalPages <= 1) {
+        $('#pagination-container').hide();
+        return;
+      }
+
+      $('#pagination-container').show();
+
+      // 添加上一页按钮
+      $pagination.append(`
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+          <a class="page-link" href="#" data-page="${currentPage - 1}" ${currentPage === 1 ? 'tabindex="-1" aria-disabled="true"' : ''}>
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        </li>
+      `);
+
+      // 添加页码按钮
+      for (let i = 1; i <= totalPages; i++) {
+        if (
+          i === 1 || // 第一页
+          i === totalPages || // 最后一页
+          (i >= currentPage - 1 && i <= currentPage + 1) // 当前页的前后页
+        ) {
+          $pagination.append(`
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+              <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+          `);
+        } else if (
+          (i === 2 && currentPage > 3) ||
+          (i === totalPages - 1 && currentPage < totalPages - 2)
+        ) {
+          // 添加省略号
+          $pagination.append(`
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+          `);
+        }
+      }
+
+      // 添加下一页按钮
+      $pagination.append(`
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+          <a class="page-link" href="#" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'tabindex="-1" aria-disabled="true"' : ''}>
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </li>
+      `);
+
+      // 绑定分页按钮事件
+      $('.page-link').click(function (e) {
+        e.preventDefault();
+        if (!$(this).parent().hasClass('disabled')) {
+          const page = $(this).data('page');
+          loadHistoryPage(page);
+        }
+      });
+    }
+
+    // 加载特定页码的历史记录
+    function loadHistoryPage(page) {
+      $('#loading-container').show();
+      $('#history-list').empty();
+
+      const filter = $('#filter').val();
+      const sort = $('#sort').val();
+
+      $.ajax({
+        url: '{{ url_for("frontend.get_news_segment_history") }}',
+        type: 'GET',
+        data: {
+          filter: filter,
+          sort: sort,
+          page: page,
+          per_page: 10
+        },
+        success: function (response) {
+          if (response.status === 'success') {
+            displayHistoryRecords(response.data);
+
+            if (response.pagination) {
+              displayPagination(response.pagination);
+            }
+          } else {
+            showToast('加载数据失败: ' + response.message, true);
+          }
+        },
+        error: function (xhr) {
+          let errorMsg = '服务器错误，请稍后再试';
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+              errorMsg = response.message;
+            }
+          } catch (e) { }
+          showToast(errorMsg, true);
+        },
+        complete: function () {
+          $('#loading-container').hide();
+        }
+      });
+    }
+
+    // 删除历史记录
+    function deleteHistoryRecord(recordId) {
+      if (confirm('确定要删除此检测记录吗？此操作不可撤销。')) {
+        $.ajax({
+          url: '{{ url_for("frontend.delete_news_segment_record") }}',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            record_id: recordId
+          }),
+          success: function (response) {
+            if (response.status === 'success') {
+              // 移除对应的卡片
+              $(`.history-card[data-id="${recordId}"]`).fadeOut(300, function () {
+                $(this).remove();
+
+                // 检查是否还有记录
+                if ($('.history-card').length === 0) {
+                  $('#empty-state').show();
+                  $('#pagination-container').hide();
+                } else {
+                  // 重新加载当前页
+                  const currentPage = parseInt($('.page-item.active .page-link').data('page')) || 1;
+                  loadHistoryPage(currentPage);
+                }
+              });
+
+              showToast('记录已成功删除');
+            } else {
+              showToast('删除失败: ' + response.message, true);
+            }
+          },
+          error: function (xhr) {
+            let errorMsg = '服务器错误，请稍后再试';
+            try {
+              const response = JSON.parse(xhr.responseText);
+              if (response.message) {
+                errorMsg = response.message;
+              }
+            } catch (e) { }
+            showToast(errorMsg, true);
+          }
+        });
+      }
+    }
+
+    // 筛选和排序条件变更时重新加载
+    $('#filter, #sort').change(function () {
+      loadHistoryRecords();
+    });
+  });
+</script>
+{% endblock %}

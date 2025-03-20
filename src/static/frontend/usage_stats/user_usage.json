@@ -1,0 +1,164 @@
+{
+    "news_detect_view": {
+        "total": 12,
+        "users": {
+            "felix": 12
+        }
+    },
+    "news_detect_submit": {
+        "total": 0,
+        "users": {}
+    },
+    "detect_url": {
+        "total": 1,
+        "users": {
+            "felix": 1
+        }
+    },
+    "detect_multimodal": {
+        "total": 0,
+        "users": {}
+    },
+    "detect_file": {
+        "total": 0,
+        "users": {}
+    },
+    "fake_news_classify": {
+        "total": 14,
+        "users": {
+            "felix": 14
+        }
+    },
+    "news_segment_view": {
+        "total": 3,
+        "users": {
+            "felix": 3
+        }
+    },
+    "news_segment_analyze": {
+        "total": 0,
+        "users": {}
+    },
+    "ai_detect_view": {
+        "total": 5,
+        "users": {
+            "felix": 5
+        }
+    },
+    "detect_ai_text": {
+        "total": 1,
+        "users": {
+            "felix": 1
+        }
+    },
+    "detect_ai_image": {
+        "total": 1,
+        "users": {
+            "felix": 1
+        }
+    },
+    "agent_view": {
+        "total": 6,
+        "users": {
+            "felix": 6
+        }
+    },
+    "agent_check": {
+        "total": 0,
+        "users": {}
+    },
+    "news_aggregate_view": {
+        "total": 17,
+        "users": {
+            "felix": 17
+        }
+    },
+    "news_aggregate_search": {
+        "total": 7,
+        "users": {
+            "felix": 7
+        }
+    },
+    "detect_aggregate": {
+        "total": 0,
+        "users": {}
+    },
+    "ai_chat_view": {
+        "total": 5,
+        "users": {
+            "felix": 5
+        }
+    },
+    "create_chat": {
+        "total": 0,
+        "users": {}
+    },
+    "send_message": {
+        "total": 0,
+        "users": {}
+    },
+    "share_chat": {
+        "total": 0,
+        "users": {}
+    },
+    "view_shared_chat": {
+        "total": 0,
+        "users": {}
+    },
+    "reply_to_shared": {
+        "total": 0,
+        "users": {}
+    },
+    "view_usage_stats": {
+        "total": 17,
+        "users": {
+            "felix": 17
+        }
+    },
+    "download_stats": {
+        "total": 1,
+        "users": {
+            "felix": 1
+        }
+    },
+    "reset_stats": {
+        "total": 0,
+        "users": {}
+    },
+    "index_view": {
+        "total": 4,
+        "users": {
+            "felix": 4
+        }
+    },
+    "about_view": {
+        "total": 2,
+        "users": {
+            "felix": 2
+        }
+    },
+    "contact_view": {
+        "total": 0,
+        "users": {}
+    },
+    "news_analyze": {
+        "total": 5,
+        "users": {
+            "felix": 5
+        }
+    },
+    "news_timeline": {
+        "total": 3,
+        "users": {
+            "felix": 3
+        }
+    },
+    "view_segment": {
+        "total": 0,
+        "users": {}
+    },
+    "update_settings": {
+        "total": 0,
+        "users": {}
+    }
+}

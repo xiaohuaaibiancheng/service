@@ -1,6 +1,6 @@
 {% extends "frontend/base.html" %}
 
-{% block title %}新闻检测 - FakeNews{% endblock %}
+{% block title %}新闻一致性检测 - FakeNews{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -864,6 +864,492 @@
     .detection-button.active i {
         color: #fff;
     }
+
+    /* 输入区域样式增强 */
+    .form-control {
+        background: rgba(30, 30, 35, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 15px 20px;
+        color: #fff !important;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        background: rgba(40, 40, 45, 0.9) !important;
+        border-color: rgba(10, 132, 255, 0.5);
+        box-shadow: 0 0 15px rgba(10, 132, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .input-with-icon {
+        position: relative;
+    }
+
+    .input-with-icon i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.2rem;
+        pointer-events: none;
+        transition: all 0.3s ease;
+    }
+
+    .input-with-icon input,
+    .input-with-icon textarea {
+        padding-left: 45px;
+    }
+
+    .input-with-icon:focus-within i {
+        color: #0A84FF;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    /* 默认结果展示区域和动画 */
+    .default-result {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        margin: 30px 0;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .default-result:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-5px);
+    }
+
+    .default-result i {
+        font-size: 3rem;
+        color: rgba(10, 132, 255, 0.7);
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+
+    .pulse {
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .bounce {
+        animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* 检测步骤导航 */
+    .detection-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        position: relative;
+    }
+
+    .detection-steps::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+
+    .step {
+        position: relative;
+        z-index: 2;
+        background: #202123;
+        padding: 0 10px;
+        text-align: center;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-number {
+        background: linear-gradient(45deg, #0A84FF, #00C6FB);
+        border-color: transparent;
+        box-shadow: 0 0 15px rgba(10, 132, 255, 0.4);
+    }
+
+    .step.completed .step-number {
+        background: rgba(52, 199, 89, 0.2);
+        border-color: rgba(52, 199, 89, 0.4);
+        color: #34C759;
+    }
+
+    .step.completed .step-number::after {
+        content: '✓';
+        position: absolute;
+        font-size: 1.2rem;
+        color: #34C759;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-label {
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .step.completed .step-label {
+        color: #34C759;
+    }
+
+    /* 文件图标修复 */
+    .fa-file-search:before {
+        content: "\f002";
+        margin-right: 5px;
+    }
+
+    .fa-file-search:after {
+        content: "\f15b";
+        margin-left: -5px;
+    }
+
+    /* 加载动画 */
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        color: #0A84FF;
+    }
+
+    /* 结果卡片进入动画 */
+    .result-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .result-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .result-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .result-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+    }
+
+    .result-icon i {
+        font-size: 1.8rem;
+    }
+
+    .result-icon.true i {
+        color: #34C759;
+    }
+
+    .result-icon.false i {
+        color: #FF3B30;
+    }
+
+    .result-icon.pending i {
+        color: #FF9F0A;
+    }
+
+    .result-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .result-meta {
+        display: flex;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .result-meta-item {
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .result-meta-item i {
+        margin-right: 8px;
+        color: #0A84FF;
+    }
+
+    .result-content {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .result-score {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .score-bar {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0 15px;
+    }
+
+    .score-fill {
+        height: 100%;
+        width: 0;
+        transition: width 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .score-fill.true {
+        background: linear-gradient(to right, #2DCE89, #34C759);
+    }
+
+    .score-fill.false {
+        background: linear-gradient(to right, #FF3B30, #FF453A);
+    }
+
+    .score-fill.pending {
+        background: linear-gradient(to right, #FF9F0A, #FFCC00);
+    }
+
+    .score-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        min-width: 60px;
+        text-align: right;
+    }
+
+    .score-value.true {
+        color: #34C759;
+    }
+
+    .score-value.false {
+        color: #FF3B30;
+    }
+
+    .score-value.pending {
+        color: #FF9F0A;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* 完成的步骤连接线 */
+    .step.completed::after {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: rgba(52, 199, 89, 0.4);
+        z-index: -1;
+    }
+
+    .step:last-child::after {
+        display: none;
+    }
+
+    /* 增强悬停效果 */
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(10, 132, 255, 0.4);
+    }
+
+    .btn-outline-light:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    /* 表单组输入焦点效果 */
+    .form-group:focus-within label {
+        color: #0A84FF;
+        transform: translateY(-2px);
+    }
+
+    /* 标题闪光效果 */
+    .hero-title {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-title::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent);
+        animation: titleShine 3s infinite;
+    }
+
+    @keyframes titleShine {
+        0% {
+            left: -100%;
+        }
+
+        20%,
+        100% {
+            left: 100%;
+        }
+    }
+
+    /* 按钮焦点状态 */
+    .btn:focus,
+    .btn:active {
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3) !important;
+    }
+
+    /* 按钮点击效果 */
+    .btn:active {
+        transform: scale(0.97) !important;
+    }
+
+    /* 初始页面指南样式 */
+    .step-guide {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        padding: 8px 15px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        max-width: 350px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .step-guide:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .step-number {
+        background: rgba(10, 132, 255, 0.15);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #0A84FF;
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(10, 132, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .step-guide:hover .step-number {
+        background: rgba(10, 132, 255, 0.25);
+        transform: scale(1.1);
+    }
+
+    .detection-type-tag {
+        background: rgba(10, 132, 255, 0.1);
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .detection-type-tag:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .detection-type-tag.url-tag {
+        background: rgba(10, 132, 255, 0.1);
+        color: #0A84FF;
+    }
+
+    .detection-type-tag.multimodal-tag {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
+    }
+
+    .detection-type-tag.file-tag {
+        background: rgba(255, 159, 10, 0.1);
+        color: #FF9F0A;
+    }
 </style>
 {% endblock %}
 
@@ -880,7 +1366,7 @@
     <div class="container">
         <div class="hero-content">
             <h1 class="hero-title">新闻一致性检测</h1>
-            <p class="hero-subtitle">专业的新闻真伪鉴别系统，支持多种检测方式，准确率达95%以上</p>
+            <p class="hero-subtitle">专业的新闻一致性检测系统，支持多种检测方式，准确率达95%以上</p>
         </div>
     </div>
 </section>
@@ -930,374 +1416,508 @@
 
         <!-- 检测表单区域 -->
         <div id="detection-forms">
-            <div id="url-form" class="detection-form" style="display: none;">
-                <div class="card bg-dark text-white">
-                    <div class="card-body">
-                        <h3>URL新闻检测</h3>
-                        <div class="form-group mt-4">
-                            <input type="url" class="form-control bg-dark text-white" placeholder="请输入新闻URL">
+            <div class="row">
+                <!-- 左侧输入区域 -->
+                <div class="col-md-6">
+                    <div id="url-form" class="detection-form" style="display: none;">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body">
+                                <h3>URL新闻检测</h3>
+                                <div class="form-group mt-4 input-with-icon">
+                                    <i class="fas fa-link"></i>
+                                    <input type="url" class="form-control bg-dark text-white" placeholder="请输入新闻URL">
+                                </div>
+                                <button class="btn btn-primary mt-4">
+                                    <i class="fas fa-search me-2"></i>开始检测
+                                </button>
+                            </div>
                         </div>
-                        <button class="btn btn-primary mt-4">开始检测</button>
+
+                        <!-- 检测步骤提示 -->
+                        <div class="detection-steps mt-4">
+                            <div class="step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">输入URL</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-label">系统分析</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">生成结果</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="multimodal-form" class="detection-form" style="display: none;">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body">
+                                <h3>多模态检测</h3>
+                                <!-- 新闻标题输入区域 -->
+                                <div class="form-group mt-4 input-with-icon">
+                                    <i class="fas fa-heading"></i>
+                                    <input type="text" class="form-control bg-dark text-white" placeholder="请输入新闻标题"
+                                        id="news-title">
+                                </div>
+                                <!-- 文本输入区域 -->
+                                <div class="form-group mt-4 input-with-icon">
+                                    <i class="fas fa-align-left"></i>
+                                    <textarea class="form-control bg-dark text-white" rows="6"
+                                        placeholder="请输入或粘贴新闻内容"></textarea>
+                                </div>
+                                <!-- 图片上传区域 -->
+                                <div class="form-group mt-4">
+                                    <label for="image-upload" class="btn btn-outline-light w-100">
+                                        <i class="fas fa-image me-2 bounce"></i> 上传图片
+                                    </label>
+                                    <input type="file" id="image-upload" class="d-none" accept="image/*">
+                                    <small class="text-muted">支持 JPG, PNG, GIF 格式</small>
+                                </div>
+                                <!-- 显示上传的图片 -->
+                                <div id="image-preview" class="mt-3 text-center" style="display: none;">
+                                    <img id="preview-image" src="#" alt="上传的图片" class="img-fluid rounded"
+                                        style="max-height: 200px;">
+                                    <button id="remove-image" class="btn btn-danger btn-sm mt-2">
+                                        <i class="fas fa-trash"></i> 移除图片
+                                    </button>
+                                </div>
+                                <button class="btn btn-primary mt-4">
+                                    <i class="fas fa-search me-2"></i>开始检测
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 检测步骤提示 -->
+                        <div class="detection-steps mt-4">
+                            <div class="step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">输入内容</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-label">多模态分析</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">生成结果</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="file-form" class="detection-form" style="display: none;">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body">
+                                <h3>文件新闻检测</h3>
+                                <div class="form-group mt-4 input-with-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                    <input type="file" class="form-control bg-dark text-white">
+                                    <small class="text-muted">支持 .txt, .doc, .docx, .pdf 格式</small>
+                                </div>
+                                <button class="btn btn-primary mt-4">
+                                    <i class="fas fa-search me-2"></i>开始检测
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 检测步骤提示 -->
+                        <div class="detection-steps mt-4">
+                            <div class="step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">上传文件</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-label">文件解析</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">生成结果</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="multimodal-form" class="detection-form" style="display: none;">
-                <div class="card bg-dark text-white">
-                    <div class="card-body">
-                        <h3>多模态检测</h3>
-                        <!-- 新闻标题输入区域 -->
-                        <div class="form-group mt-4">
-                            <input type="text" class="form-control bg-dark text-white" placeholder="请输入新闻标题"
-                                id="news-title">
+                <!-- 右侧结果区域 -->
+                <div class="col-md-6">
+                    <div id="detection-results-area">
+                        <div id="initial-prompt" class="result-area">
+                            <div class="default-result">
+                                <i class="fas fa-search-plus pulse"
+                                    style="font-size: 4rem; margin-bottom: 25px; color: #0A84FF;"></i>
+                                <h4 style="font-size: 1.5rem; margin-bottom: 20px;">欢迎使用新闻一致性检测</h4>
+                                <div class="detection-options" style="margin-bottom: 20px;">
+                                    <div class="step-guide">
+                                        <div class="step-number">1</div>
+                                        <span>从左侧选择检测方式</span>
+                                    </div>
+                                    <div class="step-guide">
+                                        <div class="step-number">2</div>
+                                        <span>输入相关内容或上传文件</span>
+                                    </div>
+                                    <div class="step-guide">
+                                        <div class="step-number">3</div>
+                                        <span>获取检测结果</span>
+                                    </div>
+                                </div>
+                                <div class="detection-types"
+                                    style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 25px;">
+                                    <div class="detection-type-tag url-tag" onclick="showDetectionForm('url')">
+                                        <i class="fas fa-link" style="margin-right: 5px;"></i>URL检测
+                                    </div>
+                                    <div class="detection-type-tag multimodal-tag"
+                                        onclick="showDetectionForm('multimodal')">
+                                        <i class="fas fa-image" style="margin-right: 5px;"></i>多模态检测
+                                    </div>
+                                    <div class="detection-type-tag file-tag" onclick="showDetectionForm('file')">
+                                        <i class="fas fa-file-upload" style="margin-right: 5px;"></i>文件检测
+                                    </div>
+                                </div>
+                                <p class="text-muted" style="margin-top: 25px;">我们的系统能够检测新闻内容的一致性，帮助您识别虚假信息</p>
+                            </div>
                         </div>
-                        <!-- 文本输入区域 -->
-                        <div class="form-group mt-4">
-                            <textarea class="form-control bg-dark text-white" rows="6"
-                                placeholder="请输入或粘贴新闻内容"></textarea>
-                        </div>
-                        <!-- 图片上传区域 -->
-                        <div class="form-group mt-4">
-                            <label for="image-upload" class="btn btn-outline-light w-100">
-                                <i class="fas fa-image"></i> 上传图片
-                            </label>
-                            <input type="file" id="image-upload" class="d-none" accept="image/*">
-                            <small class="text-muted">支持 JPG, PNG, GIF 格式</small>
-                        </div>
-                        <!-- 显示上传的图片 -->
-                        <div id="image-preview" class="mt-3 text-center" style="display: none;">
-                            <img id="preview-image" src="#" alt="上传的图片" class="img-fluid rounded"
-                                style="max-height: 200px;">
-                            <button id="remove-image" class="btn btn-danger btn-sm mt-2">
-                                <i class="fas fa-trash"></i> 移除图片
-                            </button>
-                        </div>
-                        <button class="btn btn-primary mt-4">开始检测</button>
-                    </div>
-                </div>
-            </div>
 
-            <div id="file-form" class="detection-form" style="display: none;">
-                <div class="card bg-dark text-white">
-                    <div class="card-body">
-                        <h3>文件新闻检测</h3>
-                        <div class="form-group mt-4">
-                            <input type="file" class="form-control bg-dark text-white">
-                            <small class="text-muted">支持 .txt, .doc, .docx, .pdf 格式</small>
+                        <div id="url-result" class="result-area" style="display: none;">
+                            <div class="default-result">
+                                <i class="fas fa-newspaper pulse"></i>
+                                <h4>请输入新闻URL进行检测</h4>
+                                <p class="text-muted">系统将自动提取新闻内容并进行一致性分析</p>
+                            </div>
                         </div>
-                        <button class="btn btn-primary mt-4">开始检测</button>
+
+                        <div id="multimodal-result" class="result-area" style="display: none;">
+                            <div class="default-result">
+                                <i class="fas fa-layer-group pulse"></i>
+                                <h4>请输入新闻内容进行多模态检测</h4>
+                                <p class="text-muted">系统将同时分析文本内容和图片信息，提供更准确的一致性判断</p>
+                            </div>
+                        </div>
+
+                        <div id="file-result" class="result-area" style="display: none;">
+                            <div class="default-result">
+                                <i class="fas fa-file-search pulse"></i>
+                                <h4>请上传新闻文件进行检测</h4>
+                                <p class="text-muted">系统将自动解析文件内容并进行一致性分析</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="detection-result" class="mt-4 text-white"></div>
-    </div>
 
-    <!-- 其他板块内容 -->
-    <div id="process" class="section-content">
-        <!-- 原有的检测流程内容 -->
-        <section class="process-section">
-            <div class="container">
-                <h2 class="section-title">检测流程</h2>
-                <p class="text-center text-muted mb-5">采用先进的AI技术和多重验证机制，确保检测结果的准确性</p>
+        <!-- 其他板块内容 -->
+        <div id="process" class="section-content">
+            <!-- 原有的检测流程内容 -->
+            <section class="process-section">
+                <div class="container">
+                    <h2 class="section-title">检测流程</h2>
+                    <p class="text-center text-muted mb-5">采用先进的AI技术和多重验证机制，确保一致性检测结果的准确性</p>
 
-                <div class="row g-4">
-                    <div class="col-md-3">
-                        <div class="process-card">
-                            <div class="process-number">1</div>
-                            <h3 class="h5 mb-3">内容提取</h3>
-                            <p class="text-muted">系统自动提取新闻内容，包括标题、正文和来源信息</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="process-card">
-                            <div class="process-number">2</div>
-                            <h3 class="h5 mb-3">语义分析</h3>
-                            <p class="text-muted">AI模型进行深度语义分析，识别关键信息</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="process-card">
-                            <div class="process-number">3</div>
-                            <h3 class="h5 mb-3">多源验证</h3>
-                            <p class="text-muted">自动对比多个可靠信息源，验证内容真实性</p>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="process-card">
-                            <div class="process-number">4</div>
-                            <h3 class="h5 mb-3">结果生成</h3>
-                            <p class="text-muted">生成详细的检测报告，包括真伪评分和分析</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div id="features" class="section-content">
-        <!-- 原有的技术优势内容 -->
-        <section class="features-section">
-            <div class="container">
-                <h2 class="section-title">技术优势</h2>
-                <p class="text-center text-muted mb-5">采用多项先进技术，确保检测结果的准确性和可靠性</p>
-
-                <div class="row g-4">
-                    <!-- 深度学习模型 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-brain text-blue-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">深度学习模型</h3>
-                            <p class="text-muted">采用最新的深度学习模型，通过海量数据训练，能够精准识别新闻内容的真实性特征</p>
-                        </div>
-                    </div>
-
-                    <!-- 多语言支持 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-language text-purple-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">多语言支持</h3>
-                            <p class="text-muted">支持50多种语言的新闻内容检测，包括英语、中文、日语、俄语等主流语言</p>
-                        </div>
-                    </div>
-
-                    <!-- 实时更新 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-sync text-green-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">实时更新</h3>
-                            <p class="text-muted">系统数据库实时更新，确保能够检测最新的虚假新闻和信息</p>
-                        </div>
-                    </div>
-
-                    <!-- 多维度分析 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-chart-network text-red-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">多维度分析</h3>
-                            <p class="text-muted">从内容、来源、时间、语言特征等多个维度进行综合分析，提高检测准确率</p>
-                        </div>
-                    </div>
-
-                    <!-- API接口 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-code text-yellow-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">API接口</h3>
-                            <p class="text-muted">提供开放的API接口，方便第三方应用和系统集成我们的检测服务</p>
-                        </div>
-                    </div>
-
-                    <!-- 隐私保护 -->
-                    <div class="col-md-4">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-shield-alt text-cyan-400"></i>
-                            </div>
-                            <h3 class="h5 mb-3">隐私保护</h3>
-                            <p class="text-muted">严格保护用户数据隐私，检测过程中的内容不会被保存或用于其他用途</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div id="cases" class="section-content">
-        <!-- 原有的最近案例内容 -->
-        <section class="cases-section">
-            <div class="container">
-                <h2 class="section-title">最近检测案例</h2>
-                <p class="text-center text-muted mb-5">以下是我们系统最近检测的一些新闻案例，展示了我们的检测能力和准确性</p>
-
-                <div class="row g-4">
-                    <!-- 虚假新闻案例 -->
-                    <div class="col-md-6">
-                        <div class="case-card">
-                            <div class="case-status false">
-                                <span class="status-text">虚假</span>
-                            </div>
-                            <div class="case-content">
-                                <h3 class="case-title">"科学家发现能够完全治愈癌症的新药物"报道被证实为虚假新闻</h3>
-                                <p class="case-description">
-                                    该新闻声称某研究团队发现了一种能够在24小时内治愈所有类型癌症的药物，经检测发现该新闻缺乏科学依据，引用的研究机构和科学家均不存在。</p>
-                                <div class="case-meta">
-                                    <span class="detection-time">检测时间: 2023-12-15</span>
-                                    <span class="detection-score false">虚假度: 98%</span>
-                                </div>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="process-card">
+                                <div class="process-number">1</div>
+                                <h3 class="h5 mb-3">内容提取</h3>
+                                <p class="text-muted">系统自动提取新闻内容，包括标题、正文和来源信息</p>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 真实新闻案例 -->
-                    <div class="col-md-6">
-                        <div class="case-card">
-                            <div class="case-status true">
-                                <span class="status-text">真实</span>
-                            </div>
-                            <div class="case-content">
-                                <h3 class="case-title">"国际空间站完成轨道调整"新闻被确认为真实报道</h3>
-                                <p class="case-description">
-                                    该新闻报道了国际空间站进行的例行轨道调整操作，经检测发现该新闻内容与NASA和俄罗斯航天局的官方声明一致，时间、数据和细节均准确无误。</p>
-                                <div class="case-meta">
-                                    <span class="detection-time">检测时间: 2023-12-18</span>
-                                    <span class="detection-score true">真实度: 99%</span>
-                                </div>
+                        <div class="col-md-3">
+                            <div class="process-card">
+                                <div class="process-number">2</div>
+                                <h3 class="h5 mb-3">语义分析</h3>
+                                <p class="text-muted">AI模型进行深度语义分析，识别关键信息</p>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 存疑新闻案例 -->
-                    <div class="col-md-6">
-                        <div class="case-card">
-                            <div class="case-status pending">
-                                <span class="status-text">存疑</span>
-                            </div>
-                            <div class="case-content">
-                                <h3 class="case-title">"某国宣布发现巨大石油储备"新闻需要进一步核实</h3>
-                                <p class="case-description">
-                                    该新闻报道了某国发现大型石油储备的消息，经检测发现该新闻部分内容可信，但储量数据存在夸大嫌疑，且官方尚未发布确认声明，需要进一步核实。</p>
-                                <div class="case-meta">
-                                    <span class="detection-time">检测时间: 2023-12-20</span>
-                                    <span class="detection-score pending">存疑度: 65%</span>
-                                </div>
+                        <div class="col-md-3">
+                            <div class="process-card">
+                                <div class="process-number">3</div>
+                                <h3 class="h5 mb-3">多源对比</h3>
+                                <p class="text-muted">自动对比多个信息源，验证内容一致性程度</p>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 虚假新闻案例 2 -->
-                    <div class="col-md-6">
-                        <div class="case-card">
-                            <div class="case-status false">
-                                <span class="status-text">虚假</span>
-                            </div>
-                            <div class="case-content">
-                                <h3 class="case-title">"知名企业CEO宣布破产"被证实为恶意造谣</h3>
-                                <p class="case-description">
-                                    该新闻声称某知名科技企业CEO宣布公司破产，经检测发现该新闻为恶意造谣，公司股票正常交易，官方已发表声明澄清，并表示将追究造谣者法律责任。</p>
-                                <div class="case-meta">
-                                    <span class="detection-time">检测时间: 2023-12-22</span>
-                                    <span class="detection-score false">虚假度: 100%</span>
-                                </div>
+                        <div class="col-md-3">
+                            <div class="process-card">
+                                <div class="process-number">4</div>
+                                <h3 class="h5 mb-3">结果生成</h3>
+                                <p class="text-muted">生成详细的检测报告，包括一致性评分和分析</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <div class="text-center mt-5">
-                    <button class="btn btn-outline-light">查看更多案例</button>
-                </div>
-            </div>
-        </section>
-    </div>
+        <div id="features" class="section-content">
+            <!-- 原有的技术优势内容 -->
+            <section class="features-section">
+                <div class="container">
+                    <h2 class="section-title">技术优势</h2>
+                    <p class="text-center text-muted mb-5">采用多项先进技术，确保一致性检测结果的准确性和可靠性</p>
 
-    <div id="faq" class="section-content">
-        <!-- 原有的常见问题内容 -->
-        <section class="faq-section">
-            <div class="container">
-                <h2 class="section-title">常见问题</h2>
-
-                <div class="faq-list">
-                    <div class="faq-item">
-                        <h3>检测需要多长时间？</h3>
-                        <p class="text-muted">一般情况下，单条新闻的检测时间不超过30秒。对于复杂的长文本或需要深度分析的内容，可能需要1-2分钟。批量检测的时间取决于文件数量和内容长度。
-                        </p>
-                    </div>
-
-                    <div class="faq-item">
-                        <h3>支持哪些文件格式？</h3>
-                        <p class="text-muted">我们的系统支持多种文件格式，包括TXT、DOC、DOCX、PDF、RTF等文本文件格式，以及CSV、XLSX等表格文件格式（用于批量检测）。</p>
-                    </div>
-
-                    <div class="faq-item">
-                        <h3>检测结果的准确率如何？</h3>
-                        <p class="text-muted">我们的系统经过大量真实案例训练和验证，整体准确率达到95%以上。对于主流语言（如中文、英语）的新闻内容，准确率可达98%以上。</p>
-                    </div>
-
-                    <div class="faq-item">
-                        <h3>是否提供API接口？</h3>
-                        <p class="text-muted">是的，我们提供标准的RESTful API接口，支持第三方应用和系统集成。API支持所有检测功能，并提供详细的开发文档和示例代码。</p>
-                    </div>
-
-                    <div class="faq-item">
-                        <h3>检测结果会保存多久？</h3>
-                        <p class="text-muted">免费用户的检测结果将保存7天，付费用户根据套餐等级可保存30天至永久。您可以随时导出检测结果，以CSV、PDF或JSON格式保存。</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div id="reviews" class="section-content">
-        <!-- 原有的用户评价内容 -->
-        <section class="reviews-section">
-            <div class="container">
-                <h2 class="section-title">用户评价</h2>
-                <p class="text-center text-muted mb-5">来自媒体机构、研究人员和普通用户的真实评价</p>
-
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div class="avatar bg-blue-500/20">
-                                    <span class="text-blue-400">M</span>
+                    <div class="row g-4">
+                        <!-- 深度学习模型 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-brain text-blue-400"></i>
                                 </div>
-                                <div class="reviewer-info">
-                                    <h4>某媒体编辑部</h4>
-                                    <div class="rating">★★★★★</div>
+                                <h3 class="h5 mb-3">深度学习模型</h3>
+                                <p class="text-muted">采用最新的深度学习模型，通过海量数据训练，能够精准识别新闻内容的一致性特征</p>
+                            </div>
+                        </div>
+
+                        <!-- 多语言支持 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-language text-purple-400"></i>
+                                </div>
+                                <h3 class="h5 mb-3">多语言支持</h3>
+                                <p class="text-muted">支持50多种语言的新闻内容一致性检测，包括英语、中文、日语、俄语等主流语言</p>
+                            </div>
+                        </div>
+
+                        <!-- 实时更新 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-sync text-green-400"></i>
+                                </div>
+                                <h3 class="h5 mb-3">实时更新</h3>
+                                <p class="text-muted">系统数据库实时更新，确保能够检测最新的新闻一致性问题</p>
+                            </div>
+                        </div>
+
+                        <!-- 多维度分析 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-chart-line text-red-400"></i> <!-- 折线图 -->
+                                </div>
+                                <h3 class="h5 mb-3">多维度分析</h3>
+                                <p class="text-muted">从内容、来源、时间、语言特征等多个维度进行综合分析，提高一致性检测准确率</p>
+                            </div>
+                        </div>
+
+                        <!-- API接口 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-code text-yellow-400"></i>
+                                </div>
+                                <h3 class="h5 mb-3">API接口</h3>
+                                <p class="text-muted">提供开放的API接口，方便第三方应用和系统集成我们的一致性检测服务</p>
+                            </div>
+                        </div>
+
+                        <!-- 隐私保护 -->
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <div class="feature-icon">
+                                    <i class="fas fa-shield-alt text-cyan-400"></i>
+                                </div>
+                                <h3 class="h5 mb-3">隐私保护</h3>
+                                <p class="text-muted">严格保护用户数据隐私，检测过程中的内容不会被保存或用于其他用途</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="cases" class="section-content">
+            <!-- 原有的最近案例内容 -->
+            <section class="cases-section">
+                <div class="container">
+                    <h2 class="section-title">最近检测案例</h2>
+                    <p class="text-center text-muted mb-5">以下是我们系统最近检测的一些新闻案例，展示了我们的一致性检测能力和准确性</p>
+
+                    <div class="row g-4">
+                        <!-- 不一致新闻案例 -->
+                        <div class="col-md-6">
+                            <div class="case-card">
+                                <div class="case-status false">
+                                    <span class="status-text">不一致</span>
+                                </div>
+                                <div class="case-content">
+                                    <h3 class="case-title">"科学家发现能够完全治愈癌症的新药物"报道被发现存在多处信息不一致</h3>
+                                    <p class="case-description">
+                                        该新闻声称某研究团队发现了一种能够在24小时内治愈所有类型癌症的药物，经检测发现该新闻内容与实际研究成果存在显著差异，多个信息点相互矛盾。</p>
+                                    <div class="case-meta">
+                                        <span class="detection-time">检测时间: 2023-12-15</span>
+                                        <span class="detection-score false">一致性: 12%</span>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="review-text">"这个工具极大地提高了我们的新闻审核效率，帮助我们避免了多次虚假新闻的转载风险。检测速度快，结果准确，是新闻编辑部必备的工具。"</p>
+                        </div>
+
+                        <!-- 一致新闻案例 -->
+                        <div class="col-md-6">
+                            <div class="case-card">
+                                <div class="case-status true">
+                                    <span class="status-text">一致</span>
+                                </div>
+                                <div class="case-content">
+                                    <h3 class="case-title">"国际空间站完成轨道调整"新闻被确认信息高度一致</h3>
+                                    <p class="case-description">
+                                        该新闻报道了国际空间站进行的例行轨道调整操作，经检测发现该新闻内容与NASA和俄罗斯航天局的官方声明高度一致，时间、数据和细节均准确无误。</p>
+                                    <div class="case-meta">
+                                        <span class="detection-time">检测时间: 2023-12-18</span>
+                                        <span class="detection-score true">一致性: 99%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 部分一致新闻案例 -->
+                        <div class="col-md-6">
+                            <div class="case-card">
+                                <div class="case-status pending">
+                                    <span class="status-text">部分一致</span>
+                                </div>
+                                <div class="case-content">
+                                    <h3 class="case-title">"某国宣布发现巨大石油储备"新闻存在部分不一致信息</h3>
+                                    <p class="case-description">
+                                        该新闻报道了某国发现大型石油储备的消息，经检测发现该新闻部分内容与官方发布信息一致，但储量数据存在明显差异，且部分细节与实际情况不符。</p>
+                                    <div class="case-meta">
+                                        <span class="detection-time">检测时间: 2023-12-20</span>
+                                        <span class="detection-score pending">一致性: 65%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 不一致新闻案例 2 -->
+                        <div class="col-md-6">
+                            <div class="case-card">
+                                <div class="case-status false">
+                                    <span class="status-text">不一致</span>
+                                </div>
+                                <div class="case-content">
+                                    <h3 class="case-title">"知名企业CEO宣布破产"与官方信息完全不一致</h3>
+                                    <p class="case-description">
+                                        该新闻声称某知名科技企业CEO宣布公司破产，经检测发现该新闻内容与公司官方信息完全不一致，公司运营正常，官方已发表声明澄清不实报道。</p>
+                                    <div class="case-meta">
+                                        <span class="detection-time">检测时间: 2023-12-22</span>
+                                        <span class="detection-score false">一致性: 0%</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div class="avatar bg-purple-500/20">
-                                    <span class="text-purple-400">R</span>
-                                </div>
-                                <div class="reviewer-info">
-                                    <h4>某大学研究员</h4>
-                                    <div class="rating">★★★★★</div>
-                                </div>
-                            </div>
-                            <p class="review-text">"作为媒体研究人员，这个工具为我的研究提供了极大帮助。它不仅能检测新闻真伪，还能提供详细的分析报告，帮助理解虚假新闻的特征和传播规律。"
+                    <div class="text-center mt-5">
+                        <button class="btn btn-outline-light">查看更多案例</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="faq" class="section-content">
+            <!-- 原有的常见问题内容 -->
+            <section class="faq-section">
+                <div class="container">
+                    <h2 class="section-title">常见问题</h2>
+
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <h3>检测需要多长时间？</h3>
+                            <p class="text-muted">
+                                一般情况下，单条新闻的一致性检测时间不超过30秒。对于复杂的长文本或需要深度分析的内容，可能需要1-2分钟。批量检测的时间取决于文件数量和内容长度。
                             </p>
                         </div>
-                    </div>
 
-                    <div class="col-md-4">
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div class="avatar bg-green-500/20">
-                                    <span class="text-green-400">U</span>
-                                </div>
-                                <div class="reviewer-info">
-                                    <h4>普通用户</h4>
-                                    <div class="rating">★★★★☆</div>
-                                </div>
-                            </div>
-                            <p class="review-text">"在信息爆炸的时代，这个工具帮助我快速辨别网络上的真假新闻，避免被误导。操作简单，结果清晰，非常实用的工具。"</p>
+                        <div class="faq-item">
+                            <h3>支持哪些文件格式？</h3>
+                            <p class="text-muted">我们的系统支持多种文件格式，包括TXT、DOC、DOCX、PDF、RTF等文本文件格式，以及CSV、XLSX等表格文件格式（用于批量检测）。
+                            </p>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>检测结果的准确率如何？</h3>
+                            <p class="text-muted">我们的一致性检测系统经过大量真实案例训练和验证，整体准确率达到95%以上。对于主流语言（如中文、英语）的新闻内容，准确率可达98%以上。
+                            </p>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>是否提供API接口？</h3>
+                            <p class="text-muted">是的，我们提供标准的RESTful API接口，支持第三方应用和系统集成。API支持所有一致性检测功能，并提供详细的开发文档和示例代码。
+                            </p>
+                        </div>
+
+                        <div class="faq-item">
+                            <h3>检测结果会保存多久？</h3>
+                            <p class="text-muted">免费用户的检测结果将保存7天，付费用户根据套餐等级可保存30天至永久。您可以随时导出检测结果，以CSV、PDF或JSON格式保存。</p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
+
+        <div id="reviews" class="section-content">
+            <!-- 原有的用户评价内容 -->
+            <section class="reviews-section">
+                <div class="container">
+                    <h2 class="section-title">用户评价</h2>
+                    <p class="text-center text-muted mb-5">来自媒体机构、研究人员和普通用户的真实评价</p>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="avatar bg-blue-500/20">
+                                        <span class="text-blue-400">M</span>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>某媒体编辑部</h4>
+                                        <div class="rating">★★★★★</div>
+                                    </div>
+                                </div>
+                                <p class="review-text">"这个工具极大地提高了我们的新闻审核效率，帮助我们识别出多个信息不一致的报道。检测速度快，结果准确，是新闻编辑部必备的工具。"
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="avatar bg-purple-500/20">
+                                        <span class="text-purple-400">R</span>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>某大学研究员</h4>
+                                        <div class="rating">★★★★★</div>
+                                    </div>
+                                </div>
+                                <p class="review-text">
+                                    "作为媒体研究人员，这个工具为我的研究提供了极大帮助。它不仅能检测新闻一致性，还能提供详细的分析报告，帮助理解信息不一致的特征和成因。"
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="avatar bg-green-500/20">
+                                        <span class="text-green-400">U</span>
+                                    </div>
+                                    <div class="reviewer-info">
+                                        <h4>普通用户</h4>
+                                        <div class="rating">★★★★☆</div>
+                                    </div>
+                                </div>
+                                <p class="review-text">"在信息爆炸的时代，这个工具帮助我快速识别网络上的不一致信息，避免接收错误信息。操作简单，结果清晰，非常实用的工具。"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -1333,13 +1953,22 @@
             form.style.display = 'none';
         });
 
+        // 隐藏所有结果区域
+        document.querySelectorAll('.result-area').forEach(area => {
+            area.style.display = 'none';
+        });
+
+        // 隐藏初始提示
+        document.getElementById('initial-prompt').style.display = 'none';
+
         // 移除所有按钮的活动状态
         document.querySelectorAll('.detection-button').forEach(button => {
             button.classList.remove('active');
         });
 
-        // 显示选中的表单
+        // 显示选中的表单和对应的结果区域
         document.getElementById(`${type}-form`).style.display = 'block';
+        document.getElementById(`${type}-result`).style.display = 'block';
 
         // 添加按钮活动状态
         event.currentTarget.classList.add('active');
@@ -1381,6 +2010,23 @@
         // URL检测表单提交
         document.querySelector('#url-form .btn-primary').addEventListener('click', function () {
             const url = document.querySelector('#url-form input[type="url"]').value;
+            if (!url) {
+                alert('请输入有效的URL地址');
+                return;
+            }
+
+            // 更新步骤显示
+            updateSteps('#url-form', 2);
+
+            // 隐藏默认结果，显示加载动画
+            document.querySelector('#url-result .default-result').innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <h4 class="mt-3">正在分析中...</h4>
+                <p class="text-muted">系统正在处理您的请求，请稍候</p>
+            `;
+
             fetch('/frontend/detect/url', {
                 method: 'POST',
                 headers: {
@@ -1391,15 +2037,46 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('URL检测结果:', data);
-                    displayResultAsTable(data);
+                    // 更新步骤显示
+                    updateSteps('#url-form', 3);
+                    // 使用新的结果卡片显示
+                    displayResultCard(data, '#url-result');
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 显示错误信息
+                    document.querySelector('#url-result .default-result').innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="color: #FF3B30;"></i>
+                        <h4>检测失败</h4>
+                        <p class="text-muted">请检查URL是否正确，然后重试</p>
+                    `;
+                    // 重置步骤到初始状态
+                    updateSteps('#url-form', 1);
+                });
         });
 
         // 多模态检测表单提交
         document.querySelector('#multimodal-form .btn-primary').addEventListener('click', function () {
             const title = document.getElementById('news-title').value;
             const text = document.querySelector('#multimodal-form textarea').value;
+
+            if (!title && !text) {
+                alert('请至少输入新闻标题或内容');
+                return;
+            }
+
+            // 更新步骤显示
+            updateSteps('#multimodal-form', 2);
+
+            // 隐藏默认结果，显示加载动画
+            document.querySelector('#multimodal-result .default-result').innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <h4 class="mt-3">正在多模态分析中...</h4>
+                <p class="text-muted">系统正在处理文本和图像数据，这可能需要一点时间</p>
+            `;
+
             const image = document.querySelector('#image-upload').files[0];
             const formData = new FormData();
             formData.append('title', title);
@@ -1414,9 +2091,22 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('多模态检测结果:', data);
-                    displayResultAsTable(data);
+                    // 更新步骤显示
+                    updateSteps('#multimodal-form', 3);
+                    // 使用新的结果卡片显示
+                    displayResultCard(data, '#multimodal-result');
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 显示错误信息
+                    document.querySelector('#multimodal-result .default-result').innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="color: #FF3B30;"></i>
+                        <h4>检测失败</h4>
+                        <p class="text-muted">请检查输入内容是否完整，然后重试</p>
+                    `;
+                    // 重置步骤到初始状态
+                    updateSteps('#multimodal-form', 1);
+                });
         });
 
         // 文件检测表单提交
@@ -1426,6 +2116,31 @@
                 alert('请选择一个文件进行检测');
                 return;
             }
+
+            // 检查文件格式
+            const allowedTypes = ['.txt', '.doc', '.docx', '.pdf'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedTypes.includes(fileExtension)) {
+                document.querySelector('#file-result .default-result').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="color: #FF3B30;"></i>
+                    <h4>格式不支持</h4>
+                    <p class="text-muted">请上传 .txt, .doc, .docx, .pdf 格式的文件</p>
+                `;
+                return;
+            }
+
+            // 更新步骤显示
+            updateSteps('#file-form', 2);
+
+            // 隐藏默认结果，显示加载动画
+            document.querySelector('#file-result .default-result').innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <h4 class="mt-3">正在解析文件...</h4>
+                <p class="text-muted">系统正在处理您上传的文件，请稍候</p>
+            `;
+
             const formData = new FormData();
             formData.append('file', file);
             fetch('/frontend/detect/file', {
@@ -1435,46 +2150,179 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('文件检测结果:', data);
-                    displayResultAsTable(data);
+                    // 更新步骤显示
+                    updateSteps('#file-form', 3);
+                    // 使用新的结果卡片显示
+                    displayResultCard(data, '#file-result');
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    // 显示错误信息
+                    document.querySelector('#file-result .default-result').innerHTML = `
+                        <i class="fas fa-exclamation-triangle" style="color: #FF3B30;"></i>
+                        <h4>检测失败</h4>
+                        <p class="text-muted">请检查文件格式是否支持，然后重试</p>
+                    `;
+                    // 重置步骤到初始状态
+                    updateSteps('#file-form', 1);
+                });
         });
     });
 
-    // 新增函数：将JSON数据以表格形式展示
-    function displayResultAsTable(data) {
-        const resultContainer = document.getElementById('detection-result');
-        resultContainer.innerHTML = ''; // 清空之前的内容
+    // 更新检测步骤
+    function updateSteps(formSelector, activeStep) {
+        const steps = document.querySelectorAll(`${formSelector} .detection-steps .step`);
+        steps.forEach((step, index) => {
+            if (index + 1 < activeStep) {
+                step.classList.remove('active');
+                step.classList.add('completed');
+            } else if (index + 1 === activeStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        });
+    }
+
+    // 新增：使用卡片展示结果
+    function displayResultCard(data, resultSelector) {
+        const defaultResult = document.querySelector(`${resultSelector} .default-result`);
 
         if (data.error) {
-            resultContainer.innerText = data.error;
+            defaultResult.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="color: #FF3B30;"></i>
+                <h4>检测失败</h4>
+                <p class="text-muted">${data.error}</p>
+            `;
+
+            // 根据结果选择器确定表单选择器并重置步骤
+            let formSelector = '';
+            if (resultSelector === '#url-result') {
+                formSelector = '#url-form';
+            } else if (resultSelector === '#multimodal-result') {
+                formSelector = '#multimodal-form';
+            } else if (resultSelector === '#file-result') {
+                formSelector = '#file-form';
+            }
+
+            // 重置步骤到初始状态
+            if (formSelector) {
+                updateSteps(formSelector, 1);
+            }
+
             return;
         }
 
-        const table = document.createElement('table');
-        table.classList.add('table', 'table-dark', 'table-striped');
+        // 解析JSON字符串（如果需要）
+        let resultData = data;
+        if (typeof data === 'string') {
+            try {
+                resultData = JSON.parse(data);
+            } catch (e) {
+                console.error('解析结果数据失败:', e);
+            }
+        }
 
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        Object.keys(data).forEach(key => {
-            const th = document.createElement('th');
-            th.innerText = key;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
+        // 计算一致性评分
+        let consistencyScore = 0;
+        let status = 'pending';
+        let statusIcon = 'fa-search';
 
-        const tbody = document.createElement('tbody');
-        const dataRow = document.createElement('tr');
-        Object.values(data).forEach(value => {
-            const td = document.createElement('td');
-            td.innerText = value;
-            dataRow.appendChild(td);
-        });
-        tbody.appendChild(dataRow);
-        table.appendChild(tbody);
+        // 提取文题一致性评分
+        if (resultData.title_txt_相似度 !== undefined) {
+            consistencyScore = Math.round(resultData.title_txt_相似度 * 100);
+        }
+        // 提取图文一致性评分（如果存在）
+        else if (resultData.text_pic_similarity_probability !== undefined) {
+            consistencyScore = Math.round(resultData.text_pic_similarity_probability * 100);
+        }
+        // 如果有旧格式的评分，也可以使用
+        else if (resultData.consistency_score !== undefined) {
+            consistencyScore = parseInt(resultData.consistency_score);
+        }
 
-        resultContainer.appendChild(table);
+        // 根据评分确定状态
+        if (consistencyScore >= 80) {
+            status = 'true';
+            statusIcon = 'fa-check-circle';
+        } else if (consistencyScore <= 30) {
+            status = 'false';
+            statusIcon = 'fa-times-circle';
+        } else {
+            status = 'pending';
+            statusIcon = 'fa-exclamation-circle';
+        }
+
+        // 检测类型判断
+        let detectionType = '一致性检测';
+        if (resultData.title_txt_相似度 !== undefined && resultData.text_pic_similarity_probability === undefined) {
+            detectionType = '文题一致性检测';
+        } else if (resultData.text_pic_similarity_probability !== undefined && resultData.title_txt_相似度 === undefined) {
+            detectionType = '图文一致性检测';
+        } else if (resultData.text_pic_similarity_probability !== undefined && resultData.title_txt_相似度 !== undefined) {
+            detectionType = '多模态一致性检测';
+        }
+
+        // 创建结果卡片HTML
+        let resultHTML = `
+            <div class="result-card">
+                <div class="result-header">
+                    <div class="result-icon ${status}">
+                        <i class="fas ${statusIcon}"></i>
+                    </div>
+                    <div>
+                        <h3 class="result-title">检测结果</h3>
+                        <div class="result-meta">
+                            <div class="result-meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>${new Date().toLocaleString()}</span>
+                            </div>
+                            <div class="result-meta-item">
+                                <i class="fas fa-tag"></i>
+                                <span>${resultData.detection_type || detectionType}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-content">
+                    <h4>检测详情</h4>
+                    <ul class="list-unstyled">
+        `;
+
+        // 添加结果详情
+        for (const key in resultData) {
+            if (key !== 'detection_type') {
+                resultHTML += `<li><strong>${key}:</strong> ${resultData[key]}</li>`;
+            }
+        }
+
+        resultHTML += `
+                    </ul>
+                </div>
+                
+                <div class="result-score">
+                    <span>一致性评分:</span>
+                    <div class="score-bar">
+                        <div class="score-fill ${status}" style="width: 0%"></div>
+                    </div>
+                    <div class="score-value ${status}">
+                        ${consistencyScore}%
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 显示结果卡片
+        defaultResult.innerHTML = resultHTML;
+
+        // 添加评分条动画
+        setTimeout(() => {
+            const scoreFill = document.querySelector(`${resultSelector} .score-fill`);
+            if (scoreFill) {
+                scoreFill.style.width = `${consistencyScore}%`;
+            }
+        }, 300);
     }
 </script>
 {% endblock %}

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户使用统计</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #f5f6fa;
+      --text-color: #2c3e50;
+      --border-radius: 10px;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 2rem 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .dashboard-card {
+      background: white;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      color: var(--primary-color);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card p {
+      color: #666;
+      margin: 0;
+    }
+
+    .chart-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+    }
+
+    .table-container {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .table-filters {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .table {
+      margin: 0;
+    }
+
+    .table thead th {
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      padding: 1rem;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(74, 144, 226, 0.05);
+    }
+
+    .btn-action {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .chart-container {
+        grid-template-columns: 1fr;
+      }
+
+      .table-filters {
+        flex-direction: column;
+      }
+
+      .table-filters>* {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header dashboard-card">
+      <h1>用户使用统计</h1>
+      <p>实时查看和管理系统功能使用数据</p>
+    </div>
+
+    <div class="stats-overview">
+      <div class="stat-card">
+        <h3 id="totalUsage">0</h3>
+        <p>总使用次数</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="uniqueUsers">0</h3>
+        <p>独立用户数</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="activeFeatures">0</h3>
+        <p>活跃功能数</p>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-card">
+        <h4>功能使用分布</h4>
+        <canvas id="usageChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>使用趋势</h4>
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-header">
+        <div class="table-filters">
+          <input type="text" class="form-control" id="searchInput" placeholder="搜索功能...">
+          <select class="form-select" id="sortSelect" style="width: auto;">
+            <option value="name">按名称排序</option>
+            <option value="count">按使用次数排序</option>
+          </select>
+          <select class="form-select" id="categorySelect" style="width: auto;">
+            <option value="all">所有类别</option>
+            <option value="news">新闻检测</option>
+            <option value="ai">AI功能</option>
+            <option value="chat">聊天功能</option>
+            <option value="basic">基础功能</option>
+          </select>
+          <div class="ms-auto">
+            <button class="btn btn-primary btn-action" id="downloadBtn">
+              <i class="fas fa-download me-2"></i>下载数据
+            </button>
+            <button class="btn btn-danger btn-action ms-2" id="resetBtn">
+              <i class="fas fa-redo-alt me-2"></i>重置数据
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>功能名称</th>
+            <th>类别</th>
+            <th>使用次数</th>
+            <th>独立用户数</th>
+            <th class="text-end">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过JavaScript动态插入 -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const loadingOverlay = document.querySelector('.loading-overlay');
+      const statsTableBody = document.querySelector('.table tbody');
+      const searchInput = document.querySelector('#searchInput');
+      const sortSelect = document.querySelector('#sortSelect');
+      const categorySelect = document.querySelector('#categorySelect');
+      let usageChart = null;
+      let trendChart = null;
+      let currentStats = null;
+
+      function showLoading() {
+        loadingOverlay.style.display = 'flex';
+      }
+
+      function hideLoading() {
+        loadingOverlay.style.display = 'none';
+      }
+
+      function formatDateTime(isoString) {
+        try {
+          const date = new Date(isoString);
+          return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+        } catch (e) {
+          return '-';
+        }
+      }
+
+      function getFeatureDisplayName(feature) {
+        const displayNames = {
+          'news_detect_view': '新闻检测页面访问',
+          'news_detect_submit': '新闻检测提交',
+          'detect_url': 'URL检测',
+          'detect_multimodal': '多模态检测',
+          'detect_file': '文件检测',
+          'fake_news_classify': '虚假新闻分类',
+          'news_segment_view': '新闻分段检测页面',
+          'news_segment_analyze': '新闻分段分析',
+          'ai_detect_view': 'AI检测页面',
+          'detect_ai_text': 'AI文本检测',
+          'detect_ai_image': 'AI图片检测',
+          'agent_view': '事实核查代理页面',
+          'agent_check': '事实核查分析',
+          'news_aggregate_view': '新闻聚合页面',
+          'news_aggregate_search': '新闻聚合搜索',
+          'detect_aggregate': '聚合分析',
+          'ai_chat_view': 'AI聊天页面',
+          'create_chat': '创建新聊天',
+          'send_message': '发送消息',
+          'share_chat': '分享聊天',
+          'view_shared_chat': '查看分享的聊天',
+          'reply_to_shared': '回复分享的聊天',
+          'view_usage_stats': '查看使用统计',
+          'download_stats': '下载统计数据',
+          'reset_stats': '重置统计数据',
+          'index_view': '首页访问',
+          'about_view': '关于页面',
+          'contact_view': '联系页面',
+          'news_analyze': '新闻深度分析',
+          'news_timeline': '新闻传播时间线',
+          'view_segment': '查看分段分析结果',
+          'update_settings': '更新设置'
+        };
+        return displayNames[feature] || feature;
+      }
+
+      function getFeatureCategory(feature) {
+        if (feature.includes('news')) return 'news';
+        if (feature.includes('ai') || feature.includes('detect')) return 'ai';
+        if (feature.includes('chat')) return 'chat';
+        return 'basic';
+      }
+
+      function getCategoryDisplayName(category) {
+        const categories = {
+          'news': '新闻检测',
+          'ai': 'AI功能',
+          'chat': '聊天功能',
+          'basic': '基础功能'
+        };
+        return categories[category] || category;
+      }
+
+      function initCharts(stats) {
+        // 功能使用分布图表
+        const ctx1 = document.getElementById('usageChart').getContext('2d');
+        if (usageChart) usageChart.destroy();
+        usageChart = new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(stats.stats).map(getFeatureDisplayName),
+            datasets: [{
+              data: Object.values(stats.stats).map(item => item.total),
+              backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40', '#7CBA00', '#FF6B6B'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  boxWidth: 12
+                }
+              }
+            }
+          }
+        });
+
+        // 使用趋势图表
+        const ctx2 = document.getElementById('trendChart').getContext('2d');
+        if (trendChart) trendChart.destroy();
+        const categories = ['news', 'ai', 'chat', 'basic'];
+        const datasets = categories.map(category => ({
+          label: getCategoryDisplayName(category),
+          data: Array(7).fill(0).map(() => Math.floor(Math.random() * 100)),
+          borderColor: category === 'news' ? '#FF6384' :
+            category === 'ai' ? '#36A2EB' :
+              category === 'chat' ? '#FFCE56' : '#4BC0C0',
+          fill: false
+        }));
+
+        trendChart = new Chart(ctx2, {
+          type: 'line',
+          data: {
+            labels: Array(7).fill(0).map((_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (6 - i));
+              return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+            }),
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      }
+
+      function updateStats(stats) {
+        if (!stats || !stats.stats) return;
+
+        // 更新总览数据
+        document.getElementById('totalUsage').textContent = stats.total_usage || 0;
+        document.getElementById('uniqueUsers').textContent = stats.unique_users || 0;
+        document.getElementById('activeFeatures').textContent = Object.keys(stats.stats).length;
+
+        // 更新图表
+        initCharts(stats);
+
+        // 转换数据为数组格式
+        let statsArray = Object.entries(stats.stats).map(([feature, data]) => ({
+          feature,
+          displayName: getFeatureDisplayName(feature),
+          category: getFeatureCategory(feature),
+          total: data.total,
+          uniqueUsers: Object.keys(data.users || {}).length
+        }));
+
+        // 应用过滤
+        const searchTerm = searchInput.value.toLowerCase();
+        const category = categorySelect.value;
+
+        statsArray = statsArray.filter(item => {
+          const matchesSearch = item.displayName.toLowerCase().includes(searchTerm) ||
+            item.feature.toLowerCase().includes(searchTerm);
+          const matchesCategory = category === 'all' || item.category === category;
+          return matchesSearch && matchesCategory;
+        });
+
+        // 应用排序
+        const sortBy = sortSelect.value;
+        statsArray.sort((a, b) => {
+          if (sortBy === 'name') {
+            return a.displayName.localeCompare(b.displayName);
+          } else {
+            return b.total - a.total;
+          }
+        });
+
+        // 渲染表格
+        statsTableBody.innerHTML = statsArray.length ?
+          statsArray.map(item => `
+            <tr>
+              <td>${item.displayName}</td>
+              <td>${getCategoryDisplayName(item.category)}</td>
+              <td>${item.total}</td>
+              <td>${item.uniqueUsers}</td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-danger" onclick="resetFeature('${item.feature}')">
+                  重置
+                </button>
+              </td>
+            </tr>
+          `).join('') :
+          '<tr><td colspan="5" class="text-center">暂无匹配的数据</td></tr>';
+      }
+
+      function loadStats() {
+        showLoading();
+        fetch('/frontend/api/user_usage')
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              currentStats = data.data;
+              updateStats(currentStats);
+            } else {
+              throw new Error(data.message || '获取数据失败');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: '加载失败',
+              text: error.message || '获取统计数据失败，请稍后再试'
+            });
+          })
+          .finally(() => {
+            hideLoading();
+          });
+      }
+
+      // 添加事件监听器
+      [searchInput, sortSelect, categorySelect].forEach(element => {
+        element.addEventListener('change', () => {
+          if (currentStats) updateStats(currentStats);
+        });
+      });
+
+      searchInput.addEventListener('input', () => {
+        if (currentStats) updateStats(currentStats);
+      });
+
+      window.resetFeature = function (feature) {
+        Swal.fire({
+          title: '确认重置',
+          text: `确定要重置"${feature}"的使用统计吗？`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: '确定重置',
+          cancelButtonText: '取消'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch('/frontend/api/user_usage/reset', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ feature: feature })
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data.status === 'success') {
+                  Swal.fire({
+                    icon: 'success',
+                    title: '重置成功',
+                    text: data.message,
+                    timer: 1500
+                  });
+                  loadStats();
+                } else {
+                  Swal.fire({
+                    icon: 'error',
+                    title: '重置失败',
+                    text: data.message
+                  });
+                }
+              });
+          }
+        });
+      }
+
+      document.querySelector('#resetBtn').addEventListener('click', function () {
+        Swal.fire({
+          title: '确认重置所有数据',
+          text: '此操作将重置所有功能的使用统计数据，确定继续吗？',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: '确定重置',
+          cancelButtonText: '取消'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch('/frontend/api/user_usage/reset', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ feature: null })
+            })
+              .then(response => response.json())
+              .then(data => {
+                Swal.fire({
+                  icon: data.status === 'success' ? 'success' : 'error',
+                  title: data.status === 'success' ? '重置成功' : '重置失败',
+                  text: data.message,
+                  timer: data.status === 'success' ? 1500 : undefined
+                });
+                if (data.status === 'success') {
+                  loadStats();
+                }
+              });
+          }
+        });
+      });
+
+      document.querySelector('#downloadBtn').addEventListener('click', function () {
+        showLoading();
+        fetch('/frontend/api/user_usage/download')
+          .then(response => response.blob())
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `user_usage_stats_${timestamp}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: '下载失败',
+              text: '无法下载统计数据'
+            });
+          })
+          .finally(() => {
+            hideLoading();
+          });
+      });
+
+      // 初始加载数据
+      loadStats();
+    });
+  </script>
+</body>
+
+</html>

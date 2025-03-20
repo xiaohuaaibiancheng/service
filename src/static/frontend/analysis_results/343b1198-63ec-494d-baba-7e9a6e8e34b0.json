@@ -1,0 +1,151 @@
+{
+  "id": "343b1198-63ec-494d-baba-7e9a6e8e34b0",
+  "title": "《哪吒2》吸引全球目光聚焦“中国故事” 外国友人沉浸式感受东方美学",
+  "content": "央视网消息：随着电影《哪吒之魔童闹海》的热播，激发了不少地方的文旅热，其中也有不少外国友人被吸引，探寻中国文化。\n在江西景德镇的千年古窑旁，二十多位艺术家和非遗传承人正在专心创作，许克文是釉下彩青花绘画技艺传承人，这几天，他根据哪吒的形象绘制的一款杯子火出了圈。\n景德镇釉下彩青花绘画技艺非遗传承人许克文称：“这个作品的灵感来自于《哪吒》这部电影，对这幅图我做了一些取舍，后续加入了个人的一些原创，这契合我们陶瓷文化的传承与创新。”\n工笔和写意相结合，动漫与青花瓷的碰撞让传统的古老技艺散发出现代的魅力，不仅国内消费者喜欢，一些国外友人更是爱不释手。眼前正在挑选哪吒瓷杯的是来自西班牙的艺术家Jaume Ribalta，看过了《哪吒2》后，他对电影所传达的感情有了自己的理解。\n西班牙艺术家Jaume Ribalta称：“从这部电影中你可以学到的一点是，他的主要角色总是处在不断的挑战和他所需要去克服的很多问题中。若命运不公，就和它斗到底。他与他的朋友一起，与爱他和支持他的人们在一起。我认为这些感觉传达了一个强有力的信息，我想这是这部电影的巨大成功。”\nJaume Ribalta称：“我和远在万里之外的父母亲已经约定好了，春暖花开的时候要带他们来中国，多亏了中国和西班牙之间的过境免签政策，他们首先会看到陈村及其周边地区，以及这些在清朝时期最大的窑厂。我觉得这对我和我父母来讲都是很特别的，并且我对于这个安排也很激动。”",
+  "result": {
+    "overall_result": {
+      "real_probability": 0.9532301425933838,
+      "fake_probability": 0.04676985740661621,
+      "conclusion": "经过深度学习模型分析，该新闻整体内容具有较高的真实性。",
+      "credibility_level": "高",
+      "credibility_score": 9.532301425933838,
+      "total_segments": 4,
+      "suspicious_segments": []
+    },
+    "segments": [
+      {
+        "segment_id": "segment_1",
+        "content": "央视网消息：随着电影《哪吒之魔童闹海》的热播，激发了不少地方的文旅热，其中也有不少外国友人被吸引，探寻中国文化。\n在江西景德镇的千年古窑旁，二十多位艺术家和非遗传承人正在专心创作，许克文是釉下彩青花绘画技艺传承人，这几天，他根据哪吒的形象绘制的一款杯子火出了圈。",
+        "analysis": {
+          "real_probability": 0.871336817741394,
+          "fake_probability": 0.12866313755512238,
+          "adjusted_real_probability": 0.871336817741394,
+          "adjusted_fake_probability": 0.12866318225860596,
+          "conclusion": "经过深度学习模型分析，该新闻内容具有较高的真实性。 主要原因：标题与内容相关性较低（0.29）。",
+          "sentiment": "可信度高",
+          "credibility_level": "高",
+          "credibility_score": 8.71336817741394,
+          "features": {
+            "标题夸张度": 0.23399999999999999,
+            "内容可信度": 0.6380410256410256,
+            "情感_positive_ratio": 1.0,
+            "情感_negative_ratio": 0.0,
+            "情感_neutral_ratio": 0.0,
+            "情感_sentiment_intensity": 0.5639098485310873,
+            "情感_sentiment_volatility": 0.07046280388600451,
+            "语言_avg_word_length": 1.6794871794871795,
+            "语言_unique_word_ratio": 0.8205128205128205,
+            "语言_sentence_complexity": 1.0,
+            "标题内容一致性": 0.2916666666666667,
+            "语义复杂度": 21.89188003540039
+          },
+          "prediction_time": 0.07106995582580566,
+          "total_processing_time": 0.21827220916748047
+        },
+        "start_pos": 0,
+        "end_pos": 131,
+        "share_url": "http://127.0.0.1:5000/frontend/view_segment/segment_1?analysis_id=343b1198-63ec-494d-baba-7e9a6e8e34b0"
+      },
+      {
+        "segment_id": "segment_2",
+        "content": "\n景德镇釉下彩青花绘画技艺非遗传承人许克文称：“这个作品的灵感来自于《哪吒》这部电影，对这幅图我做了一些取舍，后续加入了个人的一些原创，这契合我们陶瓷文化的传承与创新。”\n工笔和写意相结合，动漫与青花瓷的碰撞让传统的古老技艺散发出现代的魅力，不仅国内消费者喜欢，一些国外友人更是爱不释手。",
+        "analysis": {
+          "real_probability": 0.9415837526321411,
+          "fake_probability": 0.058416299521923065,
+          "adjusted_real_probability": 0.9415837526321411,
+          "adjusted_fake_probability": 0.05841624736785889,
+          "conclusion": "经过深度学习模型分析，该新闻内容具有较高的真实性。 主要原因：标题与内容相关性较低（0.26）。",
+          "sentiment": "可信度高",
+          "credibility_level": "高",
+          "credibility_score": 9.415837526321411,
+          "features": {
+            "标题夸张度": 0.23399999999999999,
+            "内容可信度": 0.6175999999999999,
+            "情感_positive_ratio": 1.0,
+            "情感_negative_ratio": 0.0,
+            "情感_neutral_ratio": 0.0,
+            "情感_sentiment_intensity": 0.5393938422203064,
+            "情感_sentiment_volatility": 0.03294806437437087,
+            "语言_avg_word_length": 1.6941176470588235,
+            "语言_unique_word_ratio": 0.8,
+            "语言_sentence_complexity": 1.0,
+            "标题内容一致性": 0.2608695652173913,
+            "语义复杂度": 21.046674728393555
+          },
+          "prediction_time": 0.054814815521240234,
+          "total_processing_time": 0.20288777351379395
+        },
+        "start_pos": 131,
+        "end_pos": 275,
+        "share_url": "http://127.0.0.1:5000/frontend/view_segment/segment_2?analysis_id=343b1198-63ec-494d-baba-7e9a6e8e34b0"
+      },
+      {
+        "segment_id": "segment_3",
+        "content": "眼前正在挑选哪吒瓷杯的是来自西班牙的艺术家Jaume Ribalta，看过了《哪吒2》后，他对电影所传达的感情有了自己的理解。\n西班牙艺术家Jaume Ribalta称：“从这部电影中你可以学到的一点是，他的主要角色总是处在不断的挑战和他所需要去克服的很多问题中。若命运不公，就和它斗到底。他与他的朋友一起，与爱他和支持他的人们在一起。",
+        "analysis": {
+          "real_probability": 0.9428960084915161,
+          "fake_probability": 0.057104047387838364,
+          "adjusted_real_probability": 1.0,
+          "adjusted_fake_probability": 0.0,
+          "conclusion": "经过深度学习模型分析，该新闻内容具有较高的真实性。 主要原因：标题与内容相关性较低（0.25）。",
+          "sentiment": "可信度高",
+          "credibility_level": "高",
+          "credibility_score": 10.0,
+          "features": {
+            "标题夸张度": 0.23399999999999999,
+            "内容可信度": 0.7064307692307693,
+            "情感_positive_ratio": 1.0,
+            "情感_negative_ratio": 0.0,
+            "情感_neutral_ratio": 0.0,
+            "情感_sentiment_intensity": 0.5132153630256653,
+            "情感_sentiment_volatility": 0.009156942367553711,
+            "语言_avg_word_length": 1.6153846153846154,
+            "语言_unique_word_ratio": 0.6442307692307693,
+            "语言_sentence_complexity": 0.8505029585798816,
+            "标题内容一致性": 0.25,
+            "语义复杂度": 24.44327163696289
+          },
+          "prediction_time": 0.08778643608093262,
+          "total_processing_time": 0.17725491523742676
+        },
+        "start_pos": 275,
+        "end_pos": 443,
+        "share_url": "http://127.0.0.1:5000/frontend/view_segment/segment_3?analysis_id=343b1198-63ec-494d-baba-7e9a6e8e34b0"
+      },
+      {
+        "segment_id": "segment_4",
+        "content": "我认为这些感觉传达了一个强有力的信息，我想这是这部电影的巨大成功。”\nJaume Ribalta称：“我和远在万里之外的父母亲已经约定好了，春暖花开的时候要带他们来中国，多亏了中国和西班牙之间的过境免签政策，他们首先会看到陈村及其周边地区，以及这些在清朝时期最大的窑厂。我觉得这对我和我父母来讲都是很特别的，并且我对于这个安排也很激动。”",
+        "analysis": {
+          "real_probability": 0.930166482925415,
+          "fake_probability": 0.06983347982168198,
+          "adjusted_real_probability": 1.0,
+          "adjusted_fake_probability": 0.0,
+          "conclusion": "经过深度学习模型分析，该新闻内容具有较高的真实性。 主要原因：标题与内容相关性较低（0.17）。",
+          "sentiment": "可信度高",
+          "credibility_level": "高",
+          "credibility_score": 10.0,
+          "features": {
+            "标题夸张度": 0.23399999999999999,
+            "内容可信度": 0.7264349514563107,
+            "情感_positive_ratio": 1.0,
+            "情感_negative_ratio": 0.0,
+            "情感_neutral_ratio": 0.0,
+            "情感_sentiment_intensity": 0.5444191992282867,
+            "情感_sentiment_volatility": 0.004234224557876587,
+            "语言_avg_word_length": 1.6407766990291262,
+            "语言_unique_word_ratio": 0.6990291262135923,
+            "语言_sentence_complexity": 0.8711764705882352,
+            "标题内容一致性": 0.16666666666666666,
+            "语义复杂度": 22.26105499267578
+          },
+          "prediction_time": 0.05551266670227051,
+          "total_processing_time": 0.19059133529663086
+        },
+        "start_pos": 443,
+        "end_pos": 612,
+        "share_url": "http://127.0.0.1:5000/frontend/view_segment/segment_4?analysis_id=343b1198-63ec-494d-baba-7e9a6e8e34b0"
+      }
+    ]
+  },
+  "timestamp": "2025-03-12T14:10:39.788222"
+}
