@@ -9,11 +9,10 @@ import uuid
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex
 from llama_index.core import Settings
-from llama_index.core.memory import ChatMemoryBuffer
 from io import BytesIO
 import os
 import time
-from flask import Blueprint,  flash, redirect, render_template, jsonify, render_template_string, request, send_file, session, url_for,current_app
+from flask import Blueprint,  flash, redirect, render_template, jsonify, render_template_string, request, send_file, session, url_for,current_app, after_this_request, make_response
 from src import bcrypt ,socketio 
 import json
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding 
@@ -25,8 +24,6 @@ from llama_index.core import StorageContext
 from src.backend.tool import load_news_data
 from llama_index.core import StorageContext, load_index_from_storage
 from .tool import FIELDS, alert_cleanup_task, calculate_stats, convert_to_cytoscape_format, create_news_network, fuzzy_search, generate_id, generate_refutation, get_hot_rumors, get_session_id, handle_image_upload,  load_services_from_csv,  load_user_data, load_user_info, read_evidence, read_submissions, remove_submission, save_conversation,llm, save_user_info, simulate_fake, write_evidence
-import hashlib
-import cache
 import random
 import string
 
@@ -182,7 +179,11 @@ def home():
 
 @backend_bp.route('/map')
 def map():
-    return render_template('map.html')
+    # 添加缓存控制头，设置为1小时
+    response = make_response(render_template('map.html'))
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
+
 @backend_bp.route('/ai_assistant')
 def ai_assistant():
 
@@ -190,9 +191,12 @@ def ai_assistant():
 
 @backend_bp.route('/get_china_data')
 def get_china_data():
+    # 添加强缓存，因为地图数据一般不会变化
     with open('src/static/backend/china.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
-    return jsonify(data)
+    response = jsonify(data)
+    response.headers['Cache-Control'] = 'public, max-age=86400'  # 缓存一天
+    return response
 
 
 
@@ -430,16 +434,59 @@ def initialize_news_index():
     try:
         # 如果存在持久化索引，直接加载
         if INDEX_PERSIST_DIR.exists() and any(INDEX_PERSIST_DIR.iterdir()):
-            storage_context = StorageContext.from_defaults(persist_dir=INDEX_PERSIST_DIR)
-            news_index = load_index_from_storage(storage_context)
-            logger.info("从持久化存储加载新闻索引")
+            # 使用缓存机制，避免重复加载
+            cache_file = INDEX_PERSIST_DIR / "index_cache.pkl"
+            if cache_file.exists():
+                import pickle
+                import time
+                # 检查缓存是否过期（默认24小时）
+                cache_time = cache_file.stat().st_mtime
+                if time.time() - cache_time < 8640000000000000000:  # 24小时
+                    try:
+                        with open(cache_file, 'rb') as f:
+                            news_index = pickle.load(f)
+                            logger.info("从缓存加载新闻索引")
+                            return
+                    except Exception as cache_error:
+                        logger.warning(f"缓存加载失败: {str(cache_error)}")
+            
+            # 使用并行处理加载索引
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                # 异步加载存储上下文
+                future = executor.submit(StorageContext.from_defaults, persist_dir=INDEX_PERSIST_DIR)
+                storage_context = future.result()
+                
+                # 异步加载索引
+                future = executor.submit(load_index_from_storage, storage_context)
+                news_index = future.result()
+                
+                logger.info("从持久化存储加载新闻索引")
+                
+                # 保存到缓存
+                try:
+                    import pickle
+                    with open(cache_file, 'wb') as f:
+                        pickle.dump(news_index, f)
+                except Exception as cache_error:
+                    logger.warning(f"缓存保存失败: {str(cache_error)}")
         else:
             # 重新构建索引并持久化
             INDEX_PERSIST_DIR.mkdir(parents=True, exist_ok=True)
-            news_docs = load_news_data("src/static/backend/output_data.json")
-            news_index = VectorStoreIndex.from_documents(news_docs)
-            news_index.storage_context.persist(persist_dir=INDEX_PERSIST_DIR)
-            logger.info("新闻索引构建完成，已保存到 %s", INDEX_PERSIST_DIR)
+            
+            # 使用并行处理加载新闻数据
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(load_news_data, "src/static/backend/output_data.json")
+                news_docs = future.result()
+                
+                # 构建索引
+                news_index = VectorStoreIndex.from_documents(news_docs)
+                
+                # 异步持久化
+                executor.submit(news_index.storage_context.persist, persist_dir=INDEX_PERSIST_DIR)
+                
+                logger.info("新闻索引构建完成，已保存到 %s", INDEX_PERSIST_DIR)
         
         logger.info("当前索引包含 %d 条数据", len(news_index.docstore.docs))
     except Exception as e:
@@ -672,24 +719,32 @@ def export_data():
     data = read_evidence()
     
     # 写入临时文件（UTF-8 with BOM）
-    temp_file = 'src/temp_evidence.csv'
+    # 使用绝对路径创建临时文件
+    temp_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_file = os.path.join(temp_dir, 'temp_evidence.csv')
+    
     with open(temp_file, 'w', newline='', encoding='utf-8-sig') as f:  # 使用 utf-8-sig
         writer = csv.DictWriter(f, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(data)
     
-    try:
-        # 发送文件
-        return send_file(
-            temp_file,
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name='evidence_export.csv'
-        )
-    finally:
-        # 清理临时文件
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
+    # 发送文件但不立即删除
+    # 注册一个删除函数，在请求结束后执行
+    @after_this_request
+    def remove_file(response):
+        try:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+        except Exception as e:
+            print(f"删除临时文件出错: {e}")
+        return response
+        
+    return send_file(
+        temp_file,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='evidence_export.csv'
+    )
 
 @backend_bp.route('/report_leaderboard')
 def report_leaderboard():
@@ -1071,7 +1126,10 @@ def hotpot():
 
 @backend_bp.route('/get_map_data')
 def get_map_data():
-    return jsonify(news_data)
+    # 添加缓存控制头
+    response = jsonify(news_data)
+    response.headers['Cache-Control'] = 'public, max-age=3600'  # 缓存1小时
+    return response
 
 
 @backend_bp.route('/province/<province_name>')

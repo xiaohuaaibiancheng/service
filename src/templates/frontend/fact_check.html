@@ -1,0 +1,2073 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}高级事实核查 - CredenceAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='frontend/css/fact_check.css') }}">
+<style>
+  /* 新的设计风格 - 现代简约主题 */
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #6366F1;
+    --primary-dark: #4338CA;
+    --secondary: #EC4899;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --dark: #111827;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+    --text-light: #FFFFFF;
+    --text-dark: #111827;
+  }
+
+  body {
+    background-color: var(--gray-100);
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+    font-weight: 400;
+  }
+
+  /* 深色模式支持 */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: var(--gray-900);
+      color: var(--text-light);
+    }
+  }
+
+  /* 左右分布布局 */
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  /* 左侧输入区 */
+  .input-wrapper {
+    flex: 0 0 40%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 右侧结果区 */
+  .results-wrapper {
+    flex: 0 0 58%;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 2rem);
+  }
+
+  .results-section {
+    border-radius: 1rem;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .results-section {
+      background: var(--gray-800);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .results-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .header-section {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-section h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-section p {
+    font-size: 1.1rem;
+    color: var(--gray-800);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .header-section p {
+      color: var(--gray-200);
+    }
+  }
+
+  /* 输入区域 */
+  .input-section {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    margin-bottom: 1rem;
+    height: 100%;
+    position: relative;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .input-section {
+      background: var(--gray-800);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .history-link {
+      background-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .history-link:hover {
+      background-color: rgba(99, 102, 241, 0.3);
+      color: var(--primary-light);
+    }
+  }
+
+  .history-link {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 0.35rem 0.75rem;
+    background-color: rgba(79, 70, 229, 0.1);
+    border-radius: 0.5rem;
+  }
+
+  .history-link i {
+    margin-right: 0.35rem;
+  }
+
+  .history-link:hover {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: var(--primary-dark);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .form-group label {
+      color: var(--gray-200);
+    }
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem;
+    background: white;
+    color: var(--gray-800);
+    transition: all 0.2s;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .form-control {
+      background: var(--gray-700);
+      border-color: var(--gray-600);
+      color: var(--text-light);
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    }
+  }
+
+  /* 选项组 */
+  .options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .option-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem;
+    background: var(--gray-100);
+    border-radius: 0.5rem;
+    border: 1px solid var(--gray-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .option-card {
+      background: var(--gray-700);
+      border-color: var(--gray-600);
+    }
+  }
+
+  .option-switch {
+    display: flex;
+    align-items: center;
+  }
+
+  .option-switch label {
+    margin-left: 0.5rem;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .form-range-container {
+    padding-top: 0.5rem;
+  }
+
+  .form-range {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--gray-300);
+    outline: none;
+    margin: 0.75rem 0;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .form-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .form-range {
+      background: var(--gray-600);
+    }
+  }
+
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .range-labels {
+      color: var(--gray-300);
+    }
+  }
+
+  /* 按钮样式 */
+  .button-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  }
+
+  .btn-secondary {
+    background: var(--secondary);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #DB2777;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+
+  .btn-outline:hover {
+    background: rgba(79, 70, 229, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* 保存按钮下拉菜单 */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0;
+    z-index: 1;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dropdown-content {
+      background-color: var(--gray-800);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  .dropdown.active .dropdown-content {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--gray-800);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+    color: var(--primary);
+  }
+
+  .dropdown-item i {
+    margin-right: 0.75rem;
+    color: var(--primary);
+    font-size: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dropdown-item {
+      color: var(--gray-200);
+    }
+
+    .dropdown-item:hover {
+      background-color: rgba(99, 102, 241, 0.1);
+    }
+  }
+
+  /* 结果区域 */
+  .results-section {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .results-section {
+      background: var(--gray-800);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .tabs-container {
+    display: flex;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tabs-container {
+      border-color: var(--gray-700);
+    }
+  }
+
+  .tab {
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .tab.active {
+    color: var(--primary);
+  }
+
+  .tab.active:after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tab {
+      color: var(--gray-300);
+    }
+
+    .tab.active {
+      color: var(--primary-light);
+    }
+
+    .tab.active:after {
+      background: var(--primary-light);
+    }
+  }
+
+  /* 加载状态 */
+  .loading-container {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 3rem 0;
+    height: 300px;
+  }
+
+  .spinner {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .spinner:before,
+  .spinner:after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .spinner:before {
+    border: 3px solid rgba(79, 70, 229, 0.1);
+  }
+
+  .spinner:after {
+    border: 3px solid transparent;
+    border-top-color: var(--primary);
+    animation: spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.9) infinite;
+    transform-origin: center center;
+  }
+
+  .loading-text {
+    font-weight: 500;
+    color: var(--text-dark);
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 0.3s;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .loading-text {
+      color: var(--text-light);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 脉动动画效果 */
+  .pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  /* 初始状态 */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    color: var(--gray-400);
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--gray-800);
+    font-weight: 600;
+  }
+
+  .empty-state p {
+    color: var(--gray-700);
+    max-width: 500px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state h3 {
+      color: var(--gray-200);
+    }
+
+    .empty-state p {
+      color: var(--gray-300);
+    }
+  }
+
+  /* 结果卡片 */
+  .result-card {
+    background: var(--gray-100);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s;
+  }
+
+  .result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .result-card {
+      background: var(--gray-700);
+      border-color: var(--gray-600);
+    }
+
+    .result-card:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .verdict-card {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(99, 102, 241, 0.1));
+    border: 1px solid rgba(79, 70, 229, 0.2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .verdict-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.2));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+  }
+
+  .card-icon i {
+    font-size: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--gray-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .card-title {
+      color: var(--gray-200);
+    }
+  }
+
+  /* 判断结果 */
+  .verdict-result {
+    display: flex;
+    align-items: center;
+    margin: 1.25rem 0;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .verdict-label {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-right: 1rem;
+  }
+
+  .verdict-true {
+    color: var(--success);
+  }
+
+  .verdict-false {
+    color: var(--danger);
+  }
+
+  .verdict-uncertain {
+    color: var(--warning);
+  }
+
+  .confidence-container {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .confidence-bar {
+    height: 8px;
+    background: var(--gray-300);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .confidence-value {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  .confidence-percentage {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    text-align: right;
+    color: var(--gray-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .confidence-bar {
+      background: var(--gray-600);
+    }
+
+    .confidence-percentage {
+      color: var(--gray-200);
+    }
+  }
+
+  /* 卡片内容 */
+  .card-content {
+    color: var(--gray-800);
+    line-height: 1.6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .card-content {
+      color: var(--gray-200);
+    }
+  }
+
+  /* 证据列表 */
+  .evidence-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .evidence-item {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+  }
+
+  .evidence-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .evidence-item {
+      background: var(--gray-700);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .evidence-item:hover {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .evidence-source {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .evidence-source i {
+    margin-right: 0.5rem;
+    color: var(--primary);
+  }
+
+  .evidence-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800);
+  }
+
+  .evidence-content {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+  }
+
+  .evidence-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+  }
+
+  .evidence-relevance {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .evidence-url {
+    color: var(--primary-dark);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-weight: 500;
+  }
+
+  .evidence-url:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .evidence-source {
+      color: var(--gray-300);
+    }
+
+    .evidence-title {
+      color: var(--gray-100);
+    }
+
+    .evidence-content {
+      color: var(--gray-200);
+    }
+
+    .evidence-url {
+      color: var(--primary-light);
+    }
+  }
+
+  /* 声明列表样式 */
+  .claims-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .claims-list li {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    background: rgba(79, 70, 229, 0.05);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 0.25rem 0.25rem 0;
+    color: var(--gray-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .claims-list li {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--gray-200);
+    }
+  }
+
+  /* 动态背景 */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .floating-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center,
+        rgba(99, 102, 241, 0.15) 0%,
+        rgba(79, 70, 229, 0.1) 30%,
+        transparent 70%);
+    filter: blur(40px);
+    opacity: 0.7;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(var(--gray-200) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gray-200) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.05;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .grid-overlay {
+      background-image: linear-gradient(var(--gray-700) 1px, transparent 1px),
+        linear-gradient(90deg, var(--gray-700) 1px, transparent 1px);
+      opacity: 0.1;
+    }
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 992px) {
+    .page-container {
+      flex-direction: column;
+    }
+
+    .input-wrapper,
+    .results-wrapper {
+      flex: 0 0 100%;
+      max-height: none;
+    }
+
+    .results-section {
+      position: relative;
+      top: 0;
+      max-height: none;
+      height: auto;
+      margin-bottom: 2rem;
+    }
+
+    .results-content {
+      max-height: none;
+    }
+
+    .header-section h1 {
+      font-size: 1.75rem;
+    }
+
+    .input-section,
+    .results-section {
+      padding: 1.5rem;
+    }
+
+    .tab {
+      padding: 0.75rem 1rem;
+      font-size: 0.9375rem;
+    }
+
+    .result-card {
+      padding: 1.25rem;
+    }
+
+    .verdict-result {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .verdict-label {
+      margin-bottom: 1rem;
+    }
+
+    .confidence-container {
+      width: 100%;
+    }
+  }
+
+  /* 无证据提示 */
+  .no-evidence {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--gray-600);
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .no-evidence {
+      color: var(--gray-300);
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+
+  .progress-bar-container {
+    width: 260px;
+    height: 4px;
+    background-color: rgba(79, 70, 229, 0.1);
+    border-radius: 2px;
+    margin: 1rem auto;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 0.3s;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: var(--primary);
+    border-radius: 2px;
+    animation: progress 30s cubic-bezier(0.34, 0.13, 0.26, 0.94) forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-image: linear-gradient(-45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent);
+    background-size: 50px 50px;
+    animation: progressStripes 2s linear infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes progressStripes {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 50px 0;
+    }
+  }
+
+  @keyframes progress {
+    0% {
+      width: 0%;
+    }
+
+    50% {
+      width: 45%;
+    }
+
+    80% {
+      width: 75%;
+    }
+
+    95% {
+      width: 90%;
+    }
+
+    100% {
+      width: 95%;
+    }
+  }
+
+  /* 选项卡内容 */
+  .tab-content {
+    width: 100%;
+    transition: opacity 0.3s ease;
+    opacity: 1;
+  }
+
+  .tab-content.fade-out {
+    opacity: 0;
+  }
+
+  /* 格式化响应样式 */
+  #formatted-content,
+  #perplexica-content {
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+
+  /* Markdown基本样式 */
+  #formatted-content h1,
+  #formatted-content h2,
+  #formatted-content h3,
+  #formatted-content h4,
+  #perplexica-content h1,
+  #perplexica-content h2,
+  #perplexica-content h3,
+  #perplexica-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800);
+  }
+
+  #formatted-content p,
+  #perplexica-content p {
+    margin-bottom: 1rem;
+  }
+
+  #formatted-content ul,
+  #formatted-content ol,
+  #perplexica-content ul,
+  #perplexica-content ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  #formatted-content a,
+  #perplexica-content a {
+    color: var(--primary);
+    text-decoration: none;
+    position: relative;
+  }
+
+  #formatted-content a:hover,
+  #perplexica-content a:hover {
+    text-decoration: underline;
+  }
+
+  /* 支持Markdown引用 */
+  #formatted-content blockquote,
+  #perplexica-content blockquote {
+    border-left: 4px solid var(--primary-light);
+    padding-left: 1rem;
+    margin-left: 0;
+    color: var(--gray-700);
+    font-style: italic;
+  }
+
+  /* 支持代码块 */
+  #formatted-content pre,
+  #perplexica-content pre {
+    background: var(--gray-100);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+  }
+
+  #formatted-content code,
+  #perplexica-content code {
+    background: var(--gray-100);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+  }
+
+  /* 表情符号样式 */
+  #formatted-content img,
+  #perplexica-content img {
+    vertical-align: middle;
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    margin: 0 4px;
+  }
+
+  /* 表情符号样式优化 */
+  .emoji {
+    display: inline-block;
+    margin: 0 2px;
+    vertical-align: text-bottom;
+    font-size: 1.1em;
+    line-height: 1;
+  }
+
+  /* 引用链接样式 */
+  .reference-link {
+    color: var(--primary-dark);
+    background-color: rgba(79, 70, 229, 0.1);
+    padding: 0 0.3rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    position: relative;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+  }
+
+  .reference-link:hover {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: var(--primary);
+  }
+
+  /* 引用悬停卡片样式 */
+  .tippy-box[data-theme~='light-border'] {
+    background-color: white;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    color: var(--gray-800);
+  }
+
+  .tippy-box[data-theme~='light-border'] .tippy-content {
+    padding: 0;
+  }
+
+  .reference-card {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .reference-title {
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-200);
+    background-color: rgba(79, 70, 229, 0.05);
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+  }
+
+  .reference-content {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .reference-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--gray-200);
+    text-align: right;
+    font-size: 0.8rem;
+  }
+
+  .reference-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .reference-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* AI搜索结果附加样式 */
+  #perplexica-content {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* AI搜索结果的来源列表样式 */
+  #perplexica-content ul li {
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  /* 深色模式适配 */
+  @media (prefers-color-scheme: dark) {
+    .tippy-box[data-theme~='light-border'] {
+      background-color: var(--gray-800);
+      border-color: var(--gray-600);
+      color: var(--gray-200);
+    }
+
+    .reference-title {
+      border-bottom-color: var(--gray-700);
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
+    }
+
+    .reference-content {
+      color: var(--gray-300);
+    }
+
+    .reference-footer {
+      border-top-color: var(--gray-700);
+    }
+
+    .reference-footer a {
+      color: var(--primary-light);
+    }
+
+    /* 深色模式下的Markdown样式 */
+    #formatted-content h1,
+    #formatted-content h2,
+    #formatted-content h3,
+    #formatted-content h4,
+    #perplexica-content h1,
+    #perplexica-content h2,
+    #perplexica-content h3,
+    #perplexica-content h4 {
+      color: var(--gray-200);
+    }
+
+    #formatted-content p,
+    #formatted-content li,
+    #perplexica-content p,
+    #perplexica-content li {
+      color: var(--gray-300);
+    }
+
+    #formatted-content blockquote,
+    #perplexica-content blockquote {
+      color: var(--gray-400);
+      border-left-color: var(--primary);
+    }
+
+    #formatted-content pre,
+    #formatted-content code,
+    #perplexica-content pre,
+    #perplexica-content code {
+      background: var(--gray-700);
+      color: var(--gray-200);
+    }
+
+    #formatted-content a,
+    #perplexica-content a {
+      color: var(--primary-light);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 动态背景 -->
+<div class="animated-background">
+  <div class="floating-particles"></div>
+  <div class="grid-overlay"></div>
+</div>
+
+<div class="page-container">
+  <!-- 左侧输入区 -->
+  <div class="input-wrapper">
+    <!-- 页面标题 -->
+    <div class="header-section">
+      <h1>高级事实核查</h1>
+      <p>输入新闻或声明内容，让AI分析其真实性并提供详细证据支持</p>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="input-section">
+      <a href="{{ url_for('frontend.fact_check_history_page') }}" class="history-link">
+        <i class="fas fa-history"></i>查看历史
+      </a>
+
+      <h4 class="mb-4">输入需要核查的新闻内容</h4>
+      <div class="form-group">
+        <label for="news-text">新闻内容</label>
+        <textarea class="form-control" id="news-text" rows="6" placeholder="请输入需要核查的新闻或声明内容..."></textarea>
+      </div>
+
+      <div class="options-container">
+        <div class="option-card">
+          <div class="option-switch">
+            <input type="checkbox" id="use-images" class="form-check-input">
+            <label for="use-images">包含图片证据</label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-switch">
+            <input type="checkbox" id="use-cache" class="form-check-input" checked>
+            <label for="use-cache">使用缓存（相同查询直接返回已有结果）</label>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-switch">
+            <input type="checkbox" id="save-results" class="form-check-input">
+            <label for="save-results">保存详细结果</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group form-range-container">
+        <label for="timeout-range">搜索超时时间: <span id="timeout-value">180</span>秒</label>
+        <select id="timeout-select" name="timeout">
+          <option value="60">1分钟</option>
+          <option value="180" selected>3分钟</option>
+          <option value="300">5分钟</option>
+          <option value="600">10分钟</option>
+        </select>
+      </div>
+
+      <div class="button-container">
+        <button id="check-btn" class="btn btn-primary">
+          <i class="fas fa-search"></i> 开始核查
+        </button>
+        <div class="dropdown">
+          <button id="save-btn" class="btn btn-outline" disabled>
+            <i class="fas fa-save"></i> 保存结果
+          </button>
+          <div class="dropdown-content">
+            <div class="dropdown-item" id="save-all">
+              <i class="fas fa-file-download"></i> 保存完整结果
+            </div>
+            <div class="dropdown-item" id="save-wiki">
+              <i class="fab fa-wikipedia-w"></i> 保存维基百科数据
+            </div>
+            <div class="dropdown-item" id="save-search">
+              <i class="fas fa-search"></i> 保存搜索引擎数据
+            </div>
+            <div class="dropdown-item" id="save-perplexica">
+              <i class="fas fa-robot"></i> 保存AI搜索数据
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧结果区 -->
+  <div class="results-wrapper">
+    <!-- 结果区域 -->
+    <div class="results-section">
+      <div class="tabs-container">
+        <div class="tab active" data-tab="verdict">核查结果</div>
+        <div class="tab" data-tab="evidence">证据列表</div>
+        <div class="tab" data-tab="details">详细分析</div>
+        <div class="tab" data-tab="formatted">格式化响应</div>
+        <div class="tab" data-tab="perplexica">AI搜索结果</div>
+      </div>
+
+      <div class="results-content">
+        <!-- 加载状态 -->
+        <div class="loading-container" id="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">正在分析中，请稍候...</div>
+          <div class="progress-bar-container" style="display: none;">
+            <div class="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div class="empty-state" id="no-result">
+          <div class="empty-icon">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3>请输入新闻内容开始核查</h3>
+          <p>AI将帮助您分析内容真实性并提供证据支持</p>
+        </div>
+
+        <!-- 结果内容 -->
+        <div id="result-content" style="display: none;">
+          <!-- 核查结果 Tab 内容 -->
+          <div class="tab-content" id="verdict-tab-content" style="display: block;">
+            <!-- 判断结果卡片 -->
+            <div class="result-card verdict-card" id="verdict-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-gavel"></i>
+                </div>
+                <h3 class="card-title">真实性判断</h3>
+              </div>
+
+              <div class="verdict-result">
+                <div class="verdict-label" id="verdict-label">未知</div>
+                <div class="confidence-container">
+                  <div class="confidence-bar">
+                    <div class="confidence-value" id="confidence-value" style="width: 0%"></div>
+                  </div>
+                  <div class="confidence-percentage" id="confidence-percentage">0%</div>
+                </div>
+              </div>
+
+              <div class="card-content" id="verdict-content">
+                <!-- 这里会动态插入AI的判断内容 -->
+              </div>
+            </div>
+
+            <!-- 主要声明卡片 -->
+            <div class="result-card" id="claims-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-list-check"></i>
+                </div>
+                <h3 class="card-title">主要声明</h3>
+              </div>
+
+              <div class="card-content" id="claims-content">
+                <!-- 这里会动态插入识别出的主要声明 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 证据列表 Tab 内容 -->
+          <div class="tab-content" id="evidence-tab-content" style="display: none;">
+            <div class="result-card" id="evidence-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-file-contract"></i>
+                </div>
+                <h3 class="card-title">证据列表</h3>
+              </div>
+
+              <ul class="evidence-list" id="evidence-list">
+                <!-- 这里会动态插入证据列表 -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- 详细分析 Tab 内容 -->
+          <div class="tab-content" id="details-tab-content" style="display: none;">
+            <div class="result-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="card-title">详细分析报告</h3>
+              </div>
+              <div class="card-content" id="details-content">
+                <!-- 这里会动态插入详细分析内容 -->
+                <p>核查声明的详细分析将在这里展示，包括推理过程、参考依据和置信度评估。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 格式化响应 Tab 内容 -->
+          <div class="tab-content" id="formatted-tab-content" style="display: none;">
+            <div class="result-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="card-title">格式化核查结果</h3>
+              </div>
+              <div class="card-content" id="formatted-content">
+                <!-- 这里会动态插入格式化结果内容 -->
+                <p>加载中...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI搜索结果 Tab 内容 -->
+          <div class="tab-content" id="perplexica-tab-content" style="display: none;">
+            <div class="result-card">
+              <div class="card-header">
+                <div class="card-icon">
+                  <i class="fas fa-robot"></i>
+                </div>
+                <h3 class="card-title">AI搜索结果</h3>
+              </div>
+              <div class="card-content" id="perplexica-content">
+                <!-- 这里会动态插入AI搜索结果内容 -->
+                <p>加载中...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 添加marked库用于解析Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+<!-- 添加tippy.js库用于引用悬停效果 -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.css">
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 配置marked选项，增强安全性和功能
+    marked.use({
+      breaks: true,      // 将换行符转换为<br>
+      gfm: true,         // 启用GitHub风格的Markdown
+      headerIds: true,   // 为标题添加ID
+      mangle: false,     // 不混淆标题ID
+      sanitize: false,   // 我们将使用DOMPurify进行清理
+      smartLists: true,  // 使用更智能的列表行为
+      smartypants: true, // 使用更智能的标点符号
+      // 自定义链接渲染
+      renderer: {
+        link(href, title, text) {
+          const link = marked.Renderer.prototype.link.call(this, href, title, text);
+          // 对外部链接添加target="_blank"和rel="noopener noreferrer"
+          return link.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        }
+      }
+    });
+
+    // 缓存DOM元素
+    const elements = {
+      timeoutSelect: document.getElementById('timeout-select'),
+      timeoutValue: document.getElementById('timeout-value'),
+      tabs: document.querySelectorAll('.tab'),
+      checkBtn: document.getElementById('check-btn'),
+      saveBtn: document.getElementById('save-btn'),
+      saveDropdown: document.querySelector('.dropdown'),
+      saveAll: document.getElementById('save-all'),
+      saveWiki: document.getElementById('save-wiki'),
+      saveSearch: document.getElementById('save-search'),
+      savePerplexica: document.getElementById('save-perplexica'),
+      newsText: document.getElementById('news-text'),
+      useImages: document.getElementById('use-images'),
+      useCache: document.getElementById('use-cache'),
+      saveResults: document.getElementById('save-results'),
+      loading: document.getElementById('loading'),
+      noResult: document.getElementById('no-result'),
+      resultContent: document.getElementById('result-content'),
+      verdictLabel: document.getElementById('verdict-label'),
+      confidenceValue: document.getElementById('confidence-value'),
+      confidencePercentage: document.getElementById('confidence-percentage'),
+      verdictContent: document.getElementById('verdict-content'),
+      claimsContent: document.getElementById('claims-content'),
+      evidenceList: document.getElementById('evidence-list')
+    };
+
+    // 存储检索结果
+    let currentResults = null;
+
+    // 初始化
+    initializeApp();
+
+    // 初始化函数
+    function initializeApp() {
+      // 绑定滑块事件
+      elements.timeoutSelect.addEventListener('change', updateTimeoutValue);
+
+      // 选项卡事件
+      elements.tabs.forEach(tab => {
+        tab.addEventListener('click', handleTabClick);
+      });
+
+      // 核查按钮事件
+      elements.checkBtn.addEventListener('click', handleFactCheck);
+
+      // 保存按钮下拉菜单
+      elements.saveBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        elements.saveDropdown.classList.toggle('active');
+      });
+
+      // 点击其他区域关闭下拉菜单
+      document.addEventListener('click', function () {
+        elements.saveDropdown.classList.remove('active');
+      });
+
+      // 保存数据按钮事件
+      elements.saveAll.addEventListener('click', () => saveResults('all'));
+      elements.saveWiki.addEventListener('click', () => saveResults('wiki'));
+      elements.saveSearch.addEventListener('click', () => saveResults('search'));
+      elements.savePerplexica.addEventListener('click', () => saveResults('perplexica'));
+    }
+
+    // 更新超时时间显示
+    function updateTimeoutValue() {
+      elements.timeoutValue.textContent = elements.timeoutSelect.value;
+    }
+
+    // 处理选项卡点击
+    function handleTabClick() {
+      // 移除所有活动状态
+      elements.tabs.forEach(t => t.classList.remove('active'));
+      // 添加当前活动状态
+      this.classList.add('active');
+
+      // 获取选中的选项卡名称
+      const tabName = this.getAttribute('data-tab');
+
+      // 先将所有选项卡内容添加淡出效果
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('fade-out');
+      });
+
+      // 延迟一点时间后切换显示
+      setTimeout(() => {
+        // 隐藏所有选项卡内容
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.style.display = 'none';
+          content.classList.remove('fade-out');
+        });
+
+        // 显示对应的选项卡内容
+        const selectedContent = document.getElementById(`${tabName}-tab-content`);
+        if (selectedContent) {
+          selectedContent.style.display = 'block';
+        }
+      }, 200);
+    }
+
+    // 处理事实核查
+    async function handleFactCheck() {
+      // 验证输入
+      if (elements.newsText.value.trim() === '') {
+        alert('请输入需要核查的新闻内容');
+        return;
+      }
+
+      // 保存原按钮文字
+      const originalBtnText = elements.checkBtn.innerHTML;
+
+      // 显示加载状态
+      setLoadingState(true, originalBtnText);
+
+      try {
+        // 获取参数
+        const useImages = elements.useImages.checked;
+        const useCache = elements.useCache.checked;
+        const timeout = parseInt(elements.timeoutSelect.value, 10);
+
+        // 请求数据
+        const result = await fetch('/frontend/fact_check_page', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text: elements.newsText.value,
+            use_images: useImages,
+            use_cache: useCache,
+            timeout: timeout
+          })
+        });
+
+        if (!result.ok) {
+          throw new Error('请求失败');
+        }
+
+        // 存储当前结果
+        currentResults = await result.json();
+
+        // 显示结果
+        displayResults(currentResults);
+
+        // 启用保存按钮
+        elements.saveBtn.disabled = false;
+      } catch (error) {
+        console.error('核查过程出错:', error);
+        alert('核查过程发生错误，请重试');
+      } finally {
+        // 隐藏加载状态
+        setLoadingState(false, originalBtnText);
+      }
+    }
+
+    // 设置加载状态
+    function setLoadingState(isLoading, originalBtnText) {
+      if (isLoading) {
+        elements.checkBtn.disabled = true;
+        elements.checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 核查中...';
+        elements.loading.style.display = 'flex';
+        elements.noResult.style.display = 'none';
+        elements.resultContent.style.display = 'none';
+      } else {
+        elements.loading.style.display = 'none';
+        elements.checkBtn.disabled = false;
+        elements.checkBtn.innerHTML = originalBtnText;
+      }
+    }
+
+    // 显示结果函数
+    function displayResults(result) {
+      // 显示结果区域
+      elements.resultContent.style.display = 'block';
+      elements.noResult.style.display = 'none';
+
+      // 设置判断结果标签和类
+      elements.verdictLabel.textContent = result.verdict || '未知';
+      elements.verdictLabel.className = 'verdict-label';
+
+      if (result.verdict === '真实') {
+        elements.verdictLabel.classList.add('verdict-true');
+      } else if (result.verdict === '虚假') {
+        elements.verdictLabel.classList.add('verdict-false');
+      } else {
+        elements.verdictLabel.classList.add('verdict-uncertain');
+      }
+
+      // 设置置信度值
+      const confidence = result.confidence || 0;
+      const confidencePercent = Math.round(confidence * 100);
+      elements.confidenceValue.style.width = `${confidencePercent}%`;
+      elements.confidencePercentage.textContent = `${confidencePercent}%`;
+
+      // 设置评估内容
+      elements.verdictContent.innerHTML = `<p>${result.explanation || '未提供详细解释'}</p>`;
+
+      // 设置主要声明
+      renderClaims(result);
+
+      // 设置证据列表
+      renderEvidence(result);
+
+      // 设置详细分析内容
+      const detailsContent = document.getElementById('details-content');
+      if (detailsContent && result.detailed_analysis) {
+        detailsContent.innerHTML = `<p>${result.detailed_analysis}</p>`;
+      } else if (detailsContent) {
+        detailsContent.innerHTML = `
+          <p>该声明的核查过程包含以下步骤：</p>
+          <ol>
+            <li>分析声明中的主要观点</li>
+            <li>从多个权威来源搜集相关证据</li>
+            <li>评估证据与声明的相关性和一致性</li>
+            <li>基于证据做出综合判断</li>
+          </ol>
+          <p>最终置信度为 ${confidencePercent}%</p>
+        `;
+      }
+
+      // 设置格式化响应内容
+      renderMarkdownContent('formatted-content', result.formatted_response, '未提供格式化响应');
+
+      // 设置AI搜索结果内容
+      renderMarkdownContent('perplexica-content', result.perplexica_search_response, '未提供AI搜索结果');
+
+      // 确保活动选项卡内容可见
+      // 先隐藏所有选项卡内容
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+      });
+
+      // 根据当前激活的选项卡显示对应内容
+      const activeTab = document.querySelector('.tab.active');
+      if (activeTab) {
+        const activeTabName = activeTab.getAttribute('data-tab');
+        const activeContent = document.getElementById(`${activeTabName}-tab-content`);
+        if (activeContent) {
+          activeContent.style.display = 'block';
+        }
+      } else {
+        // 默认显示核查结果选项卡
+        document.getElementById('verdict-tab-content').style.display = 'block';
+      }
+
+      // 确保滚动到顶部
+      document.querySelector('.results-content').scrollTop = 0;
+    }
+
+    // 渲染Markdown内容的通用函数
+    function renderMarkdownContent(elementId, content, emptyMessage = '无内容') {
+      const container = document.getElementById(elementId);
+      if (!container) return;
+
+      if (!content) {
+        container.innerHTML = `<p>${emptyMessage}</p>`;
+        return;
+      }
+
+      // 替换表情符号为带样式的span
+      content = replaceEmojisWithSpans(content);
+
+      // 使用marked库解析Markdown内容，并用DOMPurify进行安全处理
+      if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+        try {
+          const parsedMarkdown = marked.parse(content);
+
+          // 使用DOMPurify清理HTML内容，防止XSS攻击
+          const cleanHtml = DOMPurify.sanitize(parsedMarkdown, {
+            ADD_ATTR: ['target'], // 允许target属性（用于外部链接）
+            ADD_TAGS: ['iframe'], // 允许iframe标签（如果需要）
+            USE_PROFILES: { html: true } // 使用HTML配置文件
+          });
+
+          container.innerHTML = cleanHtml;
+
+          // 为引用链接添加悬停卡片效果
+          initReferenceTippy(`#${elementId}`);
+        } catch (error) {
+          console.error('Markdown解析错误:', error);
+          container.innerHTML = `<pre>${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+        }
+      } else {
+        // 如果没有marked或DOMPurify库，直接显示格式化文本
+        container.innerHTML = `<pre>${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+      }
+    }
+
+    // 替换表情符号为带样式的span
+    function replaceEmojisWithSpans(text) {
+      // 通用表情符号正则
+      const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/ug;
+
+      // 替换表情符号
+      return text.replace(emojiRegex, match => `<span class="emoji">${match}</span>`);
+    }
+
+    // 初始化引用悬停效果
+    function initReferenceTippy(selector = '#formatted-content') {
+      // 选择所有引用链接
+      const referenceLinks = document.querySelectorAll(`${selector} a[href]`);
+
+      referenceLinks.forEach(link => {
+        // 检查链接是否包含引用标记 [数字]
+        const isReference = /\[\d+\]/.test(link.textContent);
+
+        if (isReference) {
+          // 获取链接的title属性（包含悬停信息）
+          const tooltipContent = link.title || '';
+
+          // 移除原始title以避免显示两个提示
+          link.removeAttribute('title');
+
+          // 为引用链接添加样式类
+          link.classList.add('reference-link');
+
+          if (tooltipContent) {
+            // 创建一个更好的悬停卡片内容
+            const titleParts = tooltipContent.split(' - ');
+            const cardTitle = titleParts[0] || '引用来源';
+            const cardContent = titleParts[1] || '';
+
+            const cardHtml = `
+              <div class="reference-card">
+                <div class="reference-title">${cardTitle}</div>
+                <div class="reference-content">${cardContent}</div>
+                <div class="reference-footer">
+                  <a href="${link.href}" target="_blank">查看来源</a>
+                </div>
+              </div>
+            `;
+
+            // 应用tippy悬停效果
+            if (typeof tippy !== 'undefined') {
+              tippy(link, {
+                content: cardHtml,
+                allowHTML: true,
+                interactive: true,
+                theme: 'light-border',
+                placement: 'top',
+                maxWidth: 350,
+                arrow: true,
+                animation: 'shift-away',
+                appendTo: document.body // 确保悬停卡片不会被其他元素裁剪
+              });
+            }
+          }
+        }
+      });
+    }
+
+    // 渲染声明
+    function renderClaims(result) {
+      elements.claimsContent.innerHTML = '';
+
+      if (result.main_claim) {
+        elements.claimsContent.innerHTML = `<p>${result.main_claim}</p>`;
+      } else if (result.claims && result.claims.length > 0) {
+        const claimsList = document.createElement('ul');
+        claimsList.className = 'claims-list';
+
+        result.claims.forEach(claim => {
+          const claimItem = document.createElement('li');
+          claimItem.textContent = claim;
+          claimsList.appendChild(claimItem);
+        });
+
+        elements.claimsContent.appendChild(claimsList);
+      } else {
+        elements.claimsContent.innerHTML = '<p>未识别出主要声明</p>';
+      }
+    }
+
+    // 渲染证据
+    function renderEvidence(result) {
+      elements.evidenceList.innerHTML = '';
+
+      if (result.evidence && result.evidence.length > 0) {
+        const fragment = document.createDocumentFragment();
+
+        result.evidence.forEach((evidence, index) => {
+          const evidenceItem = document.createElement('li');
+          evidenceItem.className = 'evidence-item';
+          evidenceItem.style.setProperty('--item-index', index);
+
+          const sourceIcon = getSourceIcon(evidence.source);
+
+          evidenceItem.innerHTML = `
+            <div class="evidence-source">
+              <i class="fab ${sourceIcon}"></i> ${evidence.source}
+            </div>
+            <div class="evidence-title">${evidence.title || '无标题'}</div>
+            <div class="evidence-content">${evidence.content || '无内容'}</div>
+            <div class="evidence-meta">
+              <div class="evidence-relevance">相关度: ${(evidence.relevance * 100).toFixed(1)}%</div>
+              ${evidence.url ? `<a href="${evidence.url}" target="_blank" class="evidence-url">查看来源</a>` : ''}
+            </div>
+          `;
+
+          fragment.appendChild(evidenceItem);
+        });
+
+        elements.evidenceList.appendChild(fragment);
+      } else {
+        elements.evidenceList.innerHTML = '<li class="no-evidence">未找到相关证据</li>';
+      }
+    }
+
+    // 获取来源图标
+    function getSourceIcon(source) {
+      if (source.includes('wiki')) {
+        return 'fa-wikipedia-w';
+      } else if (source.includes('perplexica')) {
+        return 'fa-robot';
+      } else {
+        return 'fa-globe';
+      }
+    }
+
+    // 保存结果函数
+    function saveResults(type) {
+      if (!currentResults) {
+        alert('没有可保存的结果');
+        return;
+      }
+
+      let filename, data;
+
+      switch (type) {
+        case 'all':
+          filename = '事实核查完整结果.json';
+          data = currentResults;
+          break;
+        case 'wiki':
+          filename = '维基百科证据.json';
+          data = {
+            news: currentResults.news,
+            evidence: currentResults.evidence.filter(e => e.source.includes('wiki') || e.source.includes('Wikipedia'))
+          };
+          break;
+        case 'search':
+          filename = '搜索引擎证据.json';
+          data = {
+            news: currentResults.news,
+            evidence: currentResults.evidence.filter(e => e.source.includes('searx') || e.source.includes('google') || e.source.includes('bing'))
+          };
+          break;
+        case 'perplexica':
+          filename = 'AI搜索证据.json';
+          data = {
+            news: currentResults.news,
+            evidence: currentResults.evidence.filter(e => e.source.includes('perplexica') || e.source.includes('Perplexica'))
+          };
+          break;
+        default:
+          filename = '事实核查结果.json';
+          data = currentResults;
+      }
+
+      // 创建JSON文件并下载
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+
+      // 关闭下拉菜单
+      elements.saveDropdown.classList.remove('active');
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #4895ef;
+  --accent-color: #4cc9f0;
+}
+
+body {
+  background: #f8f9fa;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.container-main {
+  max-width: 1200px;
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+}
+
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.nav-link {
+  color: #495057;
+  font-weight: 500;
+  border: none !important;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-link.active {
+  color: var(--primary-color) !important;
+  background: transparent !important;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-color);
+  border-radius: 3px;
+}
+
+.card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(67, 97, 238, 0.15);
+}
+
+.badge-card {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  color: white !important;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: #e9ecef;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+  border-radius: 4px;
+}
+
+.table-hover tbody tr:hover {
+  background: rgba(67, 97, 238, 0.05);
+}
+
+.back-btn {
+  color: var(--primary-color);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.back-btn:hover {
+  color: var(--secondary-color);
+  transform: translateX(-3px);
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+}

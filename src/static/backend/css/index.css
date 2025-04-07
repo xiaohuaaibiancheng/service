@@ -1,0 +1,579 @@
+/* 变量定义 */
+:root {
+  --tech-blue: #1976D2;
+  --tech-blue-light: rgba(25, 118, 210, 0.1);
+  --graphite-gray: #2D3436;
+  --red: #FF4444;
+  --amber: #FFC107;
+  --green: #4CAF50;
+  --light-gray: #f5f7fa;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 6px 16px rgba(0, 0, 0, 0.3);
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --transition-normal: all 0.3s ease;
+}
+
+/* 基础样式 */
+body {
+  margin: 0;
+  font-family: "微软雅黑", "Segoe UI", Roboto, sans-serif;
+  background: var(--light-gray);
+  color: var(--graphite-gray);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* 头部导航样式 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  height: 60px;
+  width: auto;
+  margin-right: 32px;
+}
+
+.nav-items {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-left: 32px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--graphite-gray);
+  text-decoration: none;
+  font-size: 16px;
+  transition: var(--transition-normal);
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+}
+
+.nav-item:hover {
+  color: var(--tech-blue);
+  background-color: var(--tech-blue-light);
+}
+
+.nav-item i {
+  font-size: 18px;
+}
+
+/* 搜索栏样式 */
+.search-bar {
+  flex: 1;
+  max-width: 500px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 48px 12px 16px;
+  border: 2px solid var(--tech-blue);
+  border-radius: var(--border-radius-xl);
+  font-size: 16px;
+  transition: var(--transition-normal);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--tech-blue);
+  box-shadow: 0 0 0 4px var(--tech-blue-light);
+}
+
+/* 搜索结果样式 */
+#search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: var(--white);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  border-radius: var(--border-radius-sm);
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.search-result-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background-color: var(--light-gray);
+}
+
+.search-result-item a {
+  color: var(--graphite-gray);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+}
+
+.search-result-item a:hover {
+  color: var(--tech-blue);
+}
+
+#search-results div:last-child {
+  border-bottom: none;
+}
+
+/* 主内容区域样式 */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding: 24px;
+  flex-grow: 1;
+  min-height: calc(100vh - 200px);
+}
+
+.card-container {
+  background: var(--white);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition-normal);
+}
+
+.card-container:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.card-container h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--tech-blue);
+  font-size: 20px;
+  border-bottom: 2px solid var(--light-gray);
+  padding-bottom: 10px;
+}
+
+/* 地图容器样式 */
+.map-container {
+  width: 100%;
+  height: calc(100% - 40px);
+  position: relative;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+#map-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* iframe 通用样式 */
+iframe {
+  width: 100%;
+  height: calc(100% - 40px);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+/* 加载动画样式 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: var(--border-radius-sm);
+  flex-direction: column;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--tech-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.loading-text {
+  font-family: "微软雅黑", "Segoe UI", sans-serif;
+  color: var(--graphite-gray);
+  font-size: 14px;
+  text-align: center;
+  max-width: 80%;
+}
+
+.map-controls {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+}
+
+.map-control-btn {
+  background-color: var(--white);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  color: var(--tech-blue);
+  transition: var(--transition-normal);
+}
+
+.map-control-btn:hover {
+  background-color: var(--tech-blue-light);
+  box-shadow: var(--shadow-md);
+}
+
+/* 警报气泡样式 */
+.alert-bubble {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--red);
+  color: var(--white);
+  padding: 16px 24px;
+  border-radius: var(--border-radius-lg);
+  animation: breath 1.5s infinite;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  transition: var(--transition-normal);
+}
+
+.alert-bubble:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes breath {
+  0% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+}
+
+/* 媒体排行样式 */
+.media-ranking {
+  display: flex;
+  overflow-x: auto;
+  padding: 16px 32px;
+  background: var(--white);
+  gap: 24px;
+  margin-top: 0;
+  border-top: 1px solid #eee;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  scrollbar-width: thin;
+  scrollbar-color: var(--tech-blue) var(--light-gray);
+}
+
+.media-ranking::-webkit-scrollbar {
+  height: 6px;
+}
+
+.media-ranking::-webkit-scrollbar-track {
+  background: var(--light-gray);
+}
+
+.media-ranking::-webkit-scrollbar-thumb {
+  background-color: var(--tech-blue);
+  border-radius: 20px;
+}
+
+.media-item {
+  flex: 0 0 200px;
+  padding: 16px;
+  background: var(--white);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+}
+
+.media-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.name {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.score {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* AI助手弹窗样式 */
+.ai-popup {
+  position: fixed;
+  bottom: 100px;
+  left: 40px;
+  background-color: var(--white);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--border-radius-md);
+  display: none;
+  z-index: 1001;
+  min-width: 800px;
+  max-width: 900px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease-out;
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+.ai-popup.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.ai-popup iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+  border-radius: var(--border-radius-md);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  font-size: 24px;
+  color: var(--graphite-gray);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.close-btn:hover {
+  color: var(--red);
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: rotate(90deg);
+}
+
+/* 悬浮按钮样式 */
+.floating-buttons {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.floating-btn {
+  background-color: var(--tech-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 50px;
+  padding: 14px 20px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateY(100px);
+  transition: var(--transition-normal);
+  min-width: 160px;
+  height: 48px;
+}
+
+.floating-btn i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.floating-btn:hover {
+  background-color: var(--green);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.floating-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--shadow-md);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .dashboard {
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 992px) {
+  .header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .nav-items {
+    margin-left: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search-bar {
+    order: 3;
+    max-width: 100%;
+    margin-top: 12px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .card-container {
+    height: auto;
+    min-height: 400px;
+  }
+
+  .nav-items {
+    gap: 8px;
+  }
+
+  .nav-item {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .ai-popup {
+    min-width: 90%;
+    left: 5%;
+    right: 5%;
+  }
+}
+
+/* 导航容器 */
+.nav-container {
+  display: flex;
+  align-items: center;
+}
+
+/* 下拉菜单容器 */
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+  margin-right: 15px;
+}
+
+/* 下拉菜单触发按钮 */
+.dropdown-toggle {
+  cursor: pointer;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-toggle i.fa-caret-down {
+  margin-left: 5px;
+}
+
+/* 下拉内容 */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 200px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  border-radius: 4px;
+}
+
+/* 下拉菜单项 */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  transition: background-color 0.3s;
+}
+
+/* 鼠标悬停效果 */
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+/* 显示下拉菜单 */
+.nav-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* 旋转动画 */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

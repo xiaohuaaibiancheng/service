@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # 全局变量，定义为类变量以便更好地管理
 class Constants:
     # 停用词文件路径
-    STOPWORDS_PATH = r"D:\project\service\测试\chinese.txt"
+    STOPWORDS_PATH = r"src\static\frontend\chinese.txt"
     
     # 停用词集合
     STOPWORDS = set()

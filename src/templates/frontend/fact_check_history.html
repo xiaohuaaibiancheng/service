@@ -1,0 +1,675 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}事实核查历史记录 - CredenceAI{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 历史记录页面样式 */
+  .history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4F46E5;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header p {
+    color: #6B7280;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .history-filters {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .history-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .history-card {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .history-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .history-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .history-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #111827;
+  }
+
+  .history-card-date {
+    font-size: 0.875rem;
+    color: #6B7280;
+  }
+
+  .history-card-body {
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+  }
+
+  .history-claim {
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .history-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid #E5E7EB;
+  }
+
+  .history-card-actions {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .view-btn,
+  .delete-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  .view-btn {
+    color: #4F46E5;
+  }
+
+  .view-btn:hover {
+    background: rgba(79, 70, 229, 0.1);
+  }
+
+  .delete-btn {
+    color: #EF4444;
+  }
+
+  .delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .verdict-true {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+  }
+
+  .verdict-false {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+  }
+
+  .verdict-uncertain {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+  }
+
+  .history-evidence-count {
+    font-size: 0.875rem;
+    color: #6B7280;
+  }
+
+  .history-evidence-count i {
+    margin-right: 0.5rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: #9CA3AF;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #111827;
+  }
+
+  .empty-state p {
+    color: #6B7280;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #4F46E5;
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .empty-state .btn:hover {
+    background: #4338CA;
+    transform: translateY(-2px);
+  }
+
+  .empty-state .btn i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    color: white;
+    display: inline;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+  }
+
+  .pagination li {
+    margin: 0;
+  }
+
+  .pagination a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    color: #4B5563;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .pagination a:hover {
+    background: #F3F4F6;
+  }
+
+  .pagination .active a {
+    background: #4F46E5;
+    color: white;
+  }
+
+  .pagination .disabled a {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 4rem 0;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(79, 70, 229, 0.2);
+    border-radius: 50%;
+    border-top-color: #4F46E5;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 错误提示样式 */
+  .error-message {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid #EF4444;
+    color: #EF4444;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .error-message i {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  /* 深色模式样式 */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #111827;
+      color: #F3F4F6;
+    }
+
+    .page-header h1 {
+      color: #6366F1;
+    }
+
+    .page-header p {
+      color: #D1D5DB;
+    }
+
+    .history-filters,
+    .history-card,
+    .empty-state {
+      background-color: #1F2937;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .history-card-header,
+    .history-card-footer {
+      border-color: #374151;
+    }
+
+    .history-card-title {
+      color: #F3F4F6;
+    }
+
+    .history-card-date,
+    .history-evidence-count {
+      color: #9CA3AF;
+    }
+
+    .empty-state h3 {
+      color: #F3F4F6;
+    }
+
+    .empty-state p {
+      color: #D1D5DB;
+    }
+
+    .pagination a {
+      color: #F3F4F6;
+    }
+
+    .pagination a:hover {
+      background-color: #374151;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+  <div class="page-header">
+    <h1>事实核查历史记录</h1>
+    <p>查看您之前进行过的所有事实核查结果，了解核查详情，或继续深入分析</p>
+  </div>
+
+  <!-- 错误提示区域 -->
+  <div id="error-container" style="display: none;"></div>
+
+  <!-- 筛选区域 -->
+  <div class="history-filters">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group mb-0">
+          <label for="verdict-filter" class="form-label">按结论筛选</label>
+          <select id="verdict-filter" class="form-select">
+            <option value="all">所有结论</option>
+            <option value="true">真实</option>
+            <option value="false">虚假</option>
+            <option value="uncertain">不确定</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group mb-0">
+          <label for="date-filter" class="form-label">按日期筛选</label>
+          <select id="date-filter" class="form-select">
+            <option value="all">所有时间</option>
+            <option value="today">今天</option>
+            <option value="week">本周</option>
+            <option value="month">本月</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group mb-0">
+          <label for="sort-order" class="form-label">排序方式</label>
+          <select id="sort-order" class="form-select">
+            <option value="newest">最新优先</option>
+            <option value="oldest">最早优先</option>
+            <option value="confidence_high">置信度高到低</option>
+            <option value="confidence_low">置信度低到高</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载中状态 -->
+  <div id="loading-container" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>正在加载历史记录，请稍候...</p>
+  </div>
+
+  <!-- 历史记录列表 -->
+  <div id="history-list" class="history-list" style="display: none;">
+    <!-- 由JavaScript动态生成 -->
+  </div>
+
+  <!-- 空状态显示 -->
+  <div id="empty-state" class="empty-state" style="display: none;">
+    <i class="fas fa-history"></i>
+    <h3>暂无核查记录</h3>
+    <p>您还没有进行过事实核查分析，或者所有记录已被删除。</p>
+    <a href="{{ url_for('frontend.fact_check_page') }}" class="btn">
+      <i class="fas fa-search"></i>开始新的事实核查
+    </a>
+  </div>
+
+  <!-- 分页控件 -->
+  <ul id="pagination" class="pagination" style="display: none;">
+    <!-- 由JavaScript动态生成 -->
+  </ul>
+</div>
+
+<!-- 删除确认对话框 -->
+<div class="modal fade" id="delete-confirm-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">确认删除</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>确定要删除此核查记录吗？此操作无法撤销。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete-btn">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    let currentPage = 1;
+    const itemsPerPage = 12;
+    let currentRecordIdToDelete = null;
+
+    // 初始加载
+    loadHistoryRecords();
+
+    // 绑定筛选和排序事件
+    $('#verdict-filter, #date-filter, #sort-order').on('change', function () {
+      currentPage = 1; // 重置分页
+      loadHistoryRecords();
+    });
+
+    // 加载历史记录
+    function loadHistoryRecords() {
+      $('#loading-container').show();
+      $('#history-list, #pagination, #empty-state').hide();
+      $('#error-container').hide();
+
+      const verdictFilter = $('#verdict-filter').val();
+      const dateFilter = $('#date-filter').val();
+      const sortOrder = $('#sort-order').val();
+
+      // 发送请求获取历史数据
+      $.ajax({
+        url: "{{ url_for('frontend.get_fact_check_history') }}",
+        type: 'GET',
+        data: {
+          verdict: verdictFilter,
+          date_range: dateFilter,
+          sort: sortOrder,
+          page: currentPage,
+          limit: itemsPerPage
+        },
+        success: function (response) {
+          $('#loading-container').hide();
+
+          if (response.status === 'success') {
+            if (response.data && response.data.records && response.data.records.length > 0) {
+              displayRecords(response.data.records);
+              displayPagination(response.data.pagination);
+            } else {
+              $('#empty-state').show();
+            }
+          } else {
+            showError('加载历史记录失败: ' + response.message);
+            $('#empty-state').show();
+          }
+        },
+        error: function (xhr) {
+          $('#loading-container').hide();
+          $('#empty-state').show();
+          showError('服务器错误，请稍后再试');
+        }
+      });
+    }
+
+    // 显示历史记录
+    function displayRecords(records) {
+      const $historyList = $('#history-list');
+      $historyList.empty();
+
+      records.forEach(function (record) {
+        // 判断结论类型，设置相应的标签样式
+        let verdictClass = '';
+        let verdictIcon = '';
+
+        switch (record.verdict) {
+          case '真实':
+            verdictClass = 'verdict-true';
+            verdictIcon = 'fa-check-circle';
+            break;
+          case '虚假':
+            verdictClass = 'verdict-false';
+            verdictIcon = 'fa-times-circle';
+            break;
+          default:
+            verdictClass = 'verdict-uncertain';
+            verdictIcon = 'fa-question-circle';
+        }
+
+        // 构建历史记录卡片
+        const cardHtml = `
+          <div class="history-card" data-id="${record.id}">
+            <div class="history-card-header">
+              <h3 class="history-card-title">${record.main_claim.length > 50 ? record.main_claim.substring(0, 50) + '...' : record.main_claim}</h3>
+              <div class="history-card-date">
+                <i class="far fa-calendar-alt"></i> ${record.created_at}
+              </div>
+            </div>
+            <div class="history-card-body">
+              <div class="history-claim">${record.news.length > 150 ? record.news.substring(0, 150) + '...' : record.news}</div>
+              <div class="d-flex align-items-center mt-3">
+                <span class="verdict-badge ${verdictClass}">
+                  <i class="fas ${verdictIcon}"></i> ${record.verdict}
+                </span>
+                <span class="history-evidence-count">
+                  <i class="fas fa-file-alt"></i> ${record.evidence_count} 条证据
+                </span>
+              </div>
+            </div>
+            <div class="history-card-footer">
+              <div class="history-card-actions">
+                <a href="/frontend/view_fact_check/${record.id}" class="view-btn">
+                  <i class="fas fa-eye"></i> 查看详情
+                </a>
+              </div>
+              <button class="delete-btn" data-id="${record.id}">
+                <i class="fas fa-trash-alt"></i> 删除
+              </button>
+            </div>
+          </div>
+        `;
+
+        $historyList.append(cardHtml);
+      });
+
+      $historyList.show();
+    }
+
+    // 显示分页控件
+    function displayPagination(pagination) {
+      if (!pagination || pagination.total_pages <= 1) {
+        $('#pagination').hide();
+        return;
+      }
+
+      const $pagination = $('#pagination');
+      $pagination.empty();
+
+      // 上一页按钮
+      $pagination.append(`
+        <li class="${pagination.current_page === 1 ? 'disabled' : ''}">
+          <a href="#" class="page-link" data-page="${pagination.current_page - 1}" aria-label="上一页">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        </li>
+      `);
+
+      // 页码按钮
+      for (let i = 1; i <= pagination.total_pages; i++) {
+        $pagination.append(`
+          <li class="${pagination.current_page === i ? 'active' : ''}">
+            <a href="#" class="page-link" data-page="${i}">${i}</a>
+          </li>
+        `);
+      }
+
+      // 下一页按钮
+      $pagination.append(`
+        <li class="${pagination.current_page === pagination.total_pages ? 'disabled' : ''}">
+          <a href="#" class="page-link" data-page="${pagination.current_page + 1}" aria-label="下一页">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </li>
+      `);
+
+      // 绑定页码点击事件
+      $pagination.find('.page-link').on('click', function (e) {
+        e.preventDefault();
+
+        if ($(this).parent().hasClass('disabled')) {
+          return;
+        }
+
+        currentPage = parseInt($(this).data('page'));
+        loadHistoryRecords();
+      });
+
+      $pagination.show();
+    }
+
+    // 显示错误信息
+    function showError(message) {
+      const $errorContainer = $('#error-container');
+      $errorContainer.html(`
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>${message}</span>
+        </div>
+      `);
+      $errorContainer.show();
+    }
+
+    // 绑定删除按钮事件
+    $(document).on('click', '.delete-btn', function () {
+      currentRecordIdToDelete = $(this).data('id');
+      $('#delete-confirm-modal').modal('show');
+    });
+
+    // 绑定删除确认按钮事件
+    $('#confirm-delete-btn').on('click', function () {
+      if (!currentRecordIdToDelete) {
+        return;
+      }
+
+      // 发送删除请求
+      $.ajax({
+        url: "{{ url_for('frontend.delete_fact_check_history') }}",
+        type: 'POST',
+        data: {
+          record_id: currentRecordIdToDelete
+        },
+        success: function (response) {
+          $('#delete-confirm-modal').modal('hide');
+
+          if (response.status === 'success') {
+            // 重新加载记录
+            loadHistoryRecords();
+          } else {
+            showError('删除记录失败: ' + response.message);
+          }
+        },
+        error: function (xhr) {
+          $('#delete-confirm-modal').modal('hide');
+          showError('删除记录时发生错误，请稍后再试');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

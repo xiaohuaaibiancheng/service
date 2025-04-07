@@ -1,0 +1,248 @@
+:root {
+  --primary-color: #4a6cf7;
+  --primary-hover: #3a56d4;
+  --text-color: #333;
+  --light-text: #666;
+  --border-color: #e0e0e0;
+  --error-color: #e74c3c;
+  --success-color: #2ecc71;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: cover;
+  position: relative;
+  color: var(--text-color);
+}
+
+.login-container {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.login-form h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 28px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.login-form h1::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+  position: relative;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--light-text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-group i {
+  position: absolute;
+  left: 15px;
+  color: #aaa;
+  transition: color 0.3s;
+}
+
+input {
+  padding: 12px 15px 12px 45px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 100%;
+  font-size: 15px;
+  transition: all 0.3s;
+  background-color: #f9f9f9;
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
+  background-color: #fff;
+}
+
+input:focus+i {
+  color: var(--primary-color);
+}
+
+button {
+  padding: 14px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(74, 108, 247, 0.2);
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(74, 108, 247, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(74, 108, 247, 0.2);
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 15px;
+  color: var(--light-text);
+}
+
+.register-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.register-link a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.flash-message {
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: none;
+  text-align: center;
+  font-weight: 500;
+}
+
+.flash-message.error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.flash-message.success {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: var(--success-color);
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+}
+
+.remember-me input {
+  width: auto;
+  margin-right: 8px;
+}
+
+.forgot-password {
+  font-size: 14px;
+  color: var(--light-text);
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.forgot-password:hover {
+  color: var(--primary-color);
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 30px 20px;
+    margin: 0 15px;
+  }
+
+  .login-form h1 {
+    font-size: 24px;
+  }
+
+  input {
+    padding: 10px 15px 10px 40px;
+    font-size: 14px;
+  }
+
+  button {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-container {
+  animation: fadeIn 0.5s ease-out;
+}

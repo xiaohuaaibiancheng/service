@@ -3,620 +3,7 @@
 {% block title %}AI助手 - FakeNews{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* 全局样式 */
-    body {
-        background: #202123;
-        color: #fff;
-        min-height: 100vh;
-        position: relative;
-    }
-
-    /* 确保导航栏可见 */
-    .navbar {
-        position: relative;
-        z-index: 1000;
-    }
-
-
-    /* 动态背景效果 */
-    .animated-background {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 0;
-        background: #202123;
-        overflow: hidden;
-    }
-
-    .floating-particles {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(to bottom, transparent, rgba(10, 132, 255, 0.1));
-        filter: blur(1px);
-    }
-
-    .grid-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image:
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        animation: gridMove 15s linear infinite;
-    }
-
-    @keyframes gridMove {
-        0% {
-            transform: translateY(0);
-        }
-
-        100% {
-            transform: translateY(50px);
-        }
-    }
-
-    /* 整体布局 */
-    .chat-container {
-        display: flex;
-        height: calc(100vh - 150px);
-        position: relative;
-        z-index: 1;
-    }
-
-    /* 侧边栏样式 */
-    .chat-sidebar {
-        width: 260px;
-        background: rgba(32, 33, 35, 0.7);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transition: width 0.3s ease;
-        position: relative;
-        z-index: 2;
-        backdrop-filter: blur(10px);
-    }
-
-    .chat-sidebar.collapsed {
-        width: 60px;
-    }
-
-    /* 新建聊天按钮 */
-    .new-chat-btn {
-        margin: 15px;
-        padding: 12px;
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-        border: none;
-        border-radius: 15px;
-        color: white;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .new-chat-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(10, 132, 255, 0.3);
-    }
-
-    .new-chat-btn i {
-        margin-right: 10px;
-    }
-
-    /* 聊天历史列表 */
-    .chat-history {
-        flex: 1;
-        overflow-y: auto;
-        padding: 0 10px;
-    }
-
-    .chat-item {
-        padding: 10px;
-        margin: 5px 10px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .chat-item:hover {
-        transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .chat-item.active {
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-    }
-
-    .chat-item i {
-        margin-right: 10px;
-        font-size: 14px;
-    }
-
-    .chat-item-title {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* 聊天主区域 */
-    .chat-main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: rgba(255, 255, 255, 0.02);
-        position: relative;
-        z-index: 1;
-    }
-
-    /* 聊天消息区域 */
-    .chat-messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-    }
-
-    /* 欢迎页面 */
-    .welcome-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        text-align: center;
-        color: #fff;
-        animation: fadeIn 0.5s ease-out;
-    }
-
-    /* 欢迎页面标题样式 */
-    .welcome-title-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-
-    .welcome-title-icon {
-        font-size: 2.5rem;
-        margin-right: 1rem;
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(-10px);
-        }
-    }
-
-    .welcome-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(10, 132, 255, 0.3);
-    }
-
-    .welcome-subtitle {
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-        color: #666;
-    }
-
-    .example-queries {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        width: 80%;
-        max-width: 800px;
-    }
-
-    .example-query {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        padding: 15px;
-        margin: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .example-query:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    /* 消息样式 */
-    .message {
-        display: flex;
-        margin: 20px;
-        animation: fadeInUp 0.3s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .message-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        margin-right: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-    }
-
-    .message-content {
-        flex: 1;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-        padding: 15px;
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .message-content:hover {
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-2px);
-    }
-
-    .message-text {
-        padding: 8px 0;
-    }
-
-    .message-actions {
-        display: none;
-        margin-top: 10px;
-    }
-
-    .message:hover .message-actions {
-        display: flex;
-    }
-
-    .message-action-btn {
-        background: transparent;
-        border: none;
-        color: #666;
-        font-size: 14px;
-        cursor: pointer;
-        padding: 5px 10px;
-        border-radius: 4px;
-        margin-right: 10px;
-    }
-
-    .message-action-btn:hover {
-        background: #f0f0f0;
-        color: #333;
-    }
-
-    /* 输入区域 */
-    .chat-input-container {
-        padding: 20px;
-        background: rgba(32, 33, 35, 0.7);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 2;
-    }
-
-    .chat-input-wrapper {
-        position: relative;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .chat-input {
-        width: 100%;
-        background: transparent;
-        border: none;
-        color: #fff;
-        padding: 15px;
-        font-size: 1rem;
-    }
-
-    .chat-input:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
-    }
-
-    .send-btn {
-        position: absolute;
-        right: 10px;
-        bottom: 10px;
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-        border: none;
-        border-radius: 10px;
-        width: 35px;
-        height: 35px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .send-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
-    }
-
-    .send-btn:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-    }
-
-    /* 用户设置区域 */
-    .user-settings {
-        padding: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .user-settings-btn {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        color: #fff;
-        padding: 10px;
-        margin: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .user-settings-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-    }
-
-    /* 模态框样式 */
-    .modal-content {
-        background: #202123;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-    }
-
-    .modal-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .modal-footer {
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-primary {
-        background: linear-gradient(45deg, #0A84FF, #00C6FB);
-        border: none;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(10, 132, 255, 0.3);
-    }
-
-    /* 响应式设计 */
-    @media (max-width: 768px) {
-        .chat-container {
-            flex-direction: column;
-        }
-
-        .chat-sidebar {
-            width: 100%;
-            height: auto;
-            max-height: 200px;
-        }
-
-        .example-queries {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* 隐藏帮助按钮 */
-    .btn-help {
-        display: none !important;
-    }
-
-    /* 在 extra_css 中添加 */
-    @keyframes typing {
-        from {
-            width: 0
-        }
-
-        to {
-            width: 100%
-        }
-    }
-
-    .typing-effect {
-        overflow: hidden;
-        white-space: nowrap;
-        animation: typing 2s steps(40, end);
-    }
-
-    /* 功能提示卡片悬浮效果 */
-    .feature-tips .row>div {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-tips .row>div:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* 加载动画优化 */
-    .typing-indicator span {
-        animation: blink 1s infinite;
-    }
-
-    .typing-indicator span:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .typing-indicator span:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    @keyframes blink {
-
-        0%,
-        100% {
-            opacity: 0.2;
-        }
-
-        50% {
-            opacity: 1;
-        }
-    }
-
-    /* 新增波纹效果 */
-    .ripple {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .ripple:after {
-        content: "";
-        display: block;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        pointer-events: none;
-        background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
-        background-repeat: no-repeat;
-        background-position: 50%;
-        transform: scale(10, 10);
-        opacity: 0;
-        transition: transform .5s, opacity 1s;
-    }
-
-    .ripple:active:after {
-        transform: scale(0, 0);
-        opacity: .3;
-        transition: 0s;
-    }
-
-    /* 滚动条美化 */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    /* 修改折叠按钮样式 */
-    .collapse-btn {
-        position: absolute;
-        right: -12px;
-        top: 20px;
-        width: 24px;
-        height: 24px;
-        background: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 50%;
-        color: #333;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 100;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .collapse-btn:hover {
-        background: #f5f5f5;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    /* 修改折叠状态的样式 */
-    .chat-sidebar.collapsed {
-        width: 60px;
-    }
-
-    /* 优化图标旋转效果 */
-    .collapse-btn i {
-        transition: transform 0.3s ease;
-        font-size: 14px;
-    }
-
-    .chat-sidebar.collapsed .collapse-btn i {
-        transform: rotate(180deg);
-    }
-
-    /* 折叠时的内容调整 */
-    .chat-sidebar.collapsed .new-chat-btn {
-        padding: 12px 0;
-        justify-content: center;
-    }
-
-    .chat-sidebar.collapsed .chat-item {
-        padding: 10px 0;
-        justify-content: center;
-    }
-
-    .chat-sidebar.collapsed .user-settings-btn {
-        padding: 10px 0;
-        justify-content: center;
-    }
-
-    /* 修改表单控件样式 */
-    .form-control,
-    .form-select {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #fff;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(10, 132, 255, 0.5);
-        color: #fff;
-        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='frontend/css/ai_chat.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -635,27 +22,49 @@
         </div>
 
         <!-- 新建聊天按钮 -->
-        <button class="new-chat-btn" onclick="createNewChat()">
+        <button class="new-chat-btn ripple" onclick="createNewChat()">
             <i class="fas fa-plus"></i>
-            <span>新建聊天</span>
+            <span class="sidebar-text">新建聊天</span>
         </button>
 
         <!-- 聊天历史列表 -->
         <div class="chat-history" id="chat-history">
+            <!-- 添加搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" id="history-search" placeholder="搜索对话..."
+                    onkeyup="searchHistory()">
+                <i class="fas fa-search search-icon"></i>
+            </div>
             <!-- 历史记录将通过JavaScript动态加载 -->
         </div>
 
         <!-- 用户设置 -->
         <div class="user-settings">
-            <button class="user-settings-btn" onclick="showSettings()">
+            <button class="user-settings-btn ripple" onclick="showSettings()">
                 <i class="fas fa-cog"></i>
-                <span class="ms-2">设置</span>
+                <span class="sidebar-text">设置</span>
             </button>
         </div>
     </div>
 
     <!-- 聊天主区域 -->
     <div class="chat-main">
+        <!-- 添加功能栏 -->
+        <div class="chat-toolbar">
+            <div class="chat-title" id="chat-title">AI助手</div>
+            <div class="toolbar-actions">
+                <button class="toolbar-btn" onclick="clearChat()" title="清空对话">
+                    <i class="fas fa-broom"></i>
+                </button>
+                <button class="toolbar-btn" onclick="exportChat('json')" title="导出对话">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="toolbar-btn" id="shareBtn" onclick="showShareModal()" title="分享对话">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- 聊天消息区域 -->
         <div class="chat-messages" id="chat-messages">
             <!-- 欢迎页面 -->
@@ -667,17 +76,21 @@
                 <p class="welcome-subtitle">我可以帮助您分析新闻真实性，回答问题，提供建议</p>
 
                 <div class="example-queries">
-                    <div class="example-query" onclick="sendExampleQuery(this)">
-                        分析一下这条新闻的真实性：[粘贴新闻内容]
+                    <div class="example-query ripple" onclick="sendExampleQuery(this)">
+                        <i class="fas fa-newspaper query-icon"></i>
+                        <div class="query-text">分析一下这条新闻的真实性：[粘贴新闻内容]</div>
                     </div>
-                    <div class="example-query" onclick="sendExampleQuery(this)">
-                        如何识别深度伪造视频？
+                    <div class="example-query ripple" onclick="sendExampleQuery(this)">
+                        <i class="fas fa-video query-icon"></i>
+                        <div class="query-text">如何识别深度伪造视频？</div>
                     </div>
-                    <div class="example-query" onclick="sendExampleQuery(this)">
-                        帮我总结一下这篇文章：[粘贴文章内容]
+                    <div class="example-query ripple" onclick="sendExampleQuery(this)">
+                        <i class="fas fa-file-alt query-icon"></i>
+                        <div class="query-text">帮我总结一下这篇文章：[粘贴文章内容]</div>
                     </div>
-                    <div class="example-query" onclick="sendExampleQuery(this)">
-                        什么是虚假新闻的常见特征？
+                    <div class="example-query ripple" onclick="sendExampleQuery(this)">
+                        <i class="fas fa-question-circle query-icon"></i>
+                        <div class="query-text">什么是虚假新闻的常见特征？</div>
                     </div>
                 </div>
             </div>
@@ -690,7 +103,7 @@
             <div class="typing-suggestions">
                 <small class="text-muted">
                     <i class="fas fa-lightbulb me-1"></i>
-                    提示：按 Enter 发送，Shift + Enter 换行
+                    提示：按 <kbd>Enter</kbd> 发送，<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
                 </small>
             </div>
             <div class="chat-input-wrapper">
@@ -698,6 +111,15 @@
                     onkeydown="handleKeyDown(event)"></textarea>
                 <button class="send-btn" id="send-btn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <!-- 添加快捷功能按钮 -->
+            <div class="input-actions">
+                <button class="input-action-btn" onclick="clearInput()" title="清空输入">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="input-action-btn" onclick="pasteFromClipboard()" title="从剪贴板粘贴">
+                    <i class="fas fa-paste"></i>
                 </button>
             </div>
         </div>
@@ -926,16 +348,35 @@
         messagesContainer.innerHTML = '';
         messagesContainer.appendChild(welcomeContainer);
 
+        // 添加消息分组
+        let currentDate = '';
+        let messageGroup = null;
+
         messages.forEach((msg, index) => {
+            // 检查消息日期（这里假设消息对象有timestamp属性，如果没有可以添加）
+            const msgDate = msg.timestamp ? new Date(msg.timestamp).toLocaleDateString() : new Date().toLocaleDateString();
+
+            // 如果日期变化，添加日期分隔线
+            if (msgDate !== currentDate) {
+                currentDate = msgDate;
+                const dateDivider = document.createElement('div');
+                dateDivider.className = 'date-divider';
+                dateDivider.innerHTML = `<span>${currentDate}</span>`;
+                messagesContainer.appendChild(dateDivider);
+            }
+
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
 
+            const avatarIcon = msg.role === 'user' ? 'fa-user' : 'fa-robot';
+            const avatarClass = msg.role === 'user' ? 'user-avatar' : 'ai-avatar';
+
             messageDiv.innerHTML = `
-                <div class="message-avatar ${msg.role === 'user' ? 'user-avatar' : 'ai-avatar'}">
-                    <i class="fas ${msg.role === 'user' ? 'fa-user' : 'fa-robot'}"></i>
+                <div class="message-avatar ${avatarClass}">
+                    <i class="fas ${avatarIcon}"></i>
                 </div>
                 <div class="message-content">
-                    <div class="message-text">${msg.content}</div>
+                    <div class="message-text" id="message-text-${index}"></div>
                     <div class="message-actions">
                         <button class="message-action-btn" onclick="copyMessage(${index})">
                             <i class="fas fa-copy"></i> 复制
@@ -949,10 +390,39 @@
             `;
 
             messagesContainer.appendChild(messageDiv);
+
+            // 应用打字机效果，但仅对AI消息
+            if (msg.role === 'assistant') {
+                typeWriterEffect(`message-text-${index}`, msg.content, 1);
+            } else {
+                document.getElementById(`message-text-${index}`).innerText = msg.content;
+            }
         });
 
         // 滚动到底部
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // 打字机效果
+    function typeWriterEffect(elementId, text, speed) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        // 清空元素
+        element.innerHTML = '';
+
+        let i = 0;
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                // 保持滚动到底部
+                const messagesContainer = document.getElementById('chat-messages');
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                clearInterval(timer);
+            }
+        }, speed);
     }
 
     // 发送消息
@@ -969,7 +439,11 @@
         }
 
         // 添加用户消息
-        messages.push({ role: 'user', content: message });
+        messages.push({
+            role: 'user',
+            content: message,
+            timestamp: new Date().toISOString()
+        });
         renderMessages();
 
         // 清空输入框
@@ -989,18 +463,21 @@
                 <i class="fas fa-robot"></i>
             </div>
             <div class="message-content">
-                <div class="message-text">思考中<span class="thinking-dots">...</span></div>
+                <div class="message-text">
+                    思考中
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
             </div>
         `;
         document.getElementById('chat-messages').appendChild(thinkingDiv);
 
-        // 动画思考中的点
-        let dots = 0;
-        const thinkingInterval = setInterval(() => {
-            dots = (dots + 1) % 4;
-            const dotsText = '.'.repeat(dots);
-            document.querySelector('.thinking-dots').textContent = dotsText;
-        }, 300);
+        // 滚动到底部
+        const messagesContainer = document.getElementById('chat-messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
         // 准备请求数据
         const requestData = { message };
@@ -1025,27 +502,54 @@
         })
             .then(response => response.json())
             .then(data => {
-                clearInterval(thinkingInterval);
+                // 移除思考中的消息
+                const thinkingMessage = document.getElementById('thinking-message');
+                if (thinkingMessage) {
+                    thinkingMessage.remove();
+                }
 
                 if (data.status === 'success') {
-                    // 移除思考中的消息
-                    document.getElementById('thinking-message').remove();
-
                     // 添加AI回复
-                    messages.push({ role: 'assistant', content: data.reply });
+                    messages.push({
+                        role: 'assistant',
+                        content: data.reply,
+                        timestamp: new Date().toISOString()
+                    });
                     renderMessages();
 
                     // 更新聊天历史（标题可能已更新）
                     loadChatHistory();
+
+                    // 更新聊天标题
+                    updateChatTitle(data.title || '新对话');
                 } else {
                     throw new Error(data.message || '发送消息失败');
                 }
             })
             .catch(error => {
-                clearInterval(thinkingInterval);
                 console.error('Error sending message:', error);
-                alert('发送消息失败: ' + error.message);
-                document.getElementById('thinking-message').remove();
+
+                // 显示错误提示
+                const errorToast = document.createElement('div');
+                errorToast.className = 'error-toast';
+                errorToast.innerHTML = `
+                    <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="error-message">发送消息失败: ${error.message}</div>
+                    <button class="error-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                `;
+                document.body.appendChild(errorToast);
+
+                // 3秒后自动关闭
+                setTimeout(() => {
+                    if (errorToast.parentElement) {
+                        errorToast.remove();
+                    }
+                }, 3000);
+
+                const thinkingMessage = document.getElementById('thinking-message');
+                if (thinkingMessage) {
+                    thinkingMessage.remove();
+                }
             })
             .finally(() => {
                 isWaiting = false;
@@ -1053,12 +557,87 @@
             });
     }
 
-    // 处理键盘事件
-    function handleKeyDown(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
+    // 更新聊天标题
+    function updateChatTitle(title) {
+        const chatTitle = document.getElementById('chat-title');
+        if (chatTitle) {
+            chatTitle.textContent = title;
         }
+    }
+
+    // 清空对话
+    function clearChat() {
+        if (!currentChatId) return;
+
+        if (!confirm('确定要清空当前对话吗？此操作不可撤销。')) return;
+
+        // 清空消息列表，但保留第一条AI消息作为开场白
+        const welcomeMessage = messages.find(msg => msg.role === 'assistant');
+        messages = welcomeMessage ? [welcomeMessage] : [];
+        renderMessages();
+
+        // 显示成功提示
+        const toast = document.createElement('div');
+        toast.className = 'success-toast';
+        toast.innerHTML = `
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="success-message">对话已清空</div>
+        `;
+        document.body.appendChild(toast);
+
+        // 2秒后自动关闭
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    // 清空输入框
+    function clearInput() {
+        const input = document.getElementById('chat-input');
+        input.value = '';
+        input.style.height = 'auto';
+        input.focus();
+    }
+
+    // 从剪贴板粘贴
+    function pasteFromClipboard() {
+        navigator.clipboard.readText()
+            .then(text => {
+                const input = document.getElementById('chat-input');
+                input.value += text;
+                input.style.height = 'auto';
+                input.style.height = (input.scrollHeight) + 'px';
+                input.focus();
+            })
+            .catch(err => {
+                console.error('无法从剪贴板读取: ', err);
+                alert('无法从剪贴板读取，请手动粘贴');
+            });
+    }
+
+    // 显示分享模态框
+    function showShareModal() {
+        if (!currentChatId) {
+            alert('请先开始一个对话');
+            return;
+        }
+
+        const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+        shareModal.show();
+    }
+
+    // 搜索历史记录
+    function searchHistory() {
+        const searchInput = document.getElementById('history-search');
+        const query = searchInput.value.toLowerCase();
+        const chatItems = document.querySelectorAll('.chat-item');
+
+        chatItems.forEach(item => {
+            const title = item.querySelector('.chat-item-title').textContent.toLowerCase();
+            if (title.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     // 发送示例查询
@@ -1356,54 +935,6 @@
         });
     });
 
-    // 优化消息显示动画
-    function appendMessage(content, isUser) {
-        // ... 原有代码 ...
-
-        // 添加淡入动画
-        const message = document.createElement('div');
-        message.className = `message ${isUser ? 'user' : ''} fade-in`;
-
-        // 使用打字机效果显示内容
-        if (!isUser) {
-            let i = 0;
-            const typing = setInterval(() => {
-                if (i < content.length) {
-                    messageText.textContent += content[i];
-                    i++;
-                } else {
-                    clearInterval(typing);
-                }
-            }, 30);
-        } else {
-            messageText.textContent = content;
-        }
-    }
-
-    // 添加滚动动画
-    function smoothScroll(element, target, duration) {
-        const start = element.scrollTop;
-        const distance = target - start;
-        const startTime = performance.now();
-
-        function animation(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            element.scrollTop = start + distance * easeInOutQuad(progress);
-
-            if (progress < 1) {
-                requestAnimationFrame(animation);
-            }
-        }
-
-        requestAnimationFrame(animation);
-    }
-
-    function easeInOutQuad(t) {
-        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    }
-
     // 侧边栏折叠控制
     function toggleSidebar() {
         const sidebar = document.getElementById('chatSidebar');
@@ -1467,6 +998,143 @@
                 // 已经保存到本地存储，所以这里不需要额外操作
                 console.log('API设置已保存到本地存储');
             });
+    }
+
+    // 处理键盘事件
+    function handleKeyDown(event) {
+        // Ctrl/Cmd + Enter 发送消息
+        if (event.key === 'Enter') {
+            if (!event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Esc 清空输入框
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            clearInput();
+        }
+
+        // 添加其他全局快捷键
+        if (event.ctrlKey || event.metaKey) {
+            // Ctrl/Cmd + / 显示快捷键帮助
+            if (event.key === '/') {
+                event.preventDefault();
+                showShortcutsHelp();
+            }
+
+            // Ctrl/Cmd + N 新建聊天
+            if (event.key === 'n') {
+                event.preventDefault();
+                createNewChat();
+            }
+        }
+    }
+
+    // 注册全局键盘事件
+    document.addEventListener('keydown', function (event) {
+        // 如果是在输入框中，则由输入框自己的handleKeyDown处理
+        if (document.activeElement === document.getElementById('chat-input')) {
+            return;
+        }
+
+        // 全局快捷键
+        if (event.ctrlKey || event.metaKey) {
+            // Ctrl/Cmd + N 新建聊天
+            if (event.key === 'n') {
+                event.preventDefault();
+                createNewChat();
+            }
+        }
+    });
+
+    // 显示快捷键帮助
+    function showShortcutsHelp() {
+        const helpModal = `
+        <div class="modal fade" id="shortcutsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">键盘快捷键</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <div class="shortcut-keys">
+                                    <kbd>Enter</kbd>
+                                </div>
+                                <div class="shortcut-description">发送消息</div>
+                            </div>
+                            <div class="shortcut-item">
+                                <div class="shortcut-keys">
+                                    <kbd>Shift</kbd> + <kbd>Enter</kbd>
+                                </div>
+                                <div class="shortcut-description">换行</div>
+                            </div>
+                            <div class="shortcut-item">
+                                <div class="shortcut-keys">
+                                    <kbd>Esc</kbd>
+                                </div>
+                                <div class="shortcut-description">清空输入框</div>
+                            </div>
+                            <div class="shortcut-item">
+                                <div class="shortcut-keys">
+                                    <kbd>Ctrl</kbd> + <kbd>N</kbd>
+                                </div>
+                                <div class="shortcut-description">新建聊天</div>
+                            </div>
+                            <div class="shortcut-item">
+                                <div class="shortcut-keys">
+                                    <kbd>Ctrl</kbd> + <kbd>/</kbd>
+                                </div>
+                                <div class="shortcut-description">显示此帮助</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        // 添加到DOM
+        if (!document.getElementById('shortcutsModal')) {
+            const div = document.createElement('div');
+            div.innerHTML = helpModal;
+            document.body.appendChild(div);
+        }
+
+        // 显示模态框
+        const modal = new bootstrap.Modal(document.getElementById('shortcutsModal'));
+        modal.show();
+    }
+
+    // 添加滚动动画
+    function smoothScroll(element, target, duration) {
+        const start = element.scrollTop;
+        const distance = target - start;
+        const startTime = performance.now();
+
+        function animation(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            element.scrollTop = start + distance * easeInOutQuad(progress);
+
+            if (progress < 1) {
+                requestAnimationFrame(animation);
+            }
+        }
+
+        requestAnimationFrame(animation);
+    }
+
+    function easeInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
 </script>
 {% endblock %}

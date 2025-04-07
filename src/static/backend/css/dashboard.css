@@ -1,0 +1,99 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+}
+
+.card-container {
+  max-width: 1000px;
+  height: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: #333333;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.ranking-list {
+  padding-left: 15px;
+}
+
+.ranking-list ol {
+  list-style: none;
+  counter-reset: ranking 0;
+  /* 初始化计数器，起始值为0 */
+}
+
+.ranking-list li {
+  margin-bottom: 15px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.ranking-list li:hover {
+  transform: translateX(10px);
+}
+
+.ranking-list a {
+  text-decoration: none;
+  color: #333333;
+  font-size: 1em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ranking-list a:hover {
+  color: #007BFF;
+  text-decoration: underline;
+}
+
+.spread-speed {
+  color: #FF9900;
+  font-weight: 600;
+  font-size: 0.9em;
+  margin-left: 8px;
+}
+
+.rank-icon {
+  color: #FF9900;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.ranking-list li::before {
+  content: counter(ranking, decimal-leading-zero);
+  /* 使用 ranking 计数器 */
+  counter-increment: ranking;
+  /* 递增 ranking 计数器 */
+  display: inline-block;
+  width: 20px;
+  text-align: right;
+  margin-right: 8px;
+  font-size: 1em;
+  color: #666666;
+}
+
+.ranking-list li:nth-child(1)::before {
+  color: #FFD700;
+}
+
+.ranking-list li:nth-child(2)::before {
+  color: #C0C0C0;
+}
+
+.ranking-list li:nth-child(3)::before {
+  color: #CD7F32;
+}

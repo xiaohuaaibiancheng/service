@@ -1,0 +1,447 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}AI搜索与分析 - 智能信息搜索与可靠性评估{% endblock %}
+
+{% block head %}
+<style>
+  .search-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .search-header {
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  .search-header h1 {
+    font-size: 2.5em;
+    color: #333;
+    line-height: 1.2;
+  }
+
+  .search-form {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .search-input:focus {
+    border-color: #4285f4;
+    outline: none;
+  }
+
+  .search-button {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  }
+
+  .search-button:hover {
+    background-color: #3367d6;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .search-button:disabled {
+    background-color: #a9a9a9;
+    cursor: not-allowed;
+  }
+
+  .mode-selector {
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .mode-option {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .mode-option:hover {
+    background-color: #f5f9ff;
+    transform: scale(1.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .mode-option.active {
+    background-color: #e8f0fe;
+    border-color: #4285f4;
+    color: #4285f4;
+  }
+
+  .mode-option i {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .search-result {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-top: 30px;
+    display: none;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 30px;
+    display: none;
+  }
+
+  .loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #4285f4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .error-message {
+    color: #dc3545;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+    display: none;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+  }
+
+  /* AI搜索结果样式 */
+  .ai-search-result {
+    padding: 20px;
+  }
+
+  .judgment {
+    margin-bottom: 20px;
+  }
+
+  .summary {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+  }
+
+  .answer {
+    margin-bottom: 25px;
+  }
+
+  .citation {
+    color: #1a73e8;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .citation:hover {
+    text-decoration: none;
+  }
+
+  .sources {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+  }
+
+  .source-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .source-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+  }
+
+  .source-item:hover {
+    background-color: #f0f7ff;
+  }
+
+  .source-item h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .source-item a {
+    color: #1a73e8;
+    text-decoration: none;
+  }
+
+  .source-item a:hover {
+    text-decoration: underline;
+  }
+
+  .content-preview {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* 移动端响应式 */
+  @media (max-width: 768px) {
+    .search-container {
+      padding: 15px;
+    }
+
+    .search-form {
+      padding: 20px;
+    }
+
+    .mode-selector {
+      flex-direction: column;
+    }
+
+    .mode-option {
+      margin: 10px 0;
+    }
+
+    .source-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+  <div class="search-header">
+    <h1>AI搜索与信息可靠性评估</h1>
+    <p>使用AI搜索引擎查询信息，并通过OpenAI评估信息可靠性</p>
+  </div>
+
+  <div class="search-form">
+    <div class="form-group">
+      <label for="search-query">搜索内容</label>
+      <input type="text" id="search-query" class="search-input" placeholder="输入您想了解的内容...">
+    </div>
+
+    <div class="form-group">
+      <label>搜索模式</label>
+      <div class="mode-selector">
+        <div class="mode-option active" data-mode="webSearch">
+          <i class="fas fa-globe"></i>
+          <span>网页搜索</span>
+        </div>
+        <div class="mode-option" data-mode="academicSearch">
+          <i class="fas fa-graduation-cap"></i>
+          <span>学术搜索</span>
+        </div>
+        <div class="mode-option" data-mode="newsSearch">
+          <i class="fas fa-newspaper"></i>
+          <span>新闻搜索</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="proxy-port">代理端口 (可选)</label>
+      <input type="number" id="proxy-port" class="search-input" placeholder="例如: 7890">
+    </div>
+
+    <button id="search-button" class="search-button">
+      <i class="fas fa-search"></i> 搜索
+    </button>
+
+    <div class="error-message" id="error-message"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>正在搜索并进行AI分析，请稍候...</p>
+  </div>
+
+  <div class="search-result" id="search-result">
+    <!-- 搜索结果将在这里显示 -->
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 选择搜索模式
+    const modeOptions = document.querySelectorAll('.mode-option');
+    let selectedMode = 'webSearch';
+
+    modeOptions.forEach(option => {
+      option.addEventListener('click', function () {
+        modeOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+        selectedMode = this.getAttribute('data-mode');
+      });
+    });
+
+    // 搜索按钮点击事件
+    const searchButton = document.getElementById('search-button');
+    const queryInput = document.getElementById('search-query');
+    const proxyPortInput = document.getElementById('proxy-port');
+    const loadingElement = document.getElementById('loading');
+    const resultElement = document.getElementById('search-result');
+    const errorElement = document.getElementById('error-message');
+
+    searchButton.addEventListener('click', performSearch);
+
+    // 按Enter键也可以搜索
+    queryInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+
+    function performSearch() {
+      const query = queryInput.value.trim();
+      if (!query) {
+        showError('请输入搜索内容');
+        return;
+      }
+
+      // 获取代理端口
+      let proxyPort = null;
+      if (proxyPortInput.value.trim()) {
+        proxyPort = parseInt(proxyPortInput.value.trim());
+        if (isNaN(proxyPort) || proxyPort <= 0 || proxyPort > 65535) {
+          showError('代理端口无效，请输入1-65535之间的数值');
+          return;
+        }
+      }
+
+      // 准备请求数据
+      const requestData = {
+        query: query,
+        focusMode: selectedMode,
+        proxyPort: proxyPort
+      };
+
+      // 显示加载中
+      searchButton.disabled = true;
+      loadingElement.style.display = 'block';
+      resultElement.style.display = 'none';
+      errorElement.style.display = 'none';
+
+      // 发送请求
+      fetch('/frontend/api/ai_search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          searchButton.disabled = false;
+          loadingElement.style.display = 'none';
+
+          if (data.error) {
+            showError(data.error + (data.details ? ': ' + data.details : ''));
+            return;
+          }
+
+          // 显示结果
+          resultElement.style.display = 'block';
+          resultElement.innerHTML = data.html;
+
+          // 添加源引用点击事件
+          addSourceClickHandlers();
+        })
+        .catch(error => {
+          searchButton.disabled = false;
+          loadingElement.style.display = 'none';
+          showError('请求失败: ' + error.message);
+        });
+    }
+
+    function showError(message) {
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+
+    function addSourceClickHandlers() {
+      document.querySelectorAll('.citation').forEach(citation => {
+        citation.addEventListener('click', function () {
+          const sourceId = this.getAttribute('data-source-id');
+          const sourceElement = document.getElementById('source-' + sourceId);
+
+          // 移除所有高亮
+          document.querySelectorAll('.source-item').forEach(item => {
+            item.style.backgroundColor = '';
+          });
+
+          if (sourceElement) {
+            // 高亮显示当前源
+            sourceElement.style.backgroundColor = '#e8f0fe';
+            // 滚动到该元素
+            sourceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      });
+    }
+  });
+
+  // 这个函数将被引用标记的onclick调用
+  function showSource(id) {
+    const sourceElement = document.getElementById('source-' + id);
+
+    // 移除所有高亮
+    document.querySelectorAll('.source-item').forEach(item => {
+      item.style.backgroundColor = '';
+    });
+
+    if (sourceElement) {
+      // 高亮显示当前源
+      sourceElement.style.backgroundColor = '#e8f0fe';
+      // 滚动到该元素
+      sourceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+</script>
+{% endblock %}

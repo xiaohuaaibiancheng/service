@@ -106,11 +106,32 @@ logger = logging.getLogger(__name__)
 # 加载服务数据
 def load_news_data(file_path: Path) -> List[Document]:
     """加载并解析新闻数据"""
+    # 检查缓存
+    cache_file = Path(file_path).parent / f"{Path(file_path).stem}_cache.pkl"
+    if cache_file.exists():
+        import pickle
+        import time
+        # 检查缓存是否过期（默认24小时）
+        cache_time = cache_file.stat().st_mtime
+        if time.time() - cache_time < 86400:  # 24小时
+            try:
+                with open(cache_file, 'rb') as f:
+                    documents = pickle.load(f)
+                    logger.info("从缓存加载新闻数据，共 %d 条", len(documents))
+                    return documents
+            except Exception as cache_error:
+                logger.warning(f"缓存加载失败: {str(cache_error)}")
+    
     documents = []
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             news_list = json.load(f)
-            for news in news_list:
+            
+            # 使用并行处理加速文档创建
+            import concurrent.futures
+            from functools import partial
+            
+            def create_document(news):
                 # 构建结构化文本
                 text_parts = [
                     f"新闻 ID：{news['news_id']}",
@@ -150,7 +171,21 @@ def load_news_data(file_path: Path) -> List[Document]:
 
                 # 合并所有文本部分
                 full_text = "\n".join(text_parts)
-                documents.append(Document(text=full_text))
+                return Document(text=full_text)
+            
+            # 使用线程池并行处理
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                # 并行创建文档
+                documents = list(executor.map(create_document, news_list))
+            
+            # 保存到缓存
+            try:
+                import pickle
+                with open(cache_file, 'wb') as f:
+                    pickle.dump(documents, f)
+            except Exception as cache_error:
+                logger.warning(f"缓存保存失败: {str(cache_error)}")
+                
         logger.info("成功加载新闻数据，共 %d 条", len(documents))
     except Exception as e:
         logger.error(f"加载新闻数据失败：{str(e)}")

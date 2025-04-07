@@ -3,1072 +3,7 @@
 {% block title %}CredenceAI - 知真新闻真伪检测系统{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* 全局动画效果 */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes scaleIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    /* Hero区域样式 */
-    .hero-section {
-        position: relative;
-        min-height: 100vh;
-        background: #000;
-        /* 设置深色背景 */
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-    }
-
-    /* 地球背景 */
-    .earth-container {
-        position: absolute;
-        right: -20%;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 800px;
-        height: 800px;
-        animation: earthFloat 20s infinite linear;
-    }
-
-    .earth-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        animation: earthRotate 100s infinite linear;
-    }
-
-    /* 星空背景 */
-    .stars {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);
-    }
-
-    .stars::before {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-image:
-            radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 40px 70px, #ffffff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 50px 160px, #ffffff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 130px 80px, #ffffff, rgba(0, 0, 0, 0));
-        background-size: 200px 200px;
-        animation: twinkle 5s infinite;
-    }
-
-    /* 内容样式 */
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        color: #fff;
-        max-width: 600px;
-        padding: 50px 0;
-    }
-
-    .hero-title {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-        animation: fadeInUp 1s ease-out;
-        white-space: nowrap;
-    }
-
-    .hero-subtitle {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        margin-bottom: 2rem;
-        animation: fadeInUp 1s ease-out 0.2s;
-    }
-
-    .hero-features {
-        margin-bottom: 2rem;
-    }
-
-    .feature-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        animation: fadeInUp 1s ease-out;
-    }
-
-    .feature-item i {
-        color: #00ff7f;
-        margin-right: 10px;
-    }
-
-    /* 动画效果 */
-    @keyframes earthRotate {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes earthFloat {
-
-        0%,
-        100% {
-            transform: translateY(-50%) translateX(0);
-        }
-
-        50% {
-            transform: translateY(-50%) translateX(-50px);
-        }
-    }
-
-    @keyframes twinkle {
-
-        0%,
-        100% {
-            opacity: 0.3;
-        }
-
-        50% {
-            opacity: 0.6;
-        }
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* 响应式调整 */
-    @media (max-width: 1200px) {
-        .earth-container {
-            width: 600px;
-            height: 600px;
-            right: -30%;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .earth-container {
-            width: 400px;
-            height: 400px;
-            right: -50%;
-            opacity: 0.5;
-        }
-
-        .hero-title {
-            font-size: 2.5rem;
-        }
-    }
-
-    /* 功能卡片样式 */
-    .feature-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 30px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .feature-card:hover {
-        transform: translateY(-10px);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .feature-icon {
-        font-size: 2.5rem;
-        margin-bottom: 20px;
-        color: #fff;
-    }
-
-    /* 工具栏样式 */
-    .tools-section {
-        background: #fff;
-        padding: 100px 0;
-    }
-
-    .tool-card {
-        background: #f8f9fa;
-        border-radius: 15px;
-        padding: 25px;
-        height: 100%;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .tool-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    /* 统计数据区域样式 */
-    .stats-section {
-        background: #202123;
-        /* 与上面相同的深灰色背景 */
-        position: relative;
-        z-index: 2;
-        padding: 80px 0;
-        color: #fff;
-    }
-
-    /* 统计数字样式 */
-    .stat-number {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        color: #2ecc71;
-        /* 使用纯色而不是渐变 */
-        text-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
-    }
-
-    .stat-label {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.1rem;
-    }
-
-    .stat-item {
-        text-align: center;
-        padding: 30px 20px;
-        background: rgba(255, 255, 255, 0.03);
-        /* 更暗的背景 */
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-    }
-
-    .stat-item:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.05);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    /* 添加分隔线 */
-    .stats-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 15%;
-        right: 15%;
-        height: 1px;
-        background: linear-gradient(90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.1) 50%,
-                transparent 100%);
-    }
-
-    /* 添加背景光效 */
-    .stats-section::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at 50% 50%,
-                rgba(255, 255, 255, 0.02) 0%,
-                transparent 70%);
-        pointer-events: none;
-    }
-
-    /* 保持动画效果 */
-    .stat-item {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    .stat-item:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .stat-item:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    .stat-item:nth-child(4) {
-        animation-delay: 0.6s;
-    }
-
-    /* 新闻流样式 */
-    .news-flow {
-        position: absolute;
-        right: 10%;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 300px;
-        height: auto;
-        max-height: 80vh;
-        overflow: hidden;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .news-card {
-        position: relative;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-        transition: all 0.3s ease;
-        transform: translateX(100%);
-        animation: slideInNews 0.5s forwards;
-    }
-
-    .news-card:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .news-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(to bottom, #00ff7f, #2ecc71);
-    }
-
-    .news-card h5 {
-        color: #fff;
-        font-size: 15px;
-        margin-bottom: 10px;
-        font-weight: 500;
-    }
-
-    .news-card .news-meta {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.6);
-        margin-bottom: 12px;
-    }
-
-    .news-card .news-source {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.8);
-        padding: 3px 8px;
-        border-radius: 20px;
-        font-size: 10px;
-        margin-top: 8px;
-        display: inline-block;
-    }
-
-    .news-card .news-verification {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .news-card .verification-icon {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        margin-right: 8px;
-    }
-
-    .news-card .verification-status {
-        font-size: 12px;
-    }
-
-    .verification-pending {
-        background: rgba(255, 193, 7, 0.2);
-        color: #ffc107;
-    }
-
-    .verification-true {
-        background: rgba(40, 167, 69, 0.2);
-        color: #28a745;
-    }
-
-    .verification-false {
-        background: rgba(220, 53, 69, 0.2);
-        color: #dc3545;
-    }
-
-    @keyframes slideInNews {
-        from {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    /* 动态演示卡片 */
-    .detection-demo {
-        position: relative;
-        perspective: 1000px;
-    }
-
-    .demo-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 20px;
-        transform-style: preserve-3d;
-        animation: floatCard 3s ease-in-out infinite;
-    }
-
-    @keyframes floatCard {
-
-        0%,
-        100% {
-            transform: translateY(0) rotateY(0);
-        }
-
-        50% {
-            transform: translateY(-20px) rotateY(5deg);
-        }
-    }
-
-    /* 浮动新闻卡片 */
-    .floating-news {
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    .news-item {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(5px);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        transform: translateX(100%);
-        animation: slideIn 0.5s forwards;
-    }
-
-    .news-badge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 12px;
-        margin-bottom: 10px;
-    }
-
-    .news-badge.true {
-        background: #28a745;
-    }
-
-    .news-badge.false {
-        background: #dc3545;
-    }
-
-    @keyframes slideIn {
-        to {
-            transform: translateX(0);
-        }
-    }
-
-    /* 打字机效果 */
-    .typing-text {
-        overflow: hidden;
-        border-right: 2px solid #fff;
-        white-space: nowrap;
-        animation: typing 3.5s steps(40, end),
-            blink-caret .75s step-end infinite;
-    }
-
-    @keyframes typing {
-        from {
-            width: 0
-        }
-
-        to {
-            width: 100%
-        }
-    }
-
-    @keyframes blink-caret {
-
-        from,
-        to {
-            border-color: transparent
-        }
-
-        50% {
-            border-color: #fff;
-        }
-    }
-
-    /* 核心功能区域 */
-    .core-features {
-        background: #202123;
-        /* 深灰色背景 */
-        color: #fff;
-        padding: 80px 0;
-        position: relative;
-    }
-
-    .core-features h2 {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 50px;
-        font-size: 2.5rem;
-        font-weight: 600;
-        position: relative;
-    }
-
-    .feature-box {
-        position: relative;
-        height: 300px;
-        border-radius: 15px;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .feature-box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 背景图片样式 */
-    .feature-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        transition: all 0.3s ease;
-    }
-
-    .feature-box:hover .feature-bg {
-        transform: scale(1.1);
-    }
-
-    /* 内容层样式 */
-    .feature-content {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        padding: 30px;
-        background: linear-gradient(to bottom,
-                rgba(0, 0, 0, 0.4) 0%,
-                rgba(0, 0, 0, 0.8) 100%);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-    }
-
-    .feature-content h3 {
-        font-size: 24px;
-        margin-bottom: 10px;
-        font-weight: 500;
-    }
-
-    .feature-content p {
-        font-size: 14px;
-        margin-bottom: 15px;
-        opacity: 0.8;
-    }
-
-    /* 标签样式 */
-    .feature-tags {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .tag {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        backdrop-filter: blur(5px);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .tag:hover {
-        background: rgba(255, 255, 255, 0.15);
-    }
-
-    .tag i {
-        margin-right: 5px;
-    }
-
-    /* 添加悬浮效果 */
-    .feature-box::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .feature-box:hover::after {
-        opacity: 1;
-    }
-
-    /* 添加动画效果 */
-    .feature-box {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    .feature-box:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .feature-box:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    .feature-box:nth-child(4) {
-        animation-delay: 0.6s;
-    }
-
-    /* 专业工具区域 */
-    .pro-tools {
-        background: #202123;
-        /* 深灰色背景 */
-        color: #fff;
-        padding: 80px 0;
-        position: relative;
-    }
-
-    .pro-tools h2 {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 50px;
-        font-size: 2.5rem;
-        font-weight: 600;
-        position: relative;
-    }
-
-    .tool-box {
-        position: relative;
-        height: 350px;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .tool-box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 背景图片样式 */
-    .tool-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        transition: all 0.3s ease;
-    }
-
-    .tool-box:hover .tool-bg {
-        transform: scale(1.1);
-    }
-
-    /* 内容层样式 */
-    .tool-content {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        padding: 30px;
-        background: linear-gradient(to bottom,
-                rgba(0, 0, 0, 0.4) 0%,
-                rgba(0, 0, 0, 0.8) 100%);
-        color: white;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .tool-icon {
-        width: 60px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .tool-content h4 {
-        font-size: 22px;
-        margin-bottom: 20px;
-        font-weight: 500;
-    }
-
-    /* 功能列表样式 */
-    .tool-features {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .tool-features li {
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        font-size: 15px;
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    .tool-features li i {
-        color: #00ff7f;
-        margin-right: 10px;
-        font-size: 14px;
-    }
-
-    /* 添加动画效果 */
-    .tool-box {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    .tool-box:nth-child(2) {
-        animation-delay: 0.2s;
-    }
-
-    .tool-box:nth-child(3) {
-        animation-delay: 0.4s;
-    }
-
-    #earth-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-    }
-
-    /* 添加背景渐变 */
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 60% 50%,
-                rgba(0, 0, 20, 0.5) 0%,
-                rgba(0, 0, 20, 0.8) 50%,
-                rgba(0, 0, 20, 1) 100%);
-        z-index: 0;
-    }
-
-    .star-field {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        /* 使用视口单位 */
-        height: 100vh;
-        pointer-events: none;
-        z-index: 1;
-    }
-
-    .star {
-        position: absolute;
-        background: #fff;
-        border-radius: 50%;
-        animation: twinkle var(--duration) linear infinite;
-    }
-
-    .meteor {
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: linear-gradient(to right, rgba(255, 255, 255, 0.8) 0%, transparent 100%);
-        animation: meteor var(--duration) linear infinite;
-    }
-
-    @keyframes twinkle {
-
-        0%,
-        100% {
-            opacity: 0.3;
-        }
-
-        50% {
-            opacity: 1;
-        }
-    }
-
-    @keyframes meteor {
-        0% {
-            transform: translateX(0) translateY(0) rotate(-45deg);
-            opacity: 1;
-        }
-
-        70% {
-            opacity: 1;
-        }
-
-        100% {
-            transform: translateX(-500px) translateY(500px) rotate(-45deg);
-            opacity: 0;
-        }
-    }
-
-    /* 添加分隔效果 */
-    .core-features::after,
-    .pro-tools::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 1px;
-        background: linear-gradient(90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.1) 50%,
-                transparent 100%);
-    }
-
-    /* 优化卡片内文字样式 */
-    .feature-content h3,
-    .tool-content h4 {
-        color: #fff;
-        font-weight: 500;
-    }
-
-    .feature-content p,
-    .tool-content p,
-    .tool-features li {
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    /* 标签样式优化 */
-    .tag {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .tag:hover {
-        background: rgba(255, 255, 255, 0.15);
-    }
-
-    /* 图标样式优化 */
-    .tool-icon {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* 添加微妙的动画效果 */
-    .feature-box,
-    .tool-box {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    /* 添加渐变过渡效果 */
-    .core-features,
-    .pro-tools,
-    .deep-analysis {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .core-features::before,
-    .pro-tools::before,
-    .deep-analysis::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at 50% 0%,
-                rgba(255, 255, 255, 0.05) 0%,
-                transparent 70%);
-        pointer-events: none;
-    }
-
-    .core-features::after,
-    .pro-tools::after,
-    .deep-analysis::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 1px;
-        background: linear-gradient(90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.1) 50%,
-                transparent 100%);
-    }
-
-    /* 深度分析板块样式 */
-    .deep-analysis {
-        background: #202123;
-        color: #fff;
-        padding: 80px 0;
-    }
-
-    .deep-analysis h2 {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 50px;
-        font-size: 2.5rem;
-        font-weight: 600;
-        position: relative;
-    }
-
-    .analysis-box {
-        position: relative;
-        height: 400px;
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        margin-bottom: 20px;
-    }
-
-    .analysis-box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .analysis-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        transition: all 0.3s ease;
-    }
-
-    .analysis-box:hover .analysis-bg {
-        transform: scale(1.1);
-    }
-
-    .analysis-content {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        padding: 30px;
-        background: linear-gradient(to bottom,
-                rgba(0, 0, 0, 0.4) 0%,
-                rgba(0, 0, 0, 0.8) 100%);
-        color: white;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .analysis-icon {
-        width: 60px;
-        height: 60px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .analysis-content h4 {
-        font-size: 22px;
-        margin-bottom: 15px;
-        font-weight: 500;
-        color: #fff;
-    }
-
-    .analysis-content p {
-        margin-bottom: 20px;
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    .analysis-features {
-        list-style: none;
-        padding: 0;
-        margin: 0 0 20px 0;
-    }
-
-    .analysis-features li {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        font-size: 15px;
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    .analysis-features li i {
-        color: #00ff7f;
-        margin-right: 10px;
-        font-size: 14px;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='frontend/css/index.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -1099,7 +34,7 @@
                 </div>
             </div>
             <div class="hero-buttons">
-                <a href="#features" class="btn btn-primary btn-lg">开始使用</a>
+                <a href="#core-features" class="btn btn-primary btn-lg">开始使用</a>
                 <a href="javascript:void(0);" class="btn btn-outline-light btn-lg ms-3" data-bs-toggle="modal"
                     data-bs-target="#learnMoreModal">了解更多</a>
             </div>
@@ -1108,51 +43,56 @@
 </section>
 
 <!-- 核心功能区域 -->
-<section class="core-features py-5">
+<section id="core-features" class="core-features py-5">
     <div class="container">
-        <h2 class="text-center mb-5">CredenceAI 知真 - 核心功能</h2>
-        <div class="row g-4">
-            <!-- 快速检测 -->
-            <!-- 深度分析 -->
+        <h2 class="section-title text-center mb-5">CredenceAI 知真 - 核心功能</h2>
+        <div class="row g-4 justify-content-center">
+            <!-- 新闻虚假判别 -->
             <div class="col-lg-3 col-md-6">
                 <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.fake_news_classify') }}';">
                     <div class="feature-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/news-aggregate.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/news-aggregate.png') }}');">
                     </div>
                     <div class="feature-content">
                         <h3>新闻虚假判别</h3>
-                        <p>旨在通过技术手段识别和分析新闻内容的真实性。</p>
+                        <p>通过技术手段识别和分析新闻内容的真实性</p>
                         <div class="feature-tags">
                             <span class="tag"><i class="fas fa-newspaper"></i> 新闻判别</span>
-
                             <span class="tag"><i class="fas fa-search"></i> 信息澄清</span>
                             <span class="tag"><i class="fas fa-project-diagram"></i> 虚伪判断</span>
                         </div>
-
+                        <div class="mt-3">
+                            <a href="{{ url_for('frontend.fake_news_classify') }}"
+                                class="btn btn-sm btn-outline-light">立即使用</a>
+                        </div>
                     </div>
                 </div>
             </div>
+            <!-- AI生成检测 -->
             <div class="col-lg-3 col-md-6">
                 <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.ai_detect') }}';">
                     <div class="feature-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/ai-detect.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/ai-detect.png') }}');">
                     </div>
                     <div class="feature-content">
                         <h3>AI生成检测</h3>
                         <p>识别AI生成的文本和图片内容</p>
                         <div class="feature-tags">
                             <span class="tag"><i class="fas fa-shield-alt"></i> 实时监测</span>
-                            <span class="tag"><i class="fas fa-video"></i> 图片分析</span>
-                            <span class="tag"><i class="fas fa-file-text"></i> 文本识别</span>
+                            <span class="tag"><i class="fas fa-image"></i> 图片分析</span>
+                            <span class="tag"><i class="fas fa-file-alt"></i> 文本识别</span>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ url_for('frontend.ai_detect') }}" class="btn btn-sm btn-outline-light">立即使用</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- AI助手 -->
+            <!-- 新闻分析助手 -->
             <div class="col-lg-3 col-md-6">
                 <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.ai_chat') }}';">
                     <div class="feature-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/ai-chat.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/ai-chat.png') }}');">
                     </div>
                     <div class="feature-content">
                         <h3>新闻分析助手</h3>
@@ -1162,21 +102,28 @@
                             <span class="tag"><i class="fas fa-brain"></i> 深度学习</span>
                             <span class="tag"><i class="fas fa-comments"></i> 实时互动</span>
                         </div>
+                        <div class="mt-3">
+                            <a href="{{ url_for('frontend.ai_chat') }}" class="btn btn-sm btn-outline-light">立即使用</a>
+                        </div>
                     </div>
                 </div>
             </div>
-
+            <!-- 新闻一致性检测 -->
             <div class="col-lg-3 col-md-6">
                 <div class="feature-box" onclick="window.location.href='{{ url_for('frontend.news_detect') }}';">
                     <div class="feature-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/news-detect.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/news-detect.png') }}');">
                     </div>
                     <div class="feature-content">
                         <h3>新闻一致性检测</h3>
-                        <p>支持文本、URL、文档多种输入方式，智能分析新闻真实性</p>
+                        <p>支持多种输入方式，智能分析新闻真实性</p>
                         <div class="feature-tags">
                             <span class="tag"><i class="fas fa-check"></i> 准确率95%+</span>
                             <span class="tag"><i class="fas fa-file-alt"></i> 多种输入</span>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ url_for('frontend.news_detect') }}"
+                                class="btn btn-sm btn-outline-light">立即使用</a>
                         </div>
                     </div>
                 </div>
@@ -1188,13 +135,13 @@
 <!-- 深度分析板块 -->
 <section class="deep-analysis py-5">
     <div class="container">
-        <h2 class="text-center mb-5">知真系统 - 深度分析能力</h2>
+        <h2 class="section-title text-center mb-5">知真系统 - 深度分析能力</h2>
         <div class="row g-4">
             <!-- 聚合分析 -->
             <div class="col-md-6">
                 <div class="analysis-box">
                     <div class="analysis-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/semantic-analysis.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/semantic-analysis.png') }}');">
                     </div>
                     <div class="analysis-content">
                         <div class="analysis-icon">
@@ -1207,7 +154,7 @@
                             <li><i class="fas fa-chart-line"></i> 实时分析报告</li>
                             <li><i class="fas fa-chart-pie"></i> 可视化展示</li>
                         </ul>
-                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
@@ -1216,7 +163,7 @@
             <div class="col-md-6">
                 <div class="analysis-box">
                     <div class="analysis-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/source-tracking.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/source-tracking.png') }}');">
                     </div>
                     <div class="analysis-content">
                         <div class="analysis-icon">
@@ -1229,16 +176,16 @@
                             <li><i class="fas fa-filter"></i> 智能过滤</li>
                             <li><i class="fas fa-sort-amount-up"></i> 高效排序</li>
                         </ul>
-                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/news_aggregate" class="btn btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
 
-            <!-- 层级分析 -->
+            <!-- 多智搜证 -->
             <div class="col-md-6">
                 <div class="analysis-box">
                     <div class="analysis-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/Multi-intelligence.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/Multi-intelligence.png') }}');">
                     </div>
                     <div class="analysis-content">
                         <div class="analysis-icon">
@@ -1251,7 +198,7 @@
                             <li><i class="fas fa-database"></i> 多源整合</li>
                             <li><i class="fas fa-thumbs-up"></i> 简洁易用</li>
                         </ul>
-                        <a href="/frontend/agent" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/agent" class="btn btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
@@ -1259,7 +206,7 @@
             <div class="col-md-6">
                 <div class="analysis-box">
                     <div class="analysis-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/hierarchical-analysis.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/hierarchical-analysis.png') }}');">
                     </div>
                     <div class="analysis-content">
                         <div class="analysis-icon">
@@ -1272,7 +219,7 @@
                             <li><i class="fas fa-link"></i> 关联性分析</li>
                             <li><i class="fas fa-chart-bar"></i> 多维度展示</li>
                         </ul>
-                        <a href="/frontend/news_segment_detect" class="btn btn-outline-light mt-3">了解更多</a>
+                        <a href="/frontend/news_segment_detect" class="btn btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
@@ -1283,13 +230,13 @@
 <!-- 专业工具区域 -->
 <section class="pro-tools py-5">
     <div class="container">
-        <h2 class="text-center mb-5">知真系统 - 专业工具</h2>
+        <h2 class="section-title text-center mb-5">知真系统 - 专业工具</h2>
         <div class="row g-4">
             <!-- 趋势分析 -->
             <div class="col-md-4">
                 <div class="tool-box">
                     <div class="tool-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/trend-analysis.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/trend-analysis.png') }}');">
                     </div>
                     <div class="tool-content">
                         <div class="tool-icon">
@@ -1301,6 +248,7 @@
                             <li><i class="fas fa-check"></i> 舆情分析</li>
                             <li><i class="fas fa-check"></i> 传播路径可视化</li>
                         </ul>
+                        <a href="javascript:void(0);" class="btn btn-sm btn-outline-light mt-3">即将推出</a>
                     </div>
                 </div>
             </div>
@@ -1309,7 +257,7 @@
             <div class="col-md-4">
                 <div class="tool-box">
                     <div class="tool-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/smart-assistant.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/smart-assistant.png') }}');">
                     </div>
                     <div class="tool-content">
                         <div class="tool-icon">
@@ -1321,6 +269,7 @@
                             <li><i class="fas fa-check"></i> 新闻摘要</li>
                             <li><i class="fas fa-check"></i> 多语言翻译</li>
                         </ul>
+                        <a href="{{ url_for('frontend.ai_chat') }}" class="btn btn-sm btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
@@ -1329,7 +278,7 @@
             <div class="col-md-4">
                 <div class="tool-box">
                     <div class="tool-bg"
-                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/deep-analysis.png') }}')">
+                        style="background-image: url('{{ url_for('static', filename='frontend/images/features/deep-analysis.png') }}');">
                     </div>
                     <div class="tool-content">
                         <div class="tool-icon">
@@ -1341,6 +290,8 @@
                             <li><i class="fas fa-check"></i> 文本分析</li>
                             <li><i class="fas fa-check"></i> 音频检测</li>
                         </ul>
+                        <a href="{{ url_for('frontend.news_detect') }}"
+                            class="btn btn-sm btn-outline-light mt-3">立即体验</a>
                     </div>
                 </div>
             </div>
@@ -1354,26 +305,30 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">150万+</div>
-                    <div class="stat-label">累计检测</div>
+                    <div class="stat-number"><i class="fas fa-brain"></i></div>
+                    <div class="stat-label">深度学习技术</div>
+                    <div class="stat-description">采用先进深度学习算法，实现高精度识别</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">90%+</div>
-                    <div class="stat-label">准确率</div>
+                    <div class="stat-number"><i class="fas fa-fingerprint"></i></div>
+                    <div class="stat-label">多模态融合</div>
+                    <div class="stat-description">结合文本、图像、音频等多种数据源</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">100+</div>
-                    <div class="stat-label">媒体来源</div>
+                    <div class="stat-number"><i class="fas fa-shield-alt"></i></div>
+                    <div class="stat-label">知识图谱</div>
+                    <div class="stat-description">构建专业知识网络，提供深度解析能力</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-number">2秒</div>
-                    <div class="stat-label">平均响应时间</div>
+                    <div class="stat-number"><i class="fas fa-bolt"></i></div>
+                    <div class="stat-label">实时分析引擎</div>
+                    <div class="stat-description">快速响应，秒级处理海量信息</div>
                 </div>
             </div>
         </div>
@@ -1387,366 +342,8 @@
 {% block extra_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    // 生成动态新闻卡片
-    function createNewsCards() {
-        const newsFlow = document.querySelector('.news-flow');
-        if (!newsFlow) {
-            console.log('新闻流容器不存在，跳过新闻卡片创建');
-            return; // 如果元素不存在，提前退出函数
-        }
-
-        // 更丰富的新闻数据结构
-        const newsItems = [
-            {
-                title: '研究证实：新型疫苗对变异毒株有效性达95%，多国临床试验验证',
-                date: '2023-12-15',
-                source: '健康时报',
-                status: 'true',  // true, false, pending
-                statusText: '可信'
-            },
-            {
-                title: '突发！知名企业CEO宣布辞职，内部信息称因重大财务造假被调查',
-                date: '2023-12-13',
-                source: '经济观察家',
-                status: 'false',
-                statusText: '虚假'
-            },
-            {
-                title: '最新报道：某国或将推出全球首个量子计算商用芯片',
-                date: '2023-12-12',
-                source: '科技前沿',
-                status: 'pending',
-                statusText: '待验证'
-            },
-            {
-                title: '气候变化报告：全球变暖致极端天气事件增加30%',
-                date: '2023-12-10',
-                source: '环球科学',
-                status: 'true',
-                statusText: '可信'
-            }
-        ];
-
-        // 为每个新闻项创建卡片，设置递增的动画延迟
-        newsItems.forEach((news, index) => {
-            const card = document.createElement('div');
-            card.className = 'news-card';
-            card.style.animationDelay = `${index * 0.2}s`;
-
-            // 获取状态图标
-            let statusIcon = '';
-            if (news.status === 'true') {
-                statusIcon = '<i class="fas fa-check"></i>';
-            } else if (news.status === 'false') {
-                statusIcon = '<i class="fas fa-times"></i>';
-            } else {
-                statusIcon = '<i class="fas fa-question"></i>';
-            }
-
-            // 设置卡片内容，使用更丰富的HTML结构
-            card.innerHTML = `
-                <h5>${news.title}</h5>
-                <div class="news-meta">
-                    <span class="news-date"><i class="far fa-calendar-alt"></i> ${news.date}</span>
-                </div>
-                <div class="news-source">${news.source}</div>
-                <div class="news-verification">
-                    <div class="verification-icon verification-${news.status}">${statusIcon}</div>
-                    <div class="verification-status">${news.statusText}</div>
-                </div>
-            `;
-
-            // 添加点击效果
-            card.addEventListener('click', () => {
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    card.style.transform = '';
-                }, 100);
-            });
-
-            newsFlow.appendChild(card);
-        });
-    }
-
-    // 页面滚动动画
-    function initScrollAnimation() {
-        const elements = document.querySelectorAll('.feature-card, .tool-card, .stat-item');
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animation = 'fadeInUp 0.6s ease-out forwards';
-                }
-            });
-        });
-
-        elements.forEach(element => {
-            observer.observe(element);
-        });
-    }
-
-    // 网络动画
-    function initNetworkAnimation() {
-        const canvas = document.getElementById('networkCanvas');
-        if (!canvas) {
-            console.log('网络动画画布不存在，跳过网络动画初始化');
-            return; // 如果元素不存在，提前退出函数
-        }
-
-        const ctx = canvas.getContext('2d');
-
-        // 设置画布大小
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        // 节点类
-        class Node {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-            }
-        }
-
-        // 创建节点
-        const nodes = Array.from({ length: 50 }, () => new Node());
-
-        // 动画循环
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 更新和绘制节点
-            nodes.forEach(node => {
-                node.update();
-
-                // 绘制连线
-                nodes.forEach(other => {
-                    const dx = other.x - node.x;
-                    const dy = other.y - node.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < 150) {
-                        ctx.beginPath();
-                        ctx.moveTo(node.x, node.y);
-                        ctx.lineTo(other.x, other.y);
-                        ctx.strokeStyle = `rgba(255,255,255,${1 - distance / 150})`;
-                        ctx.stroke();
-                    }
-                });
-
-                // 绘制节点
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-    }
-
-    // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof createNewsCards === 'function') createNewsCards();
-        if (typeof initScrollAnimation === 'function') initScrollAnimation();
-        if (typeof initNetworkAnimation === 'function') initNetworkAnimation();
-
-        // 添加特点列表动画延迟
-        document.querySelectorAll('.feature-item').forEach((item, index) => {
-            item.style.animationDelay = `${index * 0.2}s`;
-        });
-
-        // 添加深度分析板块动画
-        const analysisBoxes = document.querySelectorAll('.analysis-box');
-        analysisBoxes.forEach((box, index) => {
-            box.style.animationDelay = `${index * 0.2}s`;
-            box.classList.add('fadeInUp');
-        });
-    });
-
-    // 3D地球动画
-    function initEarth() {
-        const scene = new THREE.Scene();
-
-        // 调整相机位置和视角 - 减小视角使地球看起来更小
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 4.2;  // 增加距离，让地球看起来更小
-        camera.position.x = 0;    // 保持居中
-        camera.position.y = 0;    // 保持居中
-
-        // 创建渲染器
-        const renderer = new THREE.WebGLRenderer({
-            canvas: document.getElementById('earth-canvas'),
-            antialias: true,
-            alpha: true
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setClearColor(0x000000, 0);
-
-        // 减小地球几何体的大小
-        const earthGeometry = new THREE.SphereGeometry(1.5, 64, 64);  // 减小地球半径
-
-        // 加载纹理
-        const textureLoader = new THREE.TextureLoader();
-        const earthTexture = textureLoader.load("{{ url_for('static', filename='frontend/images/features/earth-texture.jpg') }}");
-        const bumpTexture = textureLoader.load("{{ url_for('static', filename='frontend/images/features/earth-bump.jpg') }}");
-        const specularTexture = textureLoader.load("{{ url_for('static', filename='frontend/images/features/earth-specular.jpg') }}");
-        const cloudsTexture = textureLoader.load("{{ url_for('static', filename='frontend/images/features/earth-clouds.png') }}");
-
-        // 调整地球材质
-        const earthMaterial = new THREE.MeshPhongMaterial({
-            map: earthTexture,
-            bumpMap: bumpTexture,
-            bumpScale: 0.04,
-            specularMap: specularTexture,
-            specular: new THREE.Color('grey'),
-            shininess: 5,
-            opacity: 0.9,
-            transparent: true
-        });
-
-        // 创建地球网格
-        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-        scene.add(earth);
-
-        // 调整云层大小
-        const cloudsGeometry = new THREE.SphereGeometry(1.52, 64, 64);  // 相应调整云层大小
-        const cloudsMaterial = new THREE.MeshPhongMaterial({
-            map: cloudsTexture,
-            transparent: true,
-            opacity: 0.3
-        });
-        const clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
-        scene.add(clouds);
-
-        // 调整光照位置以适应新的大小
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        directionalLight.position.set(6, 3, 6);  // 稍微调整光源位置
-        scene.add(directionalLight);
-
-        // 调整点光源范围
-        const pointLight = new THREE.PointLight(0x3677ac, 25, 7, 2);
-        pointLight.position.set(2.5, 0, 2.5);  // 调整点光源位置
-        scene.add(pointLight);
-
-        // 修改动画循环
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const time = Date.now() * 0.001;
-
-            // 减慢地球自转速度
-            earth.rotation.y += 0.0008;
-            clouds.rotation.y += 0.001;
-
-            // 轻微的浮动效果
-            const floatY = Math.sin(time * 0.5) * 0.05;
-            earth.position.y = floatY;
-            clouds.position.y = floatY;
-
-            renderer.render(scene, camera);
-        }
-
-        // 修改窗口大小变化处理
-        function handleResize() {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize(width, height);
-
-            const canvas = renderer.domElement;
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-        }
-
-        window.addEventListener('resize', handleResize);
-        handleResize();
-        animate();
-    }
-
-    // 创建星空效果
-    function createStarField() {
-        const starField = document.querySelector('.star-field');
-
-        // 创建星星
-        for (let i = 0; i < 200; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-
-            // 随机位置
-            const x = Math.random() * 100;
-            const y = Math.random() * 100;
-
-            // 随机大小
-            const size = Math.random() * 2;
-
-            // 随机闪烁周期
-            const duration = 3 + Math.random() * 4;
-
-            star.style.cssText = `
-            left: ${x}%;
-            top: ${y}%;
-            width: ${size}px;
-            height: ${size}px;
-            --duration: ${duration}s;
-        `;
-
-            starField.appendChild(star);
-        }
-
-        // 创建流星
-        setInterval(() => {
-            const meteor = document.createElement('div');
-            meteor.className = 'meteor';
-
-            // 随机起始位置
-            const x = Math.random() * 100 + 50;
-            const y = Math.random() * 50;
-
-            // 随机大小和速度
-            const size = 1 + Math.random() * 2;
-            const duration = 1 + Math.random() * 2;
-
-            meteor.style.cssText = `
-            left: ${x}%;
-            top: ${y}%;
-            width: ${size * 30}px;
-            height: ${size}px;
-            --duration: ${duration}s;
-        `;
-
-            starField.appendChild(meteor);
-
-            // 动画结束后移除流星
-            setTimeout(() => {
-                meteor.remove();
-            }, duration * 1000);
-        }, 2000); // 每2秒创建一个新流星
-    }
-
-    // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof createStarField === 'function') createStarField();
-        if (typeof initEarth === 'function' && typeof THREE !== 'undefined') initEarth();
-    });
+    // 定义静态URL变量，供js文件使用
+    var STATIC_URL = "{{ url_for('static', filename='') }}";
 </script>
+<script src="{{ url_for('static', filename='frontend/js/index.js') }}"></script>
 {% endblock %}

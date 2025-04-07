@@ -1,0 +1,16 @@
+{
+  "928c05f034e64e7e16e72eacdd35b07f": {
+    "timestamp": "2025-04-07T23:46:41.346109",
+    "news_hash": "13aa137d09",
+    "result_file": "search_results\\fact_check_result_20250407_234641.json",
+    "id": "20250407_234641_38474d92"
+  },
+  "38474d92e72367a552131a74bb294030": {
+    "record_id": "20250407_234641_38474d92",
+    "timestamp": "2025-04-07T23:46:41.349228",
+    "verdict": "真实",
+    "confidence": 0.95,
+    "main_claim": "武汉被称为樱花之城。",
+    "news_text": ""
+  }
+}

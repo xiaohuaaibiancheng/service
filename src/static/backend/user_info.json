@@ -79,29 +79,78 @@
             ]
         },
         "detection_history": {
-            "total_detections": 3,
-            "accuracy": 95.7,
+            "total_detections": 41,
+            "accuracy": 57.0,
             "records": [
                 {
-                    "date": "2025-03-13",
-                    "result": "AI生成",
-                    "status": "成功",
-                    "status_color": "success",
-                    "accuracy": 100.0
-                },
-                {
-                    "date": "2025-03-13",
-                    "result": "人工撰写",
-                    "status": "成功",
-                    "status_color": "success",
-                    "accuracy": 91.0
-                },
-                {
-                    "date": "2025-03-13",
+                    "date": "2025-04-07",
                     "result": "真实",
                     "status": "成功",
                     "status_color": "success",
-                    "accuracy": 96.2
+                    "accuracy": 95.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "未知",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 0.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "未知",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 0.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "未知",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 0.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "未知",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 0.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
+                },
+                {
+                    "date": "2025-04-07",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
                 }
             ]
         }
