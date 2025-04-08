@@ -14,6 +14,31 @@
   .page-header {
     margin-bottom: 2rem;
     text-align: center;
+    position: relative;
+  }
+
+  .back-button {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: #4F46E5;
+    color: white;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .back-button:hover {
+    background: #4338CA;
+    transform: translateY(-50%) translateX(-2px);
+  }
+
+  .back-button i {
+    margin-right: 0.5rem;
   }
 
   .page-header h1 {
@@ -454,6 +479,14 @@
       background: rgba(239, 68, 68, 0.1);
       color: #FECACA;
     }
+
+    .back-button {
+      background: #6366F1;
+    }
+
+    .back-button:hover {
+      background: #4F46E5;
+    }
   }
 </style>
 {% endblock %}
@@ -461,6 +494,9 @@
 {% block content %}
 <div class="history-container">
   <div class="page-header">
+    <a href="{{ url_for('frontend.fact_check_page') }}" class="back-button">
+      <i class="fas fa-arrow-left"></i>返回
+    </a>
     <h1>事实核查历史记录</h1>
     <p>查看您之前进行过的所有事实核查结果，了解核查详情，或继续深入分析</p>
   </div>
