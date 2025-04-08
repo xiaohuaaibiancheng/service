@@ -1,8 +1,8 @@
 {
     "news_detect_view": {
-        "total": 20,
+        "total": 24,
         "users": {
-            "felix": 20
+            "felix": 24
         }
     },
     "news_detect_submit": {
@@ -24,15 +24,15 @@
         "users": {}
     },
     "fake_news_classify": {
-        "total": 35,
+        "total": 37,
         "users": {
-            "felix": 35
+            "felix": 37
         }
     },
     "news_segment_view": {
-        "total": 11,
+        "total": 17,
         "users": {
-            "felix": 11
+            "felix": 17
         }
     },
     "news_segment_analyze": {
@@ -40,9 +40,9 @@
         "users": {}
     },
     "ai_detect_view": {
-        "total": 9,
+        "total": 10,
         "users": {
-            "felix": 9
+            "felix": 10
         }
     },
     "detect_ai_text": {
@@ -58,9 +58,9 @@
         }
     },
     "agent_view": {
-        "total": 12,
+        "total": 18,
         "users": {
-            "felix": 12
+            "felix": 18
         }
     },
     "agent_check": {
@@ -68,9 +68,9 @@
         "users": {}
     },
     "news_aggregate_view": {
-        "total": 30,
+        "total": 36,
         "users": {
-            "felix": 30
+            "felix": 36
         }
     },
     "news_aggregate_search": {
@@ -86,9 +86,9 @@
         }
     },
     "ai_chat_view": {
-        "total": 19,
+        "total": 22,
         "users": {
-            "felix": 19
+            "felix": 22
         }
     },
     "create_chat": {
@@ -134,9 +134,9 @@
         "users": {}
     },
     "index_view": {
-        "total": 31,
+        "total": 39,
         "users": {
-            "felix": 31
+            "felix": 39
         }
     },
     "about_view": {

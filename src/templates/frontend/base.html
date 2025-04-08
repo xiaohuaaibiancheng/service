@@ -54,26 +54,24 @@
                     <!-- 检测功能组 -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            快速检测
+                            智能检测
                         </a>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.fake_news_classify') }}">
-                                    <i class="fas fa-filter me-2"></i>虚假信息核验
+                                    <i class="fas fa-filter me-2"></i>新闻真伪检测
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.news_detect') }}">
-                                    <i class="fas fa-newspaper me-2"></i>内容一致查验
+                                    <i class="fas fa-newspaper me-2"></i>新闻一致性分析
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.ai_detect') }}">
-                                    <i class="fas fa-robot me-2"></i>AI 生成辨察
+                                    <i class="fas fa-robot me-2"></i>AI内容识别
                                 </a>
                             </li>
-
-
                         </ul>
                     </li>
 
@@ -81,42 +79,33 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'frontend.ai_chat' %}active{% endif %}"
                             href="{{ url_for('frontend.ai_chat') }}">
-                            <i class="fas fa-comments me-2"></i>新闻ai对话助手
+                            <i class="fas fa-comments me-2"></i>智能新闻助手
                         </a>
                     </li>
 
-
-
-
-
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            深度分析
+                            专业分析
                         </a>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.fact_check_page') }}">
-                                    <i class="fas fa-check-circle me-2"></i>事实核查
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('frontend.fact_check_history_page') }}">
-                                    <i class="fas fa-history me-2"></i>核查历史
+                                    <i class="fas fa-check-circle me-2"></i>新闻事实核查
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.news_aggregate') }}">
-                                    <i class="fas fa-layer-group me-2"></i>聚合搜索与分析
+                                    <i class="fas fa-layer-group me-2"></i>新闻聚合分析
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="/frontend/agent">
-                                    <i class="fas fa-robot me-2"></i>多智搜证
+                                    <i class="fas fa-robot me-2"></i>智能新闻溯源
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('frontend.news_segment_detect') }}">
-                                    <i class="fas fa-sitemap me-2"></i>层级分析
+                                    <i class="fas fa-sitemap me-2"></i>新闻结构分析
                                 </a>
                             </li>
                         </ul>
