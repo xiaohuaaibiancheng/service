@@ -79,8 +79,8 @@
             ]
         },
         "detection_history": {
-            "total_detections": 47,
-            "accuracy": 85.5,
+            "total_detections": 55,
+            "accuracy": 95.0,
             "records": [
                 {
                     "date": "2025-04-08",
@@ -125,32 +125,32 @@
                     "accuracy": 95.0
                 },
                 {
-                    "date": "2025-04-07",
+                    "date": "2025-04-08",
                     "result": "真实",
                     "status": "成功",
                     "status_color": "success",
                     "accuracy": 95.0
                 },
                 {
-                    "date": "2025-04-07",
+                    "date": "2025-04-08",
                     "result": "真实",
                     "status": "成功",
                     "status_color": "success",
                     "accuracy": 95.0
                 },
                 {
-                    "date": "2025-04-07",
+                    "date": "2025-04-08",
                     "result": "真实",
                     "status": "成功",
                     "status_color": "success",
                     "accuracy": 95.0
                 },
                 {
-                    "date": "2025-04-07",
-                    "result": "未知",
-                    "status": "失败",
-                    "status_color": "danger",
-                    "accuracy": 0.0
+                    "date": "2025-04-08",
+                    "result": "真实",
+                    "status": "成功",
+                    "status_color": "success",
+                    "accuracy": 95.0
                 }
             ]
         }

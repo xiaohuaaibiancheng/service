@@ -1,0 +1,352 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}事实核查详情 - CredenceAI{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 详情页面样式 */
+  .detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #4F46E5;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header .back-link {
+    display: inline-flex;
+    align-items: center;
+    color: #6B7280;
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+
+  .page-header .back-link:hover {
+    color: #4F46E5;
+  }
+
+  .page-header .back-link i {
+    margin-right: 0.5rem;
+  }
+
+  .detail-card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+  }
+
+  .detail-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .detail-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #111827;
+  }
+
+  .detail-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    color: #6B7280;
+    font-size: 0.875rem;
+  }
+
+  .detail-card-meta span {
+    display: flex;
+    align-items: center;
+  }
+
+  .detail-card-meta i {
+    margin-right: 0.5rem;
+  }
+
+  .detail-card-body {
+    padding: 1.5rem;
+  }
+
+  .detail-section {
+    margin-bottom: 2rem;
+  }
+
+  .detail-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #111827;
+  }
+
+  .detail-content {
+    line-height: 1.6;
+    color: #374151;
+  }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .verdict-true {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+  }
+
+  .verdict-false {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+  }
+
+  .verdict-uncertain {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+  }
+
+  .evidence-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .evidence-item {
+    padding: 1rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .evidence-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .evidence-source {
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin-bottom: 0.5rem;
+  }
+
+  .evidence-content {
+    line-height: 1.6;
+    color: #374151;
+  }
+
+  .confidence-meter {
+    height: 0.5rem;
+    background: #E5E7EB;
+    border-radius: 9999px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: #4F46E5;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+  }
+
+  /* 深色模式样式 */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #111827;
+      color: #F3F4F6;
+    }
+
+    .page-header h1 {
+      color: #6366F1;
+    }
+
+    .page-header .back-link {
+      color: #D1D5DB;
+    }
+
+    .page-header .back-link:hover {
+      color: #6366F1;
+    }
+
+    .detail-card {
+      background-color: #1F2937;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .detail-card-header {
+      border-color: #374151;
+    }
+
+    .detail-card-title {
+      color: #F3F4F6;
+    }
+
+    .detail-card-meta {
+      color: #9CA3AF;
+    }
+
+    .detail-section-title {
+      color: #F3F4F6;
+    }
+
+    .detail-content {
+      color: #D1D5DB;
+    }
+
+    .evidence-item {
+      border-color: #374151;
+      background-color: #1F2937;
+    }
+
+    .evidence-source {
+      color: #9CA3AF;
+    }
+
+    .evidence-content {
+      color: #D1D5DB;
+    }
+
+    .confidence-meter {
+      background-color: #374151;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+  <div class="page-header">
+    <a href="{{ url_for('frontend.fact_check_history_page') }}" class="back-link">
+      <i class="fas fa-arrow-left"></i>返回历史记录
+    </a>
+    <h1>事实核查详情</h1>
+  </div>
+
+  {% if result %}
+  <div class="detail-card">
+    <div class="detail-card-header">
+      <h2 class="detail-card-title">{{ result.main_claim }}</h2>
+      <div class="detail-card-meta">
+        <span>
+          <i class="far fa-calendar-alt"></i>
+          {{ result.created_at }}
+        </span>
+        <span>
+          <i class="fas fa-user"></i>
+          {{ result.username or '匿名用户' }}
+        </span>
+        <span>
+          <i class="fas fa-clock"></i>
+          {{ result.processing_time or '未知' }}
+        </span>
+      </div>
+    </div>
+    <div class="detail-card-body">
+      <!-- 核查结论 -->
+      <div class="detail-section">
+        <h3 class="detail-section-title">核查结论</h3>
+        <div class="detail-content">
+          <span class="verdict-badge verdict-{{ result.verdict|lower }}">
+            <i
+              class="fas fa-{% if result.verdict == '真实' %}check-circle{% elif result.verdict == '虚假' %}times-circle{% else %}question-circle{% endif %}"></i>
+            {{ result.verdict }}
+          </span>
+          {% if result.confidence %}
+          <div class="mt-3">
+            <div>置信度: {{ "%.2f"|format(result.confidence * 100) }}%</div>
+            <div class="confidence-meter">
+              <div class="confidence-fill" style="width: {{ result.confidence * 100 }}%"></div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 原始文本 -->
+      <div class="detail-section">
+        <h3 class="detail-section-title">原始文本</h3>
+        <div class="detail-content">
+          {{ result.news_text or result.news }}
+        </div>
+      </div>
+
+      <!-- 分析过程 -->
+      {% if result.reasoning %}
+      <div class="detail-section">
+        <h3 class="detail-section-title">分析过程</h3>
+        <div class="detail-content">
+          {{ result.reasoning }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 证据列表 -->
+      {% if result.evidence %}
+      <div class="detail-section">
+        <h3 class="detail-section-title">证据列表</h3>
+        <ul class="evidence-list">
+          {% for evidence in result.evidence %}
+          <li class="evidence-item">
+            <div class="evidence-source">
+              <i class="fas fa-link"></i>
+              {{ evidence.source }}
+            </div>
+            <div class="evidence-content">
+              {{ evidence.content }}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- 详细解释 -->
+      {% if result.explanation %}
+      <div class="detail-section">
+        <h3 class="detail-section-title">详细解释</h3>
+        <div class="detail-content">
+          {{ result.explanation }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 矛盾点 -->
+      {% if result.contradictions %}
+      <div class="detail-section">
+        <h3 class="detail-section-title">矛盾点</h3>
+        <div class="detail-content">
+          <ul>
+            {% for contradiction in result.contradictions %}
+            <li>{{ contradiction }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-danger">
+    <i class="fas fa-exclamation-circle"></i>
+    未找到指定的事实核查记录
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

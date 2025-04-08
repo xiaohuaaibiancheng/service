@@ -362,66 +362,244 @@
     box-shadow: none;
   }
 
-  /* 保存按钮下拉菜单 */
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-
-  .dropdown-content {
+  /* 弹窗样式 */
+  .modal {
     display: none;
-    position: absolute;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .modal-content {
     background-color: white;
-    min-width: 200px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    padding: 0.5rem 0;
-    z-index: 1;
-    top: 100%;
-    right: 0;
-    margin-top: 0.5rem;
+    margin: auto;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 420px;
+    position: relative;
+    transform: translateY(-30px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  @media (prefers-color-scheme: dark) {
-    .dropdown-content {
-      background-color: var(--gray-800);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-    }
+  .modal.active .modal-content {
+    transform: translateY(0) scale(1);
   }
 
-  .dropdown.active .dropdown-content {
-    display: block;
-    animation: fadeIn 0.3s ease;
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
   }
 
-  .dropdown-item {
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
-    color: var(--gray-800);
+    justify-content: center;
+  }
+
+  .close-modal:hover {
+    color: var(--gray-700);
+    background-color: var(--gray-100);
+    transform: rotate(90deg);
+  }
+
+  .modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .modal-option {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background-color: var(--gray-50);
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
   }
 
-  .dropdown-item:hover {
-    background-color: rgba(79, 70, 229, 0.05);
-    color: var(--primary);
+  .modal-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
   }
 
-  .dropdown-item i {
-    margin-right: 0.75rem;
+  .modal-option:hover {
+    transform: translateX(8px);
+    border-color: var(--primary-light);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+  }
+
+  .modal-option:hover::before {
+    opacity: 0.05;
+  }
+
+  .modal-option i {
+    margin-right: 1rem;
     color: var(--primary);
-    font-size: 1rem;
+    font-size: 1.25rem;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+  }
+
+  .modal-option:hover i {
+    transform: scale(1.1);
+  }
+
+  .modal-option span {
+    font-weight: 600;
+    color: var(--gray-800);
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+  }
+
+  .modal-option:hover span {
+    color: var(--primary-dark);
   }
 
   @media (prefers-color-scheme: dark) {
-    .dropdown-item {
+    .modal-content {
+      background-color: var(--gray-800);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-header {
+      border-bottom-color: var(--gray-700);
+    }
+
+    .modal-title {
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-modal {
+      color: var(--gray-400);
+    }
+
+    .close-modal:hover {
+      color: var(--gray-200);
+      background-color: var(--gray-700);
+    }
+
+    .modal-option {
+      background-color: var(--gray-700);
+    }
+
+    .modal-option:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .modal-option span {
       color: var(--gray-200);
     }
 
-    .dropdown-item:hover {
-      background-color: rgba(99, 102, 241, 0.1);
+    .modal-option:hover span {
+      color: var(--primary-light);
     }
+  }
+
+  /* 添加弹窗动画 */
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes optionSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .modal.active .modal-content {
+    animation: modalFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-option {
+    animation: optionSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+  }
+
+  .modal-option:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  .modal-option:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .modal-option:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  .modal-option:nth-child(4) {
+    animation-delay: 0.4s;
   }
 
   /* 结果区域 */
@@ -1397,20 +1575,6 @@
           <button id="save-btn" class="btn btn-outline" disabled>
             <i class="fas fa-save"></i> 保存结果
           </button>
-          <div class="dropdown-content">
-            <div class="dropdown-item" id="save-all">
-              <i class="fas fa-file-download"></i> 保存完整结果
-            </div>
-            <div class="dropdown-item" id="save-wiki">
-              <i class="fab fa-wikipedia-w"></i> 保存维基百科数据
-            </div>
-            <div class="dropdown-item" id="save-search">
-              <i class="fas fa-search"></i> 保存搜索引擎数据
-            </div>
-            <div class="dropdown-item" id="save-perplexica">
-              <i class="fas fa-robot"></i> 保存AI搜索数据
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1558,6 +1722,34 @@
     </div>
   </div>
 </div>
+
+<!-- 在button-container div后添加弹窗HTML -->
+<div class="modal" id="save-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">保存结果</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-options">
+      <div class="modal-option" data-type="all">
+        <i class="fas fa-file-download"></i>
+        <span>保存完整结果</span>
+      </div>
+      <div class="modal-option" data-type="wiki">
+        <i class="fab fa-wikipedia-w"></i>
+        <span>保存维基百科数据</span>
+      </div>
+      <div class="modal-option" data-type="search">
+        <i class="fas fa-search"></i>
+        <span>保存搜索引擎数据</span>
+      </div>
+      <div class="modal-option" data-type="perplexica">
+        <i class="fas fa-robot"></i>
+        <span>保存AI搜索数据</span>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -1589,6 +1781,8 @@
       }
     });
 
+    console.log('DOM加载完成，初始化应用');
+
     // 缓存DOM元素
     const elements = {
       timeoutSelect: document.getElementById('timeout-select'),
@@ -1596,11 +1790,9 @@
       tabs: document.querySelectorAll('.tab'),
       checkBtn: document.getElementById('check-btn'),
       saveBtn: document.getElementById('save-btn'),
-      saveDropdown: document.querySelector('.dropdown'),
-      saveAll: document.getElementById('save-all'),
-      saveWiki: document.getElementById('save-wiki'),
-      saveSearch: document.getElementById('save-search'),
-      savePerplexica: document.getElementById('save-perplexica'),
+      saveModal: document.getElementById('save-modal'),
+      closeModal: document.querySelector('.close-modal'),
+      modalOptions: document.querySelectorAll('.modal-option'),
       newsText: document.getElementById('news-text'),
       useImages: document.getElementById('use-images'),
       useCache: document.getElementById('use-cache'),
@@ -1615,6 +1807,14 @@
       claimsContent: document.getElementById('claims-content'),
       evidenceList: document.getElementById('evidence-list')
     };
+
+    // 检查关键元素是否存在
+    console.log('保存按钮元素:', elements.saveBtn);
+    console.log('保存全部按钮元素:', elements.saveAll);
+    console.log('保存维基按钮元素:', elements.saveWiki);
+    console.log('保存搜索按钮元素:', elements.saveSearch);
+    console.log('保存AI搜索按钮元素:', elements.savePerplexica);
+    console.log('下拉菜单元素:', elements.saveDropdown);
 
     // 存储检索结果
     let currentResults = null;
@@ -1635,22 +1835,44 @@
       // 核查按钮事件
       elements.checkBtn.addEventListener('click', handleFactCheck);
 
-      // 保存按钮下拉菜单
-      elements.saveBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        elements.saveDropdown.classList.toggle('active');
+      // 保存按钮点击事件
+      if (elements.saveBtn) {
+        console.log('绑定保存按钮点击事件');
+        elements.saveBtn.addEventListener('click', function (e) {
+          console.log('保存按钮被点击');
+          e.preventDefault();
+          e.stopPropagation();
+          elements.saveModal.classList.add('active');
+        });
+      } else {
+        console.error('保存按钮元素未找到');
+      }
+
+      // 关闭弹窗按钮点击事件
+      if (elements.closeModal) {
+        elements.closeModal.addEventListener('click', function () {
+          console.log('关闭弹窗');
+          elements.saveModal.classList.remove('active');
+        });
+      }
+
+      // 弹窗选项点击事件
+      elements.modalOptions.forEach(option => {
+        option.addEventListener('click', function () {
+          const type = this.getAttribute('data-type');
+          console.log('选择保存类型:', type);
+          elements.saveModal.classList.remove('active');
+          saveResults(type);
+        });
       });
 
-      // 点击其他区域关闭下拉菜单
-      document.addEventListener('click', function () {
-        elements.saveDropdown.classList.remove('active');
+      // 点击弹窗外部关闭弹窗
+      elements.saveModal.addEventListener('click', function (e) {
+        if (e.target === elements.saveModal) {
+          console.log('点击弹窗外部，关闭弹窗');
+          elements.saveModal.classList.remove('active');
+        }
       });
-
-      // 保存数据按钮事件
-      elements.saveAll.addEventListener('click', () => saveResults('all'));
-      elements.saveWiki.addEventListener('click', () => saveResults('wiki'));
-      elements.saveSearch.addEventListener('click', () => saveResults('search'));
-      elements.savePerplexica.addEventListener('click', () => saveResults('perplexica'));
     }
 
     // 更新超时时间显示
@@ -1729,12 +1951,14 @@
 
         // 存储当前结果
         currentResults = await result.json();
+        console.log('获取到核查结果:', currentResults);
 
         // 显示结果
         displayResults(currentResults);
 
         // 启用保存按钮
         elements.saveBtn.disabled = false;
+        console.log('保存按钮已启用');
       } catch (error) {
         console.error('核查过程出错:', error);
         alert('核查过程发生错误，请重试');
@@ -1836,6 +2060,10 @@
 
       // 确保滚动到顶部
       document.querySelector('.results-content').scrollTop = 0;
+
+      // 启用保存按钮
+      elements.saveBtn.disabled = false;
+      console.log('保存按钮已在显示结果时启用');
     }
 
     // 渲染Markdown内容的通用函数
@@ -2010,63 +2238,70 @@
 
     // 保存结果函数
     function saveResults(type) {
-      if (!currentResults) {
-        alert('没有可保存的结果');
-        return;
+      try {
+        console.log('开始保存结果类型:', type);
+
+        if (!currentResults) {
+          console.error('没有可保存的结果');
+          alert('没有可保存的结果');
+          return;
+        }
+
+        console.log('当前结果数据:', currentResults);
+
+        // 使用API而不是本地处理
+        fetch('/frontend/save_fact_check_result', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            result_data: currentResults,
+            type: type
+          })
+        })
+          .then(response => {
+            console.log('保存请求响应状态:', response.status);
+            return response.json();
+          })
+          .then(result => {
+            console.log('保存请求响应结果:', result);
+
+            if (result.success) {
+              // 创建JSON文件并下载
+              const jsonString = JSON.stringify(result.data, null, 2);
+              const blob = new Blob([jsonString], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+
+              console.log('创建下载链接:', url);
+
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = result.filename;
+              document.body.appendChild(a);
+
+              console.log('触发下载');
+              a.click();
+
+              // 清理
+              setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                console.log('清理下载资源完成');
+              }, 100);
+            } else {
+              console.error('保存结果失败:', result.error);
+              alert('保存结果时出错: ' + (result.error || '未知错误'));
+            }
+          })
+          .catch(error => {
+            console.error('保存结果请求出错:', error);
+            alert('保存结果时出错，请重试');
+          });
+      } catch (error) {
+        console.error('保存结果函数执行出错:', error);
+        alert('保存结果时出错: ' + error.message);
       }
-
-      let filename, data;
-
-      switch (type) {
-        case 'all':
-          filename = '事实核查完整结果.json';
-          data = currentResults;
-          break;
-        case 'wiki':
-          filename = '维基百科证据.json';
-          data = {
-            news: currentResults.news,
-            evidence: currentResults.evidence.filter(e => e.source.includes('wiki') || e.source.includes('Wikipedia'))
-          };
-          break;
-        case 'search':
-          filename = '搜索引擎证据.json';
-          data = {
-            news: currentResults.news,
-            evidence: currentResults.evidence.filter(e => e.source.includes('searx') || e.source.includes('google') || e.source.includes('bing'))
-          };
-          break;
-        case 'perplexica':
-          filename = 'AI搜索证据.json';
-          data = {
-            news: currentResults.news,
-            evidence: currentResults.evidence.filter(e => e.source.includes('perplexica') || e.source.includes('Perplexica'))
-          };
-          break;
-        default:
-          filename = '事实核查结果.json';
-          data = currentResults;
-      }
-
-      // 创建JSON文件并下载
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-
-      // 清理
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
-
-      // 关闭下拉菜单
-      elements.saveDropdown.classList.remove('active');
     }
   });
 </script>

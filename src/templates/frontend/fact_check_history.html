@@ -455,6 +455,12 @@
     const itemsPerPage = 12;
     let currentRecordIdToDelete = null;
 
+    // 定义URL变量
+    const viewRecordUrl = "{{ url_for('frontend.view_fact_check_record', record_id='') }}";
+    const deleteHistoryUrl = "{{ url_for('frontend.delete_fact_check_history') }}";
+    const getHistoryUrl = "{{ url_for('frontend.get_fact_check_history') }}";
+    const factCheckPageUrl = "{{ url_for('frontend.fact_check_page') }}";
+
     // 初始加载
     loadHistoryRecords();
 
@@ -476,7 +482,7 @@
 
       // 发送请求获取历史数据
       $.ajax({
-        url: "{{ url_for('frontend.get_fact_check_history') }}",
+        url: getHistoryUrl,
         type: 'GET',
         data: {
           verdict: verdictFilter,
@@ -554,7 +560,7 @@
             </div>
             <div class="history-card-footer">
               <div class="history-card-actions">
-                <a href="/frontend/view_fact_check/${record.id}" class="view-btn">
+                <a href="${viewRecordUrl}${record.id}" class="view-btn">
                   <i class="fas fa-eye"></i> 查看详情
                 </a>
               </div>
@@ -649,7 +655,7 @@
 
       // 发送删除请求
       $.ajax({
-        url: "{{ url_for('frontend.delete_fact_check_history') }}",
+        url: deleteHistoryUrl,
         type: 'POST',
         data: {
           record_id: currentRecordIdToDelete

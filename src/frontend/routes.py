@@ -2384,6 +2384,77 @@ def fact_check_page():
         except Exception as e:
             return handle_api_error("事实核查错误", e)
 
+@frontend_bp.route('/save_fact_check_result', methods=['POST'])
+def save_fact_check_result():
+    """
+    保存事实核查结果API
+    前端可以通过这个API获取特定格式的结果并下载
+    """
+    try:
+        # 获取请求数据
+        data = request.json
+        if not data or 'result_data' not in data or 'type' not in data:
+            return jsonify({"error": "缺少必要参数"}), 400
+
+        result_data = data.get('result_data', {})
+        save_type = data.get('type', 'all')  # 保存类型：all, evidence, analysis等
+
+        # 根据保存类型生成文件名和过滤数据
+        filename = f"事实核查_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        filtered_data = {}
+
+        if save_type == 'all':
+            filename += "_完整结果.json"
+            filtered_data = result_data
+        elif save_type == 'evidence':
+            filename += "_证据.json"
+            filtered_data = {
+                'news_text': result_data.get('news_text', result_data.get('news', '')),
+                'main_claim': result_data.get('main_claim', ''),
+                'evidence': result_data.get('evidence', [])
+            }
+        elif save_type == 'analysis':
+            filename += "_分析.json"
+            filtered_data = {
+                'verdict': result_data.get('verdict', '未知'),
+                'confidence': result_data.get('confidence', 0.5),
+                'main_claim': result_data.get('main_claim', ''),
+                'explanation': result_data.get('explanation', ''),
+                'processing_time': result_data.get('processing_time', '0秒')
+            }
+        elif save_type == 'wiki':
+            filename += "_维基证据.json"
+            filtered_data = {
+                'news_text': result_data.get('news_text', result_data.get('news', '')),
+                'evidence': [e for e in result_data.get('evidence', []) if 'wiki' in e.get('source', '').lower()]
+            }
+        elif save_type == 'search':
+            filename += "_搜索引擎证据.json"
+            filtered_data = {
+                'news_text': result_data.get('news_text', result_data.get('news', '')),
+                'evidence': [e for e in result_data.get('evidence', [])
+                             if any(s in e.get('source', '').lower() for s in ['searx', 'google', 'bing'])]
+            }
+        elif save_type == 'perplexica':
+            filename += "_AI搜索证据.json"
+            filtered_data = {
+                'news_text': result_data.get('news_text', result_data.get('news', '')),
+                'evidence': [e for e in result_data.get('evidence', [])
+                             if 'perplexica' in e.get('source', '').lower()]
+            }
+
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'data': filtered_data
+        })
+    except Exception as e:
+        logging.error(f"保存事实核查结果时出错: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @frontend_bp.route('/multi_source_check', methods=['POST'])
 def multi_source_check():
     # 从session中获取用户名
@@ -3916,7 +3987,9 @@ def get_complete_fact_check_result(record_id):
         完整的事实核查结果字典
     """
     try:
+        logging.info(f"开始获取事实核查记录: {record_id}")
         search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
+        logging.info(f"搜索目录: {search_results_dir}")
 
         # 定义5个核心文件路径
         results_files = {
@@ -3929,6 +4002,7 @@ def get_complete_fact_check_result(record_id):
 
         # 收集所有数据
         result = {}
+        found_in_files = []
 
         # 读取每个文件
         for file_type, file_path in results_files.items():
@@ -3936,10 +4010,12 @@ def get_complete_fact_check_result(record_id):
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         data_list = json.load(f)
+                    logging.info(f"成功读取文件 {file_type}，包含 {len(data_list)} 条记录")
 
                     # 查找匹配的记录
                     for item in data_list:
                         if item.get('id') == record_id:
+                            found_in_files.append(file_type)
                             # 根据文件类型合并数据
                             if file_type == 'verdict':
                                 result.update({
@@ -3948,7 +4024,9 @@ def get_complete_fact_check_result(record_id):
                                     'main_claim': item.get('main_claim'),
                                     'news_text': item.get('news_text'),
                                     'news': item.get('news_text'),
-                                    'processing_time': item.get('processing_time')
+                                    'processing_time': item.get('processing_time'),
+                                    'username': item.get('username'),
+                                    'timestamp': item.get('timestamp')
                                 })
                             elif file_type == 'evidence':
                                 result['evidence'] = item.get('evidence', [])
@@ -3961,16 +4039,26 @@ def get_complete_fact_check_result(record_id):
                                 result['summary'] = item.get('summary', '')
                             elif file_type == 'ai_search':
                                 result['perplexica_search_response'] = item.get('perplexica_search_response', '')
-
                             break
-                except json.JSONDecodeError:
-                    logging.error(f"无法解析文件 {file_path}")
+                except json.JSONDecodeError as e:
+                    logging.error(f"解析文件 {file_path} 时出错: {str(e)}")
                 except Exception as e:
-                    logging.error(f"读取文件 {file_path} 时出错: {str(e)}")
+                    logging.error(f"处理文件 {file_path} 时出错: {str(e)}")
+            else:
+                logging.warning(f"文件不存在: {file_path}")
 
-        return result if result else None
+        if not found_in_files:
+            logging.error(f"未在任何文件中找到记录 {record_id}")
+            return None
+
+        logging.info(f"在以下文件中找到记录: {', '.join(found_in_files)}")
+        logging.info(f"获取到的结果: {json.dumps(result, ensure_ascii=False, indent=2)}")
+        return result
+
     except Exception as e:
-        logging.error(f"获取完整事实核查结果失败: {str(e)}")
+        logging.error(f"获取事实核查记录时出错: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def enhance_with_openai(result):
