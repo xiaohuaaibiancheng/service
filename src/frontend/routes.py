@@ -3596,46 +3596,18 @@ def fact_check_history_page():
 @frontend_bp.route('/get_fact_check_history', methods=['GET'])
 def get_fact_check_history():
     """获取事实核查历史记录列表"""
-    username = session.get('username')
-
-    if not username:
-        return jsonify({
-            "status": "error",
-            "message": "用户未登录"
-        }), 401
-
     try:
-        # 获取过滤和排序参数
-        verdict_filter = request.args.get('verdict', 'all')
+        # 获取请求参数
+        verdict = request.args.get('verdict', 'all')
         date_range = request.args.get('date_range', 'all')
         sort_order = request.args.get('sort', 'newest')
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 12))
 
-        # 验证参数
-        if page < 1:
-            page = 1
-        if limit < 1 or limit > 50:
-            limit = 12
-
-        # 获取search_results目录（在项目根目录下）
+        # 获取search_results目录
         search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
-        if not os.path.exists(search_results_dir):
-            return jsonify({
-                "status": "success",
-                "data": {
-                    "records": [],
-                    "pagination": {
-                        "current_page": page,
-                        "total_pages": 0,
-                        "total_records": 0,
-                        "limit": limit
-                    }
-                }
-            })
-
-        # 读取verdict文件获取核查结果
         verdict_file = os.path.join(search_results_dir, 'fact_check_verdicts.json')
+
         if not os.path.exists(verdict_file):
             return jsonify({
                 "status": "success",
@@ -3677,57 +3649,48 @@ def get_fact_check_history():
 
         # 根据过滤条件筛选数据
         filtered_data = []
+        seen_records = {}  # 用于去重的字典
+
         for record in verdict_data:
-            # 确保记录有ID
-            if 'id' not in record:
-                continue
-
-            # 按用户名过滤
-            if record.get('username') != username and record.get('username') != 'anonymous':
-                continue
-
-            # 按判决结果过滤
-            if verdict_filter != 'all':
-                record_verdict = record.get('verdict', '未知')
-                if verdict_filter == 'true' and record_verdict != '真实':
+            # 检查是否满足筛选条件
+            if verdict != 'all':
+                record_verdict = record.get('verdict', '')
+                if verdict == 'true' and record_verdict not in ['真实', '可信']:
                     continue
-                if verdict_filter == 'false' and record_verdict != '虚假':
+                elif verdict == 'false' and record_verdict not in ['虚假', '不可信']:
                     continue
-                if verdict_filter == 'uncertain' and record_verdict not in ['不确定', '存疑', '部分真实']:
+                elif verdict == 'uncertain' and record_verdict not in ['不确定', '部分可信', '存疑']:
                     continue
 
-            # 按日期范围过滤
+            # 检查日期范围
             if date_range != 'all':
                 try:
-                    record_date = datetime.fromisoformat(record.get('timestamp', ''))
+                    record_time = datetime.fromisoformat(record.get('timestamp', ''))
                     now = datetime.now()
-                    if date_range == 'today' and record_date.date() != now.date():
+                    if date_range == 'today' and record_time.date() != now.date():
                         continue
-                    elif date_range == 'week' and (now - record_date).days > 7:
+                    elif date_range == 'week' and (now - record_time).days > 7:
                         continue
-                    elif date_range == 'month' and (now - record_date).days > 30:
+                    elif date_range == 'month' and (now - record_time).days > 30:
                         continue
                 except ValueError:
-                    # 日期解析错误，跳过此记录
                     continue
 
-            # 添加人性化日期显示
-            try:
-                record_date = datetime.fromisoformat(record.get('timestamp', ''))
-                record['created_at'] = record_date.strftime('%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                record['created_at'] = '未知时间'
+            # 使用新闻内容和主要声明作为去重键
+            key = f"{record.get('news_text', '')}_{record.get('main_claim', '')}_{record.get('username', 'anonymous')}"
 
-            # 添加证据数量
-            record_id = record.get('id')
-            record['evidence_count'] = evidence_count_map.get(record_id, 0)
+            # 如果已存在相同内容的记录，保留时间戳最新的
+            if key in seen_records:
+                existing_record = seen_records[key]
+                existing_time = datetime.fromisoformat(existing_record.get('timestamp', ''))
+                current_time = datetime.fromisoformat(record.get('timestamp', ''))
+                if current_time > existing_time:
+                    seen_records[key] = record
+            else:
+                seen_records[key] = record
 
-            # 确保记录有news字段
-            if 'news' not in record and 'news_text' in record:
-                record['news'] = record['news_text']
-
-            # 添加到过滤后的数据中
-            filtered_data.append(record)
+        # 将去重后的记录添加到过滤数据中
+        filtered_data = list(seen_records.values())
 
         # 根据排序参数对结果进行排序
         if sort_order == 'newest':
@@ -3751,6 +3714,10 @@ def get_fact_check_history():
         start_index = (page - 1) * limit
         end_index = min(start_index + limit, total_records)
         paginated_data = filtered_data[start_index:end_index]
+
+        # 为每条记录添加证据数量
+        for record in paginated_data:
+            record['evidence_count'] = evidence_count_map.get(record['id'], 0)
 
         # 构建响应
         return jsonify({
@@ -3799,6 +3766,27 @@ def save_structured_fact_check_result(result, username=None):
         cache_key = news_text + main_claim
         query_hash = hashlib.md5(cache_key.encode()).hexdigest()
 
+        # 检查是否已存在相同内容的记录
+        if os.path.exists(verdict_file):
+            try:
+                with open(verdict_file, 'r', encoding='utf-8') as f:
+                    existing_records = json.load(f)
+                    if not isinstance(existing_records, list):
+                        existing_records = []
+
+                    # 检查是否存在相同内容的记录
+                    for record in existing_records:
+                        if (record.get('main_claim') == main_claim and
+                            record.get('news_text') == news_text and
+                            record.get('username') == (username or 'anonymous')):
+                            # 更新现有记录的时间戳
+                            record['timestamp'] = timestamp
+                            with open(verdict_file, 'w', encoding='utf-8') as f:
+                                json.dump(existing_records, f, ensure_ascii=False, indent=2)
+                            return record['id']
+            except json.JSONDecodeError:
+                logging.warning(f"无法解析verdict文件，将创建新记录")
+
         # 生成唯一记录ID
         record_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{query_hash[:8]}"
 
@@ -3813,6 +3801,24 @@ def save_structured_fact_check_result(result, username=None):
             'news_text': news_text,
             'processing_time': result.get('processing_time', '0秒')
         }
+
+        # 读取现有记录
+        existing_records = []
+        if os.path.exists(verdict_file):
+            try:
+                with open(verdict_file, 'r', encoding='utf-8') as f:
+                    existing_records = json.load(f)
+                    if not isinstance(existing_records, list):
+                        existing_records = []
+            except json.JSONDecodeError:
+                logging.warning(f"无法解析verdict文件，将创建新记录")
+
+        # 添加新记录
+        existing_records.append(verdict_data)
+
+        # 保存更新后的记录
+        with open(verdict_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_records, f, ensure_ascii=False, indent=2)
 
         # 2. 保存证据列表
         evidence_data = {

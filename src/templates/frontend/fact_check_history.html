@@ -89,6 +89,7 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    color: #111827;
   }
 
   .history-card-footer {
@@ -297,6 +298,29 @@
     font-size: 1.25rem;
   }
 
+  .form-label {
+    color: #111827;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-select {
+    color: #111827;
+    border: 1px solid #E5E7EB;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: white;
+  }
+
+  .form-select:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  }
+
+  .form-select option {
+    color: #111827;
+  }
+
   /* 深色模式样式 */
   @media (prefers-color-scheme: dark) {
     body {
@@ -309,10 +333,14 @@
     }
 
     .page-header p {
-      color: #D1D5DB;
+      color: #E5E7EB;
     }
 
-    .history-filters,
+    .history-filters {
+      background-color: #1F2937;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
     .history-card,
     .empty-state {
       background-color: #1F2937;
@@ -325,16 +353,20 @@
     }
 
     .history-card-title {
-      color: #F3F4F6;
+      color: #F9FAFB;
     }
 
     .history-card-date,
     .history-evidence-count {
-      color: #9CA3AF;
+      color: #D1D5DB;
+    }
+
+    .history-claim {
+      color: #E5E7EB;
     }
 
     .empty-state h3 {
-      color: #F3F4F6;
+      color: #F9FAFB;
     }
 
     .empty-state p {
@@ -342,11 +374,85 @@
     }
 
     .pagination a {
-      color: #F3F4F6;
+      color: #E5E7EB;
     }
 
     .pagination a:hover {
       background-color: #374151;
+      color: #F9FAFB;
+    }
+
+    .pagination .active a {
+      background-color: #6366F1;
+      color: #F9FAFB;
+    }
+
+    .form-label {
+      color: #E5E7EB;
+    }
+
+    .form-select {
+      background-color: #1F2937;
+      border-color: #374151;
+      color: #E5E7EB;
+    }
+
+    .form-select:focus {
+      background-color: #1F2937;
+      border-color: #6366F1;
+      color: #E5E7EB;
+    }
+
+    .form-select option {
+      background-color: #1F2937;
+      color: #E5E7EB;
+    }
+
+    .loading-container p {
+      color: #E5E7EB;
+    }
+
+    .error-message {
+      background-color: rgba(239, 68, 68, 0.1);
+      border-left: 4px solid #EF4444;
+      color: #FCA5A5;
+    }
+
+    .verdict-badge {
+      color: #F9FAFB;
+    }
+
+    .verdict-true {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6EE7B7;
+    }
+
+    .verdict-false {
+      background: rgba(239, 68, 68, 0.2);
+      color: #FCA5A5;
+    }
+
+    .verdict-uncertain {
+      background: rgba(245, 158, 11, 0.2);
+      color: #FCD34D;
+    }
+
+    .view-btn {
+      color: #818CF8;
+    }
+
+    .view-btn:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: #A5B4FC;
+    }
+
+    .delete-btn {
+      color: #FCA5A5;
+    }
+
+    .delete-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #FECACA;
     }
   }
 </style>
@@ -519,7 +625,14 @@
       const $historyList = $('#history-list');
       $historyList.empty();
 
+      if (!records || !Array.isArray(records)) {
+        console.error('无效的记录数据');
+        return;
+      }
+
       records.forEach(function (record) {
+        if (!record) return;
+
         // 判断结论类型，设置相应的标签样式
         let verdictClass = '';
         let verdictIcon = '';
@@ -538,33 +651,40 @@
             verdictIcon = 'fa-question-circle';
         }
 
+        // 确保必要的字段存在
+        const recordId = record.id || '';
+        const mainClaim = record.main_claim || '';
+        const newsText = record.news || record.news_text || '';
+        const createdDate = record.created_at || record.timestamp || '';
+        const evidenceCount = record.evidence_count || 0;
+
         // 构建历史记录卡片
         const cardHtml = `
-          <div class="history-card" data-id="${record.id}">
+          <div class="history-card" data-id="${recordId}">
             <div class="history-card-header">
-              <h3 class="history-card-title">${record.main_claim.length > 50 ? record.main_claim.substring(0, 50) + '...' : record.main_claim}</h3>
+              <h3 class="history-card-title">${mainClaim.length > 50 ? mainClaim.substring(0, 50) + '...' : mainClaim}</h3>
               <div class="history-card-date">
-                <i class="far fa-calendar-alt"></i> ${record.created_at}
+                <i class="far fa-calendar-alt"></i> ${createdDate}
               </div>
             </div>
             <div class="history-card-body">
-              <div class="history-claim">${record.news.length > 150 ? record.news.substring(0, 150) + '...' : record.news}</div>
+              <div class="history-claim">${newsText.length > 150 ? newsText.substring(0, 150) + '...' : newsText}</div>
               <div class="d-flex align-items-center mt-3">
                 <span class="verdict-badge ${verdictClass}">
-                  <i class="fas ${verdictIcon}"></i> ${record.verdict}
+                  <i class="fas ${verdictIcon}"></i> ${record.verdict || '未知'}
                 </span>
                 <span class="history-evidence-count">
-                  <i class="fas fa-file-alt"></i> ${record.evidence_count} 条证据
+                  <i class="fas fa-file-alt"></i> ${evidenceCount} 条证据
                 </span>
               </div>
             </div>
             <div class="history-card-footer">
               <div class="history-card-actions">
-                <a href="${viewRecordUrl}${record.id}" class="view-btn">
+                <a href="${viewRecordUrl}${recordId}" class="view-btn">
                   <i class="fas fa-eye"></i> 查看详情
                 </a>
               </div>
-              <button class="delete-btn" data-id="${record.id}">
+              <button class="delete-btn" data-id="${recordId}">
                 <i class="fas fa-trash-alt"></i> 删除
               </button>
             </div>

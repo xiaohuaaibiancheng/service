@@ -79,8 +79,8 @@
             ]
         },
         "detection_history": {
-            "total_detections": 55,
-            "accuracy": 95.0,
+            "total_detections": 58,
+            "accuracy": 90.5,
             "records": [
                 {
                     "date": "2025-04-08",
@@ -98,10 +98,10 @@
                 },
                 {
                     "date": "2025-04-08",
-                    "result": "真实",
-                    "status": "成功",
-                    "status_color": "success",
-                    "accuracy": 95.0
+                    "result": "未知",
+                    "status": "失败",
+                    "status_color": "danger",
+                    "accuracy": 50.0
                 },
                 {
                     "date": "2025-04-08",

@@ -1,16 +1,16 @@
 {
-  "928c05f034e64e7e16e72eacdd35b07f": {
-    "timestamp": "2025-04-08T13:23:17.480124",
-    "news_hash": "13aa137d09",
-    "result_file": "search_results\\fact_check_result_20250408_132317.json",
-    "id": "20250408_132317_38474d92"
+  "1c25fbbffef74b8d2a96d064dd2b94e3": {
+    "timestamp": "2025-04-08T15:21:08.492798",
+    "news_hash": "d07b72f772",
+    "result_file": "search_results\\fact_check_result_20250408_152108.json",
+    "id": "20250408_152108_98c04934"
   },
-  "c703b6b381913e54ff2410a43d6e78fc": {
-    "record_id": "20250408_134050_c703b6b3",
-    "timestamp": "2025-04-08T13:40:50.895586",
+  "1ad72826dd6b8f5bcdae743d3ed14a37": {
+    "record_id": "20250408_152139_1ad72826",
+    "timestamp": "2025-04-08T15:21:39.587219",
     "verdict": "真实",
     "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城"
+    "main_claim": "武汉是热干面的家乡。",
+    "news_text": "武汉是热干面的家乡"
   }
 }

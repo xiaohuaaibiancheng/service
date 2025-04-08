@@ -1,102 +1,22 @@
 [
   {
-    "id": "20250408_132317_c703b6b3",
+    "id": "20250408_152108_1ad72826",
     "username": "felix",
-    "timestamp": "2025-04-08T13:23:17.489151",
+    "timestamp": "2025-04-08T15:21:08.496801",
     "verdict": "真实",
     "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "112.59秒"
+    "main_claim": "武汉是热干面的家乡。",
+    "news_text": "武汉是热干面的家乡",
+    "processing_time": "140.56秒"
   },
   {
-    "id": "20250408_132840_c703b6b3",
+    "id": "20250408_152139_1ad72826",
     "username": "felix",
-    "timestamp": "2025-04-08T13:28:40.426216",
+    "timestamp": "2025-04-08T15:21:39.587219",
     "verdict": "真实",
     "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133050_c703b6b3",
-    "username": "anonymous",
-    "timestamp": "2025-04-08T13:30:50.369590",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
+    "main_claim": "武汉是热干面的家乡。",
+    "news_text": "武汉是热干面的家乡",
     "processing_time": "0.00秒"
-  },
-  {
-    "id": "20250408_133109_c703b6b3",
-    "username": "anonymous",
-    "timestamp": "2025-04-08T13:31:09.434524",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133526_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:35:26.968842",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133543_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:35:43.253608",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133559_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:35:59.671975",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133708_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:37:08.023346",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_133839_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:38:39.462953",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
-  },
-  {
-    "id": "20250408_134050_c703b6b3",
-    "username": "felix",
-    "timestamp": "2025-04-08T13:40:50.895586",
-    "verdict": "真实",
-    "confidence": 0.95,
-    "main_claim": "武汉被称为樱花之城。",
-    "news_text": "武汉是樱花之城",
-    "processing_time": "0.01秒"
   }
 ]
