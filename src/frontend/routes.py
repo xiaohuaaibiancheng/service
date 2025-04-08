@@ -2782,46 +2782,37 @@ def view_fact_check_record(record_id):
         return redirect(url_for('backend.login', next=url_for('frontend.view_fact_check_record', record_id=record_id)))
 
     try:
-        # 根据record_id构建文件路径（record_id应该是完整的文件名，不含.json后缀）
-        search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
-        file_path = os.path.join(search_results_dir, f"{record_id}.json")
+        # 获取完整的事实核查结果
+        result = get_complete_fact_check_result(record_id)
 
-        if not os.path.exists(file_path):
+        if not result:
             flash('未找到指定的事实核查记录', 'error')
             return redirect(url_for('frontend.fact_check_history_page'))
 
-        # 读取文件内容
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        # 确保所有关键字段都存在
+        if 'created_at' not in result and 'timestamp' in result:
+            try:
+                record_date = datetime.fromisoformat(result.get('timestamp', ''))
+                result['created_at'] = record_date.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                result['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        # 分析记录文件名，提取时间戳
-        filename = os.path.basename(file_path)
-        timestamp_match = re.search(r'(\d{8}_\d{6})', filename)
-        created_at = ''
+        if 'id' not in result:
+            result['id'] = record_id
 
-        if timestamp_match:
-            timestamp_str = timestamp_match.group(1)
-            created_at = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S").strftime('%Y-%m-%d %H:%M:%S')
+        # 确保news字段存在
+        if 'news' not in result and 'news_text' in result:
+            result['news'] = result['news_text']
 
-        # 提取重要字段并添加查看时间
-        result = {
-            'id': record_id,
-            'verdict': data.get('verdict', '未知'),
-            'confidence': data.get('confidence', 0),
-            'explanation': data.get('explanation', '无说明'),
-            'main_claim': data.get('main_claim', '无主要声明'),
-            'news_text': data.get('news_text', data.get('news', '无内容')),
-            'evidence': data.get('evidence', []),
-            'created_at': created_at,
-            'viewed_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
+        # 添加查看时间
+        result['viewed_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # 拓展结果，添加可视化数据
         enhanced_result = enhance_fact_check_result(result)
 
         return render_template('frontend/view_fact_check.html',
-                               result=enhanced_result,
-                               record_id=record_id)
+                              result=enhanced_result,
+                              record_id=record_id)
     except Exception as e:
         logging.error(f"查看事实核查记录出错: {str(e)}")
         flash(f'查看记录时出错: {str(e)}', 'error')
@@ -2846,33 +2837,76 @@ def delete_fact_check_history():
                 "message": "记录ID不能为空"
             }), 400
 
-        # 查找要删除的记录文件（在项目根目录下）
+        # 获取search_results目录
         search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
 
-        # 考虑多种可能的文件名格式
-        possible_paths = [
-            os.path.join(search_results_dir, f"{record_id}.json"),
-            os.path.join(search_results_dir, f"{record_id}_full.json"),
-            os.path.join(search_results_dir, f"{record_id}")
+        # 定义5个核心文件路径
+        core_files = [
+            os.path.join(search_results_dir, 'fact_check_verdicts.json'),
+            os.path.join(search_results_dir, 'fact_check_evidence.json'),
+            os.path.join(search_results_dir, 'fact_check_analysis.json'),
+            os.path.join(search_results_dir, 'fact_check_formatted.json'),
+            os.path.join(search_results_dir, 'fact_check_ai_search.json')
         ]
+
+        # 缓存文件
+        cache_file = os.path.join(search_results_dir, 'fact_check_cache.json')
 
         deleted = False
 
-        # 尝试删除所有可能的文件
-        for file_path in possible_paths:
+        # 从每个核心文件中删除该记录
+        for file_path in core_files:
             if os.path.exists(file_path):
                 try:
-                    os.remove(file_path)
-                    logging.info(f"已删除历史记录文件: {file_path}")
-                    deleted = True
+                    # 读取文件内容
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+
+                    # 找到并删除匹配的记录
+                    if isinstance(data, list):
+                        new_data = [item for item in data if item.get('id') != record_id]
+                        if len(new_data) < len(data):
+                            deleted = True
+
+                            # 写回文件
+                            with open(file_path, 'w', encoding='utf-8') as f:
+                                json.dump(new_data, f, ensure_ascii=False, indent=2)
+
+                            logging.info(f"已从文件 {file_path} 中删除记录 {record_id}")
                 except Exception as e:
-                    logging.error(f"删除文件 {file_path} 失败: {str(e)}")
+                    logging.error(f"处理文件 {file_path} 时出错: {str(e)}")
+
+        # 更新缓存文件，删除引用该记录的缓存项
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cache_data = json.load(f)
+
+                # 找到并删除引用该记录的缓存项
+                keys_to_delete = []
+                for key, entry in cache_data.items():
+                    if entry.get('record_id') == record_id:
+                        keys_to_delete.append(key)
+
+                # 删除找到的缓存项
+                for key in keys_to_delete:
+                    del cache_data[key]
+                    deleted = True
+
+                # 写回文件
+                if keys_to_delete:
+                    with open(cache_file, 'w', encoding='utf-8') as f:
+                        json.dump(cache_data, f, ensure_ascii=False, indent=2)
+
+                    logging.info(f"已从缓存文件中删除记录 {record_id} 的 {len(keys_to_delete)} 个缓存项")
+            except Exception as e:
+                logging.error(f"处理缓存文件时出错: {str(e)}")
 
         if not deleted:
             return jsonify({
-                "status": "error",
-                "message": "找不到要删除的记录"
-            }), 404
+                "status": "warning",
+                "message": "找不到要删除的记录或删除过程中出现错误"
+            })
 
         return jsonify({
             "status": "success",
@@ -2889,24 +2923,19 @@ def delete_fact_check_history():
 def save_fact_check_result_with_user(result_dict, username):
     """保存事实核查结果，并关联到用户"""
     try:
-        # 确保search_results目录存在
-        search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
-        os.makedirs(search_results_dir, exist_ok=True)
+        # 确保结果字典包含新闻文本
+        if 'news_text' not in result_dict and 'news' in result_dict:
+            result_dict['news_text'] = result_dict['news']
 
-        # 生成记录ID
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        main_claim = result_dict.get('main_claim', '')
-        record_id = f"{timestamp}_{hashlib.md5(main_claim.encode()).hexdigest()[:8]}"
+        # 调用结构化保存函数
+        record_id = save_structured_fact_check_result(result_dict, username)
 
-        # 添加记录ID和时间戳到结果中
-        result_dict['record_id'] = record_id
-        result_dict['timestamp'] = datetime.now().isoformat()
-
-        # 保存结构化结果
-        if not save_structured_fact_check_result(result_dict, username):
-            raise Exception("保存结构化结果失败")
-
-        return record_id
+        if record_id:
+            logging.info(f"成功保存用户 {username} 的事实核查结果: {record_id}")
+            return record_id
+        else:
+            logging.error("保存事实核查结果失败")
+            return None
     except Exception as e:
         logging.error(f"保存事实核查结果时出错: {str(e)}")
         return None
@@ -3380,15 +3409,7 @@ def perform_new_fact_check(news_text, session_id=''):
 
 def enhance_fact_check_result(result):
     """增强事实核查结果，添加可视化数据和思考过程"""
-    # 尝试使用OpenAI增强结果
-    try:
-        enhanced_result = enhance_with_openai(result)
-        if enhanced_result:
-            return enhanced_result
-    except Exception as e:
-        logging.error(f"使用OpenAI增强结果失败: {str(e)}")
-
-    # 如果OpenAI增强失败，使用默认增强
+    # 使用默认增强方式，不再尝试OpenAI
     return add_default_enhancements(result)
 
 def add_default_enhancements(result):
@@ -3531,68 +3552,147 @@ def get_fact_check_history():
         if not os.path.exists(search_results_dir):
             return jsonify({
                 "status": "success",
-                "data": [],
-                "total": 0,
-                "page": page,
-                "limit": limit
+                "data": {
+                    "records": [],
+                    "pagination": {
+                        "current_page": page,
+                        "total_pages": 0,
+                        "total_records": 0,
+                        "limit": limit
+                    }
+                }
             })
 
-        # 读取verdict文件获取历史记录
+        # 读取verdict文件获取核查结果
         verdict_file = os.path.join(search_results_dir, 'fact_check_verdicts.json')
         if not os.path.exists(verdict_file):
             return jsonify({
                 "status": "success",
-                "data": [],
-                "total": 0,
-                "page": page,
-                "limit": limit
+                "data": {
+                    "records": [],
+                    "pagination": {
+                        "current_page": page,
+                        "total_pages": 0,
+                        "total_records": 0,
+                        "limit": limit
+                    }
+                }
             })
 
-        with open(verdict_file, 'r', encoding='utf-8') as f:
-            history_data = json.load(f)
+        # 读取证据文件获取证据数量
+        evidence_file = os.path.join(search_results_dir, 'fact_check_evidence.json')
+        evidence_data = []
+        if os.path.exists(evidence_file):
+            try:
+                with open(evidence_file, 'r', encoding='utf-8') as f:
+                    evidence_data = json.load(f)
+            except json.JSONDecodeError:
+                logging.error(f"无法解析证据文件 {evidence_file}")
 
-        # 过滤和排序
+        # 读取并处理verdict数据
+        try:
+            with open(verdict_file, 'r', encoding='utf-8') as f:
+                verdict_data = json.load(f)
+        except json.JSONDecodeError:
+            logging.error(f"无法解析verdict文件 {verdict_file}")
+            verdict_data = []
+
+        # 生成证据数量字典，便于快速查找
+        evidence_count_map = {}
+        for entry in evidence_data:
+            record_id = entry.get('id')
+            if record_id:
+                evidence_count_map[record_id] = entry.get('total_evidence', 0)
+
+        # 根据过滤条件筛选数据
         filtered_data = []
-        for record in history_data:
+        for record in verdict_data:
+            # 确保记录有ID
+            if 'id' not in record:
+                continue
+
             # 按用户名过滤
-            if record.get('username') != username:
+            if record.get('username') != username and record.get('username') != 'anonymous':
                 continue
 
             # 按判决结果过滤
-            if verdict_filter != 'all' and record.get('verdict') != verdict_filter:
-                continue
+            if verdict_filter != 'all':
+                record_verdict = record.get('verdict', '未知')
+                if verdict_filter == 'true' and record_verdict != '真实':
+                    continue
+                if verdict_filter == 'false' and record_verdict != '虚假':
+                    continue
+                if verdict_filter == 'uncertain' and record_verdict not in ['不确定', '存疑', '部分真实']:
+                    continue
 
             # 按日期范围过滤
             if date_range != 'all':
-                record_date = datetime.fromisoformat(record.get('timestamp', ''))
-                now = datetime.now()
-                if date_range == 'today' and record_date.date() != now.date():
-                    continue
-                elif date_range == 'week' and (now - record_date).days > 7:
-                    continue
-                elif date_range == 'month' and (now - record_date).days > 30:
+                try:
+                    record_date = datetime.fromisoformat(record.get('timestamp', ''))
+                    now = datetime.now()
+                    if date_range == 'today' and record_date.date() != now.date():
+                        continue
+                    elif date_range == 'week' and (now - record_date).days > 7:
+                        continue
+                    elif date_range == 'month' and (now - record_date).days > 30:
+                        continue
+                except ValueError:
+                    # 日期解析错误，跳过此记录
                     continue
 
+            # 添加人性化日期显示
+            try:
+                record_date = datetime.fromisoformat(record.get('timestamp', ''))
+                record['created_at'] = record_date.strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                record['created_at'] = '未知时间'
+
+            # 添加证据数量
+            record_id = record.get('id')
+            record['evidence_count'] = evidence_count_map.get(record_id, 0)
+
+            # 确保记录有news字段
+            if 'news' not in record and 'news_text' in record:
+                record['news'] = record['news_text']
+
+            # 添加到过滤后的数据中
             filtered_data.append(record)
 
-        # 排序
+        # 根据排序参数对结果进行排序
         if sort_order == 'newest':
             filtered_data.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-        else:
+        elif sort_order == 'oldest':
             filtered_data.sort(key=lambda x: x.get('timestamp', ''))
+        elif sort_order == 'confidence_high':
+            filtered_data.sort(key=lambda x: float(x.get('confidence', 0)), reverse=True)
+        elif sort_order == 'confidence_low':
+            filtered_data.sort(key=lambda x: float(x.get('confidence', 0)))
 
-        # 分页
-        total = len(filtered_data)
-        start = (page - 1) * limit
-        end = start + limit
-        paginated_data = filtered_data[start:end]
+        # 计算分页信息
+        total_records = len(filtered_data)
+        total_pages = (total_records + limit - 1) // limit if total_records > 0 else 0
 
+        # 确保当前页在有效范围内
+        if page > total_pages and total_pages > 0:
+            page = total_pages
+
+        # 分页数据
+        start_index = (page - 1) * limit
+        end_index = min(start_index + limit, total_records)
+        paginated_data = filtered_data[start_index:end_index]
+
+        # 构建响应
         return jsonify({
             "status": "success",
-            "data": paginated_data,
-            "total": total,
-            "page": page,
-            "limit": limit
+            "data": {
+                "records": paginated_data,
+                "pagination": {
+                    "current_page": page,
+                    "total_pages": total_pages,
+                    "total_records": total_records,
+                    "limit": limit
+                }
+            }
         })
 
     except Exception as e:
@@ -3605,42 +3705,47 @@ def get_fact_check_history():
         }), 500
 
 def save_structured_fact_check_result(result, username=None):
-    """保存结构化的事实核查结果到7个核心JSON文件"""
+    """保存结构化的事实核查结果到5个核心JSON文件"""
     try:
         # 确保search_results目录存在
         search_results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'search_results')
         os.makedirs(search_results_dir, exist_ok=True)
 
-        # 定义7个核心文件的路径
-        verdict_file = os.path.join(search_results_dir, 'fact_check_verdicts.json')
-        evidence_file = os.path.join(search_results_dir, 'fact_check_evidence.json')
-        analysis_file = os.path.join(search_results_dir, 'fact_check_analysis.json')
-        formatted_file = os.path.join(search_results_dir, 'fact_check_formatted.json')
-        ai_search_file = os.path.join(search_results_dir, 'fact_check_ai_search.json')
-        cache_file = os.path.join(search_results_dir, 'fact_check_cache.json')
-        cache_index_file = os.path.join(search_results_dir, 'cache_index.json')
+        # 定义5个核心文件的路径
+        verdict_file = os.path.join(search_results_dir, 'fact_check_verdicts.json')  # 核查结果
+        evidence_file = os.path.join(search_results_dir, 'fact_check_evidence.json')  # 证据列表
+        analysis_file = os.path.join(search_results_dir, 'fact_check_analysis.json')  # 详细分析
+        formatted_file = os.path.join(search_results_dir, 'fact_check_formatted.json')  # 格式化响应
+        ai_search_file = os.path.join(search_results_dir, 'fact_check_ai_search.json')  # AI搜索结果
+        cache_file = os.path.join(search_results_dir, 'fact_check_cache.json')  # 缓存索引
 
         # 生成记录ID和时间戳
         timestamp = datetime.now().isoformat()
         main_claim = result.get('main_claim', '')
-        record_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hashlib.md5(main_claim.encode()).hexdigest()[:8]}"
+        news_text = result.get('news_text', result.get('news', ''))
 
-        # 1. 保存判决结果
+        # 使用新闻文本和主要声明作为缓存键
+        cache_key = news_text + main_claim
+        query_hash = hashlib.md5(cache_key.encode()).hexdigest()
+
+        # 生成唯一记录ID
+        record_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{query_hash[:8]}"
+
+        # 1. 保存核查结果
         verdict_data = {
-            'record_id': record_id,
+            'id': record_id,
             'username': username or 'anonymous',
             'timestamp': timestamp,
             'verdict': result.get('verdict', '未知'),
             'confidence': float(result.get('confidence', 0.5)),
             'main_claim': main_claim,
-            'news_text': result.get('news_text', ''),
-            'explanation': result.get('explanation', ''),
+            'news_text': news_text,
             'processing_time': result.get('processing_time', '0秒')
         }
 
         # 2. 保存证据列表
         evidence_data = {
-            'record_id': record_id,
+            'id': record_id,
             'timestamp': timestamp,
             'total_evidence': len(result.get('evidence', [])),
             'evidence': [
@@ -3657,16 +3762,16 @@ def save_structured_fact_check_result(result, username=None):
 
         # 3. 保存详细分析
         analysis_data = {
-            'record_id': record_id,
+            'id': record_id,
             'timestamp': timestamp,
-            'reasoning': result.get('reasoning', ''),
+            'reasoning': result.get('reasoning', result.get('explanation', '')),
             'contradictions': result.get('contradictions', []),
-            'analysis': result.get('analysis', {})
+            'explanation': result.get('explanation', result.get('reasoning', ''))
         }
 
         # 4. 保存格式化响应
         formatted_data = {
-            'record_id': record_id,
+            'id': record_id,
             'timestamp': timestamp,
             'formatted_response': result.get('formatted_response', ''),
             'summary': result.get('summary', '')
@@ -3674,9 +3779,8 @@ def save_structured_fact_check_result(result, username=None):
 
         # 5. 保存AI搜索结果
         ai_search_data = {
-            'record_id': record_id,
+            'id': record_id,
             'timestamp': timestamp,
-            'ai_search_results': result.get('ai_search_results', {}),
             'perplexica_search_response': result.get('perplexica_search_response', '')
         }
 
@@ -3689,72 +3793,64 @@ def save_structured_fact_check_result(result, username=None):
             (ai_search_file, ai_search_data)
         ]:
             try:
-                if os.path.exists(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        existing_data = json.load(f)
-                    # 更新或添加记录
-                    found = False
-                    for i, record in enumerate(existing_data):
-                        if record.get('record_id') == record_id:
-                            existing_data[i] = data
-                            found = True
-                            break
-                    if not found:
-                        existing_data.append(data)
-                    data_to_save = existing_data
-                else:
-                    data_to_save = [data]
+                data_to_save = []
 
+                if os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            data_to_save = json.load(f)
+
+                        # 确保是列表类型
+                        if not isinstance(data_to_save, list):
+                            logging.warning(f"文件 {file_path} 内容不是列表格式，重置为空列表")
+                            data_to_save = []
+                    except json.JSONDecodeError:
+                        logging.warning(f"无法解析文件 {file_path}，重置为空列表")
+                        data_to_save = []
+
+                # 添加新数据
+                data_to_save.append(data)
+
+                # 写入文件
                 with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+
+                logging.info(f"已更新文件: {file_path}")
             except Exception as e:
                 logging.error(f"保存文件 {file_path} 时出错: {str(e)}")
 
-        # 更新缓存相关文件
+        # 更新缓存文件
         try:
-            # 生成查询的MD5哈希作为缓存键
-            query_hash = hashlib.md5((result.get('news_text', '') + main_claim).encode()).hexdigest()
-
-            # 更新缓存索引
-            cache_index = {}
-            if os.path.exists(cache_index_file):
-                with open(cache_index_file, 'r', encoding='utf-8') as f:
-                    cache_index = json.load(f)
-
-            cache_index[query_hash] = {
-                'record_id': record_id,
-                'timestamp': timestamp,
-                'main_claim': main_claim
-            }
-
-            with open(cache_index_file, 'w', encoding='utf-8') as f:
-                json.dump(cache_index, f, ensure_ascii=False, indent=2)
-
-            # 更新缓存文件
             cache_data = {}
             if os.path.exists(cache_file):
-                with open(cache_file, 'r', encoding='utf-8') as f:
-                    cache_data = json.load(f)
+                try:
+                    with open(cache_file, 'r', encoding='utf-8') as f:
+                        cache_data = json.load(f)
+                except json.JSONDecodeError:
+                    logging.warning(f"无法解析缓存文件，重置为空字典")
+                    cache_data = {}
 
+            # 更新缓存
             cache_data[query_hash] = {
                 'record_id': record_id,
                 'timestamp': timestamp,
                 'verdict': verdict_data['verdict'],
                 'confidence': verdict_data['confidence'],
                 'main_claim': main_claim,
-                'news_text': result.get('news_text', '')
+                'news_text': news_text
             }
 
             with open(cache_file, 'w', encoding='utf-8') as f:
                 json.dump(cache_data, f, ensure_ascii=False, indent=2)
 
+            logging.info(f"已更新缓存: {query_hash} -> {record_id}")
         except Exception as e:
             logging.error(f"更新缓存文件时出错: {str(e)}")
 
-        return True
+        return record_id
     except Exception as e:
         logging.error(f"保存结构化事实核查结果时出错: {str(e)}")
-        return False
+        return None
 
 # 查找缓存的事实核查结果
 def find_cached_fact_check_result(news_text, claim=None):
@@ -3770,8 +3866,12 @@ def find_cached_fact_check_result(news_text, claim=None):
         if not os.path.exists(cache_file):
             return None, None
 
-        with open(cache_file, 'r', encoding='utf-8') as f:
-            cache_data = json.load(f)
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+        except json.JSONDecodeError:
+            logging.error(f"无法解析缓存文件 {cache_file}")
+            return None, None
 
         # 检查缓存是否存在
         if query_hash not in cache_data:
@@ -3780,65 +3880,26 @@ def find_cached_fact_check_result(news_text, claim=None):
         cache_entry = cache_data[query_hash]
         record_id = cache_entry.get('record_id')
 
-        # 检查缓存是否过期（7天）
-        cache_time = datetime.fromisoformat(cache_entry.get('timestamp', ''))
-        if (datetime.now() - cache_time).days > 7:
+        if not record_id:
             return None, None
 
-        # 从5个核心文件中获取完整结果
-        result = {}
+        # 检查缓存是否过期（7天）
+        try:
+            cache_time = datetime.fromisoformat(cache_entry.get('timestamp', ''))
+            if (datetime.now() - cache_time).days > 7:
+                logging.info(f"缓存已过期: {record_id}")
+                return None, None
+        except ValueError:
+            logging.warning(f"缓存时间戳格式无效: {cache_entry.get('timestamp')}")
+            return None, None
 
-        # 1. 获取判决结果
-        verdict_file = os.path.join(search_results_dir, 'fact_check_verdicts.json')
-        if os.path.exists(verdict_file):
-            with open(verdict_file, 'r', encoding='utf-8') as f:
-                verdicts = json.load(f)
-                for verdict in verdicts:
-                    if verdict.get('record_id') == record_id:
-                        result.update(verdict)
-                        break
+        # 获取完整结果
+        complete_result = get_complete_fact_check_result(record_id)
+        if not complete_result:
+            logging.warning(f"找到缓存记录 {record_id}，但无法获取完整结果")
+            return None, None
 
-        # 2. 获取证据列表
-        evidence_file = os.path.join(search_results_dir, 'fact_check_evidence.json')
-        if os.path.exists(evidence_file):
-            with open(evidence_file, 'r', encoding='utf-8') as f:
-                evidences = json.load(f)
-                for evidence in evidences:
-                    if evidence.get('record_id') == record_id:
-                        result['evidence'] = evidence.get('evidence', [])
-                        break
-
-        # 3. 获取详细分析
-        analysis_file = os.path.join(search_results_dir, 'fact_check_analysis.json')
-        if os.path.exists(analysis_file):
-            with open(analysis_file, 'r', encoding='utf-8') as f:
-                analyses = json.load(f)
-                for analysis in analyses:
-                    if analysis.get('record_id') == record_id:
-                        result['analysis'] = analysis.get('analysis', {})
-                        break
-
-        # 4. 获取格式化响应
-        formatted_file = os.path.join(search_results_dir, 'fact_check_formatted.json')
-        if os.path.exists(formatted_file):
-            with open(formatted_file, 'r', encoding='utf-8') as f:
-                formatted_responses = json.load(f)
-                for formatted in formatted_responses:
-                    if formatted.get('record_id') == record_id:
-                        result['formatted_response'] = formatted.get('formatted_response', {})
-                        break
-
-        # 5. 获取AI搜索结果
-        ai_search_file = os.path.join(search_results_dir, 'fact_check_ai_search.json')
-        if os.path.exists(ai_search_file):
-            with open(ai_search_file, 'r', encoding='utf-8') as f:
-                ai_searches = json.load(f)
-                for ai_search in ai_searches:
-                    if ai_search.get('record_id') == record_id:
-                        result['ai_search_results'] = ai_search.get('ai_search_results', {})
-                        break
-
-        return record_id, result
+        return record_id, complete_result
     except Exception as e:
         logging.error(f"查找缓存事实核查结果时出错: {str(e)}")
         return None, None
@@ -3872,8 +3933,9 @@ def get_complete_fact_check_result(record_id):
         # 读取每个文件
         for file_type, file_path in results_files.items():
             if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    data_list = json.load(f)
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data_list = json.load(f)
 
                     # 查找匹配的记录
                     for item in data_list:
@@ -3885,22 +3947,33 @@ def get_complete_fact_check_result(record_id):
                                     'confidence': item.get('confidence'),
                                     'main_claim': item.get('main_claim'),
                                     'news_text': item.get('news_text'),
-                                    'news': item.get('news_text')
+                                    'news': item.get('news_text'),
+                                    'processing_time': item.get('processing_time')
                                 })
                             elif file_type == 'evidence':
                                 result['evidence'] = item.get('evidence', [])
                             elif file_type == 'analysis':
                                 result['reasoning'] = item.get('reasoning', '')
-                                result['explanation'] = item.get('reasoning', '')
+                                result['explanation'] = item.get('explanation', '')
                                 result['contradictions'] = item.get('contradictions', [])
                             elif file_type == 'formatted':
                                 result['formatted_response'] = item.get('formatted_response', '')
+                                result['summary'] = item.get('summary', '')
                             elif file_type == 'ai_search':
                                 result['perplexica_search_response'] = item.get('perplexica_search_response', '')
 
                             break
+                except json.JSONDecodeError:
+                    logging.error(f"无法解析文件 {file_path}")
+                except Exception as e:
+                    logging.error(f"读取文件 {file_path} 时出错: {str(e)}")
 
         return result if result else None
     except Exception as e:
         logging.error(f"获取完整事实核查结果失败: {str(e)}")
         return None
+
+def enhance_with_openai(result):
+    """使用OpenAI增强事实核查结果（此方法仅作为兼容接口，实际未使用）"""
+    # 返回None让调用方回退到默认增强
+    return None

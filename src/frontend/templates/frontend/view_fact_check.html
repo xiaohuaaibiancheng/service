@@ -1,0 +1,652 @@
+{% extends "frontend/base.html" %}
+
+{% block title %}事实核查结果详情 - CredenceAI{% endblock %}
+
+{% block extra_css %}
+<style>
+  .result-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .result-header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .result-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4F46E5;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-header p {
+    color: #6B7280;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .result-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .result-meta-item {
+    display: flex;
+    align-items: center;
+    color: #6B7280;
+    font-size: 0.875rem;
+  }
+
+  .result-meta-item i {
+    margin-right: 0.5rem;
+  }
+
+  .claim-box {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .claim-box h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #111827;
+    display: flex;
+    align-items: center;
+  }
+
+  .claim-box h2 i {
+    margin-right: 0.75rem;
+    color: #4F46E5;
+  }
+
+  .claim-content {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .verdict-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .verdict-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .verdict-true {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+  }
+
+  .verdict-false {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+  }
+
+  .verdict-uncertain {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+  }
+
+  .verdict-confidence {
+    display: flex;
+    align-items: center;
+    color: #6B7280;
+  }
+
+  .verdict-explanation {
+    line-height: 1.6;
+  }
+
+  .evidence-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .evidence-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .evidence-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+  }
+
+  .evidence-header h2 i {
+    margin-right: 0.75rem;
+    color: #4F46E5;
+  }
+
+  .evidence-count {
+    background: rgba(79, 70, 229, 0.1);
+    color: #4F46E5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .evidence-list {
+    margin-top: 1.5rem;
+  }
+
+  .evidence-item {
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  .evidence-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .evidence-source {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #4B5563;
+  }
+
+  .evidence-source i {
+    margin-right: 0.5rem;
+    color: #4F46E5;
+  }
+
+  .evidence-relevance {
+    display: flex;
+    align-items: center;
+    color: #6B7280;
+    font-size: 0.875rem;
+  }
+
+  .evidence-relevance-bar {
+    width: 50px;
+    height: 6px;
+    background: #E5E7EB;
+    border-radius: 9999px;
+    margin-left: 0.5rem;
+    overflow: hidden;
+  }
+
+  .relevance-fill {
+    height: 100%;
+    background: #4F46E5;
+  }
+
+  .evidence-item-body {
+    padding: 1rem;
+  }
+
+  .evidence-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #111827;
+  }
+
+  .evidence-content {
+    color: #4B5563;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+  }
+
+  .evidence-url {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #4F46E5;
+    text-decoration: none;
+  }
+
+  .evidence-url i {
+    margin-right: 0.5rem;
+  }
+
+  .evidence-url:hover {
+    text-decoration: underline;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .btn i {
+    margin-right: 0.5rem;
+  }
+
+  .btn-primary {
+    background: #4F46E5;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #4338CA;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: #F3F4F6;
+    color: #4B5563;
+  }
+
+  .btn-secondary:hover {
+    background: #E5E7EB;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+  }
+
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* 深色模式样式 */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #111827;
+      color: #F3F4F6;
+    }
+
+    .result-header h1 {
+      color: #6366F1;
+    }
+
+    .result-header p,
+    .result-meta-item {
+      color: #D1D5DB;
+    }
+
+    .claim-box,
+    .verdict-section,
+    .evidence-section,
+    .result-meta {
+      background-color: #1F2937;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .claim-box h2,
+    .evidence-header h2,
+    .evidence-title {
+      color: #F3F4F6;
+    }
+
+    .evidence-item {
+      border-color: #374151;
+    }
+
+    .evidence-item-header {
+      background: #111827;
+      border-color: #374151;
+    }
+
+    .evidence-source {
+      color: #D1D5DB;
+    }
+
+    .evidence-content {
+      color: #9CA3AF;
+    }
+
+    .evidence-relevance-bar {
+      background: #374151;
+    }
+
+    .btn-secondary {
+      background: #374151;
+      color: #F3F4F6;
+    }
+
+    .btn-secondary:hover {
+      background: #4B5563;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+  <div class="result-header">
+    <h1>事实核查结果详情</h1>
+    <p>查看完整的事实核查分析、证据和结论</p>
+  </div>
+
+  <div class="result-meta">
+    <div class="result-meta-item">
+      <i class="far fa-calendar-alt"></i> 核查时间：{{ result.created_at }}
+    </div>
+    <div class="result-meta-item">
+      <i class="far fa-clock"></i> 处理用时：{{ result.processing_time }}
+    </div>
+  </div>
+
+  <div class="claim-box">
+    <h2><i class="fas fa-quote-left"></i> 核查内容</h2>
+    <div class="claim-content">{{ result.news }}</div>
+    <div class="main-claim">
+      <strong>主要声明：</strong>{{ result.main_claim }}
+    </div>
+  </div>
+
+  <div class="verdict-section">
+    <div class="verdict-header">
+      {% if result.verdict == '真实' %}
+      <div class="verdict-badge verdict-true">
+        <i class="fas fa-check-circle"></i> {{ result.verdict }}
+      </div>
+      {% elif result.verdict == '虚假' %}
+      <div class="verdict-badge verdict-false">
+        <i class="fas fa-times-circle"></i> {{ result.verdict }}
+      </div>
+      {% else %}
+      <div class="verdict-badge verdict-uncertain">
+        <i class="fas fa-question-circle"></i> {{ result.verdict }}
+      </div>
+      {% endif %}
+      <div class="verdict-confidence">
+        置信度：{{ "%.2f"|format(result.confidence) }}
+      </div>
+    </div>
+
+    {% if result.explanation %}
+    <div class="verdict-explanation">
+      <h3>分析说明</h3>
+      <div>{{ result.explanation|safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if result.formatted_response %}
+    <div class="verdict-explanation mt-4">
+      <h3>详细分析</h3>
+      <div>{{ result.formatted_response|safe }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="evidence-section">
+    <div class="evidence-header">
+      <h2><i class="fas fa-search"></i> 证据来源</h2>
+      <div class="evidence-count">{{ result.evidence|length }} 条证据</div>
+    </div>
+
+    <div class="evidence-list">
+      {% for evidence in result.evidence %}
+      <div class="evidence-item">
+        <div class="evidence-item-header">
+          <div class="evidence-source">
+            <i class="fas fa-globe"></i> {{ evidence.source }}
+          </div>
+          <div class="evidence-relevance">
+            相关度：{{ "%.2f"|format(evidence.relevance) }}
+            <div class="evidence-relevance-bar">
+              <div class="relevance-fill" style="width: {{ evidence.relevance * 100 }}%;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="evidence-item-body">
+          <div class="evidence-title">{{ evidence.title }}</div>
+          <div class="evidence-content">{{ evidence.content }}</div>
+          {% if evidence.url %}
+          <a href="{{ evidence.url }}" target="_blank" class="evidence-url">
+            <i class="fas fa-external-link-alt"></i> 查看原文
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <div>
+      <a href="{{ url_for('frontend.fact_check_history_page') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> 返回历史记录
+      </a>
+      <a href="{{ url_for('frontend.fact_check_page') }}" class="btn btn-primary">
+        <i class="fas fa-search"></i> 新的核查
+      </a>
+    </div>
+    <form id="delete-form" action="{{ url_for('frontend.delete_fact_check_history') }}" method="post"
+      style="display: inline;">
+      <input type="hidden" name="record_id" value="{{ record_id }}">
+      <button type="button" class="btn btn-danger" id="delete-btn">
+        <i class="fas fa-trash-alt"></i> 删除记录
+      </button>
+    </form>
+  </div>
+
+  <!-- 新增：保存按钮和下拉菜单 -->
+  <div class="save-dropdown-container" style="margin-top: 1rem; text-align: center;">
+    <button class="btn btn-primary" id="save-btn">
+      <i class="fas fa-save"></i> 保存结果
+    </button>
+    <div class="save-dropdown"
+      style="display: none; position: absolute; background: white; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; padding: 0.5rem 0; margin-top: 0.5rem;">
+      <button class="dropdown-item" id="save-all"
+        style="display: block; width: 100%; text-align: left; padding: 0.5rem 1rem; border: none; background: none; cursor: pointer;">
+        <i class="fas fa-file-download"></i> 保存完整结果
+      </button>
+      <button class="dropdown-item" id="save-evidence"
+        style="display: block; width: 100%; text-align: left; padding: 0.5rem 1rem; border: none; background: none; cursor: pointer;">
+        <i class="fas fa-list"></i> 仅保存证据
+      </button>
+      <button class="dropdown-item" id="save-analysis"
+        style="display: block; width: 100%; text-align: left; padding: 0.5rem 1rem; border: none; background: none; cursor: pointer;">
+        <i class="fas fa-search"></i> 仅保存分析
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除确认对话框 -->
+<div class="modal fade" id="delete-confirm-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">确认删除</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>确定要删除此核查记录吗？此操作无法撤销。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete-btn">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    // 保存当前结果数据
+    const resultData = {
+      id: '{{ record_id }}',
+      verdict: '{{ result.verdict }}',
+      confidence: {{ result.confidence }
+  },
+    main_claim: '{{ result.main_claim }}',
+    news_text: '{{ result.news }}',
+    evidence: {{ result.evidence | tojson | safe }},
+    explanation: '{{ result.explanation|safe }}',
+    created_at: '{{ result.created_at }}',
+    processing_time: '{{ result.processing_time }}'
+    };
+
+  // 绑定删除按钮事件
+  $('#delete-btn').on('click', function () {
+    $('#delete-confirm-modal').modal('show');
+  });
+
+  // 绑定确认删除按钮事件
+  $('#confirm-delete-btn').on('click', function () {
+    // 获取记录ID
+    const recordId = '{{ record_id }}';
+
+    // 发送删除请求
+    $.ajax({
+      url: "{{ url_for('frontend.delete_fact_check_history') }}",
+      type: 'POST',
+      data: {
+        record_id: recordId
+      },
+      success: function (response) {
+        $('#delete-confirm-modal').modal('hide');
+
+        if (response.status === 'success') {
+          // 删除成功，跳转到历史记录页面
+          window.location.href = "{{ url_for('frontend.fact_check_history_page') }}";
+        } else {
+          // 显示错误提示
+          alert('删除记录失败: ' + response.message);
+        }
+      },
+      error: function () {
+        $('#delete-confirm-modal').modal('hide');
+        alert('删除记录时发生错误，请稍后再试');
+      }
+    });
+  });
+
+  // 新增：保存功能相关代码
+  $('#save-btn').on('click', function (e) {
+    e.stopPropagation();
+    $('.save-dropdown').toggle();
+  });
+
+  // 点击其他区域关闭下拉菜单
+  $(document).on('click', function (e) {
+    if (!$(e.target).closest('.save-dropdown-container').length) {
+      $('.save-dropdown').hide();
+    }
+  });
+
+  // 保存完整结果
+  $('#save-all').on('click', function () {
+    saveResults('all');
+  });
+
+  // 保存证据
+  $('#save-evidence').on('click', function () {
+    saveResults('evidence');
+  });
+
+  // 保存分析
+  $('#save-analysis').on('click', function () {
+    saveResults('analysis');
+  });
+
+  // 保存结果函数
+  function saveResults(type) {
+    let filename, data;
+
+    switch (type) {
+      case 'all':
+        filename = '事实核查完整结果_{{ record_id }}.json';
+        data = resultData;
+        break;
+      case 'evidence':
+        filename = '事实核查证据_{{ record_id }}.json';
+        data = {
+          news_text: resultData.news_text,
+          main_claim: resultData.main_claim,
+          evidence: resultData.evidence
+        };
+        break;
+      case 'analysis':
+        filename = '事实核查分析_{{ record_id }}.json';
+        data = {
+          verdict: resultData.verdict,
+          confidence: resultData.confidence,
+          main_claim: resultData.main_claim,
+          explanation: resultData.explanation,
+          processing_time: resultData.processing_time
+        };
+        break;
+      default:
+        filename = '事实核查结果_{{ record_id }}.json';
+        data = resultData;
+    }
+
+    // 创建JSON文件并下载
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    // 清理
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+
+    // 关闭下拉菜单
+    $('.save-dropdown').hide();
+  }
+  });
+</script>
+{% endblock %}

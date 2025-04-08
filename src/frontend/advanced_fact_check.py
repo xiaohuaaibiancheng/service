@@ -133,6 +133,9 @@ class AdvancedFactChecker:
             # 添加格式化的响应
             result_dict["formatted_response"] = result.format_response()
 
+            # 添加来源新闻文本
+            result_dict["news_text"] = news_text
+
             return result_dict
         except Exception as e:
             logger.error(f"事实核查过程发生错误: {e}")
@@ -173,6 +176,12 @@ class AdvancedFactChecker:
             result_dict = json.loads(result.to_json())
             result_dict["processing_time"] = f"{processing_time:.2f}秒"
             result_dict["source_count"] = 1 + (len(additional_sources) if additional_sources else 0)
+
+            # 添加来源新闻文本
+            result_dict["news_text"] = primary_text
+
+            # 添加格式化的响应
+            result_dict["formatted_response"] = result.format_response()
 
             return result_dict
         except Exception as e:
@@ -275,6 +284,10 @@ class AdvancedFactChecker:
             # 格式化结果
             evidence_result = {
                 "claim": claim,
+                "main_claim": claim,  # 添加主要声明字段
+                "news_text": claim,   # 添加新闻文本字段
+                "verdict": "未评估",   # 添加默认判决
+                "confidence": 0.5,    # 添加默认置信度
                 "source_count": {
                     "total": len(unique_evidence),
                     "wiki": sum(1 for e in unique_evidence if "wiki" in e.source),
