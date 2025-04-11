@@ -16,7 +16,7 @@ OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.2"))
 SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY", "")
 
 # 图像API配置 #智普 flash v api
-IMAGE_API_KEY = os.getenv("IMAGE_API_KEY", "9e39acc8938cbfb8b86dcd34879e4d5c.oyqOjK1XsrJ0cMgi")
+IMAGE_API_KEY = os.getenv("IMAGE_API_KEY", "")
 
 # 应用程序配置
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
