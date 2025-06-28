@@ -191,6 +191,8 @@ http://localhost:5000
 本项目采用 **Apache 2.0** 开源协议，模型权重文件遵循附加使用条款（详见MODEL_LICENSE）
 
 ---
+## 📮 视频介绍
+<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=114759949097700&bvid=BV1TbK2zrE3B&cid=30740580510&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
 
 ## 📮 技术支持
 **核心团队**：秃头也要上  
